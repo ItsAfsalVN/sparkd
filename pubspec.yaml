@@ -1,0 +1,76 @@
+name: sparkd
+description: "A hyper-local micro-agency platform connecting young 'Sparks' with local SMEs."
+publish_to: "none"
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.9.2
+
+# Dependencies
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+  flutter_native_splash: ^2.4.7
+  flutter_launcher_icons: ^0.14.4
+  flutter_bloc: ^9.1.1
+  equatable: ^2.0.7
+  smooth_page_indicator: ^1.2.1
+  shared_preferences: ^2.5.3
+  get_it: ^8.2.0
+  flutter_svg: ^2.2.1
+
+# Dev dependencies
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^5.0.0
+  bloc_test: ^10.0.0
+
+# Flutter
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/icons/
+    - assets/fonts/
+    - assets/images/
+    - assets/images/onboarding/
+
+  fonts:
+    - family: Urbanist
+      fonts:
+        - asset: assets/fonts/Urbanist.ttf
+
+    - family: Poppins
+      fonts:
+        - asset: assets/fonts/Poppins-Regular.ttf
+
+# Flutter native splash
+flutter_native_splash:
+  color: "#F6F7F3"
+  image: "assets/images/icon_light.png"
+
+  color_dark: "#000000"
+  image_dark: "assets/images/icon_dark.png"
+
+  android_12:
+    color: "#F6F7F3"
+    image: "assets/images/icon_light.png"
+
+    color_dark: "#000000"
+    image_dark: "assets/images/icon_dark.png"
+
+  ios: true
+
+# Flutter launcher icons
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icons/icon_adaptive.png"
+
+  adaptive_icon_background: "#0E65FB"
+  adaptive_icon_foreground: "assets/icons/icon_adaptive_foreground.png"
