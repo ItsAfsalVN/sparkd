@@ -17,6 +17,7 @@ class AuthRepositoryImplementation implements AuthRepository {
   
   @override
   Future<void> requestOtp() {
+    throw UnimplementedError();
   }
 
 }
