@@ -1,7 +1,16 @@
-part of 'sign_up_bloc.dart'; 
+part of 'sign_up_bloc.dart';
 
 // You can use an enum to track the overall form status
-enum FormStatus { initial, invalid, valid, submitting, failure, success, step1Completed }
+enum FormStatus {
+  initial,
+  invalid,
+  valid,
+  submitting,
+  otpSent,
+  failure,
+  success,
+  step1Completed,
+}
 
 class SignUpState extends Equatable {
   final String fullName;
@@ -13,7 +22,7 @@ class SignUpState extends Equatable {
   final bool isEmailValid;
   final bool isPasswordValid;
   final bool doPasswordsMatch;
-  final String? errorMessage; 
+  final String? errorMessage;
 
   final FormStatus status;
 
@@ -22,7 +31,7 @@ class SignUpState extends Equatable {
     this.email = '',
     this.password = '',
     this.confirmPassword = '',
-    this.isFullNameValid = true, 
+    this.isFullNameValid = true,
     this.isEmailValid = true,
     this.isPasswordValid = true,
     this.doPasswordsMatch = true,

@@ -8,6 +8,7 @@ import 'package:sparkd/features/auth/domain/repositories/sign_up_data_repository
 import 'package:sparkd/features/auth/domain/usecases/get_is_first_run.dart';
 import 'package:sparkd/features/auth/domain/usecases/set_onboarding_complete.dart';
 import 'package:sparkd/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:sparkd/features/auth/presentation/bloc/phone/phone_bloc.dart';
 
 final sl = GetIt.instance;
 
@@ -16,6 +17,8 @@ Future<void> init() async {
   sl.registerFactory(
     () => AuthBloc(getIsFirstRun: sl(), setOnboardingCompleted: sl()),
   );
+  
+  sl.registerFactory(() => PhoneBloc(signUpDataRepository: sl()));
 
   sl.registerLazySingleton(() => GetIsFirstRun(sl()));
   sl.registerLazySingleton(() => SetOnboardingComplete(sl()));

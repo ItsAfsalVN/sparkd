@@ -48,7 +48,6 @@ class PhoneBloc extends Bloc<PhoneEvent, PhoneState> {
     if (state.isPhoneNumberValid) {
       if (!isClosed && state.isPhoneNumberValid) {
         emit(state.copyWith(status: FormStatus.submitting));
-        if (!isClosed) emit(state.copyWith(status: FormStatus.success));
       }
     } else {
       emit(

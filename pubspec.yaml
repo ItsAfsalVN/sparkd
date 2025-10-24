@@ -21,6 +21,8 @@ dependencies:
   shared_preferences: ^2.5.3
   get_it: ^8.2.0
   flutter_svg: ^2.2.1
+  firebase_core: ^4.2.0
+  firebase_auth: ^6.1.1
 
 # Dev dependencies
 dev_dependencies:
