@@ -14,4 +14,9 @@ class AuthRepositoryImplementation implements AuthRepository {
   Future<void> setOnboardingCompleted() async {
     return await localDataSource.setOnboardingCompleted();
   }
+  
+  @override
+  Future<void> requestOtp() {
+  }
+
 }

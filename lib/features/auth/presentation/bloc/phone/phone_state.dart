@@ -1,17 +1,18 @@
-part of 'phone_bloc.dart'; 
-
+part of 'phone_bloc.dart';
 
 class PhoneState extends Equatable {
   final String phoneNumber;
   final bool isPhoneNumberValid;
   final FormStatus status;
   final String? errorMessage;
+  final String? verificationId;
 
   const PhoneState({
     this.phoneNumber = '',
-    this.isPhoneNumberValid = false, 
+    this.isPhoneNumberValid = false,
     this.status = FormStatus.initial,
     this.errorMessage,
+    this.verificationId,
   });
 
   PhoneState copyWith({
@@ -20,6 +21,8 @@ class PhoneState extends Equatable {
     FormStatus? status,
     String? errorMessage,
     bool clearErrorMessage = false,
+    String? verificationId,
+    bool clearVerificationId = false,
   }) {
     return PhoneState(
       phoneNumber: phoneNumber ?? this.phoneNumber,
@@ -28,6 +31,7 @@ class PhoneState extends Equatable {
       errorMessage: clearErrorMessage
           ? null
           : errorMessage ?? this.errorMessage,
+      verificationId: clearVerificationId ? null : verificationId ?? this.verificationId,
     );
   }
 
@@ -37,5 +41,6 @@ class PhoneState extends Equatable {
     isPhoneNumberValid,
     status,
     errorMessage,
+    verificationId,
   ];
 }
