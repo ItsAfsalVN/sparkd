@@ -1,18 +1,71 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-// Updated import name based on your code
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:sparkd/core/utils/app_color_theme_extension.dart';
 import 'package:sparkd/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:sparkd/features/auth/presentation/screens/decision_screen.dart';
 import 'package:sparkd/core/utils/app_colors.dart';
-// --- 1. IMPORT TEXT STYLE FILES ---
 import 'package:sparkd/core/utils/app_text_styles.dart';
 import 'package:sparkd/core/utils/app_text_theme_extension.dart';
 import 'core/services/service_locator.dart' as di;
 
+import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart' show kIsWeb;
+
 void main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  await dotenv.load(fileName: ".env");
+  FirebaseOptions? options;
+
+  if (kIsWeb) {
+    options = FirebaseOptions(
+      apiKey: dotenv.env['FIREBASE_WEB_API_KEY']!,
+      appId: dotenv.env['FIREBASE_WEB_APP_ID']!,
+      messagingSenderId: dotenv.env['FIREBASE_WEB_MESSAGING_SENDER_ID']!,
+      projectId: dotenv.env['FIREBASE_WEB_PROJECT_ID']!,
+      authDomain: dotenv.env['FIREBASE_WEB_AUTH_DOMAIN']!,
+      storageBucket: dotenv.env['FIREBASE_WEB_STORAGE_BUCKET']!,
+      measurementId: dotenv.env['FIREBASE_WEB_MEASUREMENT_ID']!,
+    );
+  } else if (Platform.isMacOS || Platform.isIOS) {
+    options = FirebaseOptions(
+      apiKey: dotenv.env['FIREBASE_IOS_API_KEY']!,
+      appId: dotenv.env['FIREBASE_IOS_APP_ID']!,
+      messagingSenderId: dotenv.env['FIREBASE_IOS_MESSAGING_SENDER_ID']!,
+      projectId: dotenv.env['FIREBASE_IOS_PROJECT_ID']!,
+      storageBucket: dotenv.env['FIREBASE_IOS_STORAGE_BUCKET']!,
+      iosBundleId: dotenv.env['FIREBASE_IOS_IOS_BUNDLED']!,
+    );
+  } else if (Platform.isAndroid) {
+    options = FirebaseOptions(
+      apiKey: dotenv.env['FIREBASE_ANDROID_API_KEY']!,
+      appId: dotenv.env['FIREBASE_ANDROID_APP_ID']!,
+      messagingSenderId: dotenv.env['FIREBASE_ANDROID_MESSAGING_SENDER_ID']!,
+      projectId: dotenv.env['FIREBASE_ANDROID_PROJECT_ID']!,
+      storageBucket: dotenv.env['FIREBASE_ANDROID_STORAGE_BUCKET']!,
+    );
+  } else if (Platform.isWindows) {
+    options = FirebaseOptions(
+      apiKey: dotenv.env['FIREBASE_WINDOWS_API_KEY']!,
+      appId: dotenv.env['FIREBASE_WINDOWS_APP_ID']!,
+      messagingSenderId: dotenv.env['FIREBASE_WINDOWS_MESSAGING_SENDER_ID']!,
+      projectId: dotenv.env['FIREBASE_WINDOWS_PROJECT_ID']!,
+      authDomain: dotenv.env['FIREBASE_WINDOWS_AUTH_DOMAIN']!,
+      storageBucket: dotenv.env['FIREBASE_WINDOWS_STORAGE_BUCKET']!,
+      measurementId: dotenv.env['FIREBASE_WINDOWS_MEASUREMENT_ID'],
+    );
+  } else {
+    throw UnsupportedError(
+      'Firebase initialization is not supported on this platform',
+    );
+  }
+
+  await Firebase.initializeApp(options: options);
+
   await di.init();
+
   runApp(
     BlocProvider(
       create: (context) {

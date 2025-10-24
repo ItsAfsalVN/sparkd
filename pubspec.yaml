@@ -23,6 +23,8 @@ dependencies:
   flutter_svg: ^2.2.1
   firebase_core: ^4.2.0
   firebase_auth: ^6.1.1
+  firebase_app_check: ^0.4.1+1
+  flutter_dotenv: ^6.0.0
 
 # Dev dependencies
 dev_dependencies:
@@ -37,6 +39,7 @@ flutter:
   uses-material-design: true
 
   assets:
+    - .env
     - assets/icons/
     - assets/fonts/
     - assets/images/
