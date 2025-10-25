@@ -32,7 +32,7 @@ class AuthRepositoryImplementation implements AuthRepository {
     }
   }
 
-@override
+  @override
   Future<UserCredential> verifyOtp({
     required String verificationId,
     required String smsCode,
@@ -43,10 +43,23 @@ class AuthRepositoryImplementation implements AuthRepository {
         smsCode: smsCode,
       );
     } catch (e) {
-      // Handle or rethrow errors
       logger.e("AuthRepositoryImplementation Error verifying OTP: $e");
       throw Exception('Failed to verify OTP: $e');
     }
   }
 
+  @override
+  Future<String?> getCurrentSignUpStep() async {
+    return await localDataSource.getCurrentSignUpStep();
+  }
+
+  @override
+  Future<void> setCurrentSignUpStep(String step) async {
+    await localDataSource.setCurrentSignUpStep(step);
+  }
+
+  @override
+  Future<void> clearSignUpStep() async {
+    await localDataSource.clearSignUpStep();
+  }
 }

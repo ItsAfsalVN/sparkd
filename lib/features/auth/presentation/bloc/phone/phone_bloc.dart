@@ -15,6 +15,8 @@ class PhoneBloc extends Bloc<PhoneEvent, PhoneState> {
   final RequestOtpUseCase _requestOtpUseCase;
   final VerifyOtpUseCase _verifyOtpUseCase;
 
+  SignUpDataRepository get signUpDataRepository => _signUpDataRepository;
+
   PhoneBloc({
     required SignUpDataRepository signUpDataRepository,
     required RequestOtpUseCase requestOtpUseCase,
@@ -124,7 +126,6 @@ class PhoneBloc extends Bloc<PhoneEvent, PhoneState> {
       "status: ${state.status}",
     );
 
-    // Check only essential requirements, not the status
     if (state.smsCode.length != 6) {
       emit(
         state.copyWith(

@@ -17,8 +17,16 @@ import 'package:sparkd/features/auth/presentation/bloc/phone/phone_bloc.dart';
 final sl = GetIt.instance;
 
 Future<void> init() async {
+  // --- Auth Feature ---
+
+  // BLoCs
   sl.registerFactory(
-    () => AuthBloc(getIsFirstRun: sl(), setOnboardingCompleted: sl()),
+    () => AuthBloc(
+      getIsFirstRun: sl(),
+      setOnboardingCompleted: sl(),
+      localDataSource: sl(),
+      signUpDataRepository: sl(),
+    ),
   );
 
   sl.registerFactory(
@@ -29,11 +37,15 @@ Future<void> init() async {
     ),
   );
 
+  // Use Cases
   sl.registerLazySingleton(() => GetIsFirstRun(sl()));
   sl.registerLazySingleton(() => SetOnboardingComplete(sl()));
   sl.registerLazySingleton(() => RequestOtpUseCase(authRepository: sl()));
-  sl.registerLazySingleton(() => VerifyOtpUseCase(sl()));
+  sl.registerLazySingleton(
+    () => VerifyOtpUseCase(sl()),
+  ); // Corrected: Pass repository using sl()
 
+  // Repositories
   sl.registerLazySingleton<AuthRepository>(
     () => AuthRepositoryImplementation(
       localDataSource: sl(),
@@ -42,9 +54,10 @@ Future<void> init() async {
   );
 
   sl.registerLazySingleton<SignUpDataRepository>(
-    () => SignUpDataRepositoryImplementation(),
+    () => SignUpDataRepositoryImplementation(sharedPreferences: sl()),
   );
 
+  // Data Sources
   sl.registerLazySingleton<AuthLocalDataSource>(
     () => AuthLocalDataSourceImplementation(sharedPreferences: sl()),
   );
@@ -53,6 +66,7 @@ Future<void> init() async {
     () => AuthRemoteDataSourceImplementation(firebaseAuth: sl()),
   );
 
+  // --- External ---
   final sharedPreferences = await SharedPreferences.getInstance();
   sl.registerLazySingleton(() => sharedPreferences);
   sl.registerLazySingleton(() => FirebaseAuth.instance);

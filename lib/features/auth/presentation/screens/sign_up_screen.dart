@@ -190,15 +190,26 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     BlocListener<SignUpBloc, SignUpState>(
                       listenWhen: (prev, curr) => prev.status != curr.status,
                       listener: (context, state) {
-                        if (state.status == FormStatus.step1Completed) {
+                        if (state.status == FormStatus.detailsSubmitted) {
+                          BlocProvider.of<AuthBloc>(
+                            context,
+                          ).add(AuthDetailsSubmitted());
+                          logger.i(
+                            "SignUpScreen: Heard DetailsSubmitted, notifying AuthBloc.",
+                          );
+
+                          logger.i(
+                            "SignUpScreen: Navigating to PhoneInputScreen...",
+                          );
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) =>
-                                  PhoneInputScreen(userType: widget.userType),
+                              builder: (context) => PhoneInputScreen(),
                             ),
                           ).then((_) {
-                            // Reset status when coming back
+                            logger.d(
+                              "SignUpScreen: Returned from PhoneInputScreen, resetting status.",
+                            );
                             context.read<SignUpBloc>().add(SignUpStatusReset());
                           });
                         }
@@ -275,7 +286,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
   void _submitForm(BuildContext context) {
     if (_formKey.currentState?.validate() ?? false) {
       FocusScope.of(context).unfocus();
-      BlocProvider.of<SignUpBloc>(context).add(SignUpSubmitted());
+      BlocProvider.of<SignUpBloc>(
+        context,
+      ).add(SignUpSubmitted(widget.userType));
     } else {
       logger.e("Form validation failed");
     }

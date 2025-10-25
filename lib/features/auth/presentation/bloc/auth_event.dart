@@ -10,3 +10,7 @@ abstract class AuthEvent extends Equatable {
 class AuthCheckStatusRequested extends AuthEvent{}
 
 class AuthOnboardingCompleted extends AuthEvent {}
+
+class AuthDetailsSubmitted extends AuthEvent {}
+
+class AuthPhoneNumberVerified extends AuthEvent {}

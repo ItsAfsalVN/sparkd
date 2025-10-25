@@ -8,4 +8,8 @@ abstract class AuthRepository {
     required String verificationId,
     required String smsCode,
   });
+
+  Future<String?> getCurrentSignUpStep();
+  Future<void> setCurrentSignUpStep(String step);
+  Future<void> clearSignUpStep();
 }

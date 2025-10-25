@@ -35,6 +35,13 @@ class SignUpConfirmPasswordChanged extends SignUpEvent {
   List<Object> get props => [value];
 }
 
-class SignUpSubmitted extends SignUpEvent {} 
+class SignUpSubmitted extends SignUpEvent {
+  final UserType userType;
+
+  const SignUpSubmitted(this.userType);
+
+  @override
+  List<Object> get props => [userType];
+} 
 
 class SignUpStatusReset extends SignUpEvent {}
