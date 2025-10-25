@@ -34,3 +34,21 @@ class AuthAwaitingPhoneNumber extends AuthState {
   @override
   List<Object> get props => [signUpData];
 }
+
+class AuthAwaitingSkills extends AuthState {
+  final SignUpData signUpData;
+
+  const AuthAwaitingSkills(this.signUpData);
+
+  @override
+  List<Object> get props => [signUpData];
+}
+
+class AuthAwaitingBusinessDetails extends AuthState {
+  final SignUpData signUpData;
+
+  const AuthAwaitingBusinessDetails(this.signUpData);
+
+  @override
+  List<Object> get props => [signUpData];
+}

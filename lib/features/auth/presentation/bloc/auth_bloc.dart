@@ -41,12 +41,32 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     final currentUser = FirebaseAuth.instance.currentUser;
 
+    // If phone number is verified
     if (currentUser != null) {
+      logger.d(
+        "Authbloc: Firebase user found (UID : ${currentUser.uid}. Checking sign in step...)",
+      );
+
+      final currentStep = await _localDataSource.getCurrentSignUpStep();
+      if (currentStep == STEP_AWAITING_BUSINESS) {
+        final currentData = _signUpDataRepository.getData();
+        emit(AuthAwaitingBusinessDetails(currentData));
+        logger.i("AuthBloc: Resuming sign-up at skills input.");
+        return;
+      } else if (currentStep == STEP_AWAITING_SKILLS) {
+        final currentData = _signUpDataRepository.getData();
+        emit(AuthAwaitingSkills(currentData));
+        logger.i("AuthBloc: Resuming sign-up at skills input.");
+        return;
+      }
+
       UserType userType = UserType.spark;
       await _localDataSource.clearSignUpStep();
       emit(AuthAuthenticated(userType));
-      logger.i("AuthBloc: User is authenticated.");
+      logger.i("AuthBloc: User authenticated (no pending sign-up step).");
     } else {
+
+      // Before phone number is verified
       final bool isFirstRun = await _getIsFirstRun();
       if (isFirstRun) {
         emit(AuthFirstRun());
@@ -104,12 +124,19 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     try {
       final signUpData = _signUpDataRepository.getData();
       final userType = signUpData.userType;
+      logger.d("AuthBloc: Phone verified. Checking UserType: $userType");
+
       String nextStep;
       if (userType == UserType.spark) {
         nextStep = STEP_AWAITING_SKILLS;
       } else if (userType == UserType.sme) {
         nextStep = STEP_AWAITING_BUSINESS;
       } else {
+        logger.e(
+          "AuthBloc: Unexpected user type ($userType) during phone verification. Clearing step.",
+        );
+        await _localDataSource.clearSignUpStep();
+        emit(AuthUnauthenticated());
         return;
       }
 
