@@ -57,6 +57,11 @@ class _InputOtpScreenState extends State<InputOtpScreen> {
                   SnackBarType.success,
                 );
 
+                BlocProvider.of<AuthBloc>(
+                  context,
+                ).add(AuthPhoneNumberVerified());
+                logger.i("Notified AuthBloc: AuthPhoneVerified.");
+
                 final phoneBloc = context.read<PhoneBloc>();
                 final signUpDataRepo = phoneBloc.signUpDataRepository;
                 final signUpData = signUpDataRepo.getData();

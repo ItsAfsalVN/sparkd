@@ -7,6 +7,8 @@ import 'package:sparkd/features/auth/presentation/screens/role_selection_screen.
 import 'package:sparkd/features/auth/presentation/screens/phone_input_screen.dart';
 // Import logger if you use it
 import 'package:sparkd/core/utils/logger.dart';
+import 'package:sparkd/features/auth/presentation/screens/sme/add_business_details_screen.dart';
+import 'package:sparkd/features/auth/presentation/screens/spark/add_skills_screen.dart';
 
 class DecisionScreen extends StatelessWidget {
   const DecisionScreen({super.key});
@@ -50,10 +52,19 @@ class DecisionScreen extends StatelessWidget {
           logger.i("Navigating to PhoneInputScreen (Resuming sign-up)");
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(
-              builder: (context) =>
-                  PhoneInputScreen(),
-            ),
+            MaterialPageRoute(builder: (context) => PhoneInputScreen()),
+          );
+        } else if (state is AuthAwaitingBusinessDetails) {
+          logger.i("Navigating to AddBusinessDetailsScreen (Resuming sign-up)");
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => AddBusinessDetailsScreen()),
+          );
+        } else if (state is AuthAwaitingSkills) {
+          logger.i("Navigating to AddSkillsScreen (Resuming sign-up)");
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => AddSkillsScreen()),
           );
         }
       },
