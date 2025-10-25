@@ -17,3 +17,14 @@ class PhoneNumberChanged extends PhoneEvent {
 }
 
 class PhoneNumberSubmitted extends PhoneEvent {}
+
+class OtpCodeChanged extends PhoneEvent {
+  final String smsCode;
+  const OtpCodeChanged({required this.smsCode});
+  @override
+  List<Object> get props => [smsCode];
+}
+
+class OtpSubmitted extends PhoneEvent {
+  const OtpSubmitted();
+}

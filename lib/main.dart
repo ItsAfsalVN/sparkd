@@ -14,71 +14,138 @@ import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show kIsWeb;
 
 void main(List<String> args) async {
+  // Only keep the *absolutely essential* binding initialization here.
   WidgetsFlutterBinding.ensureInitialized();
 
-  await dotenv.load(fileName: ".env");
-  FirebaseOptions? options;
-
-  if (kIsWeb) {
-    options = FirebaseOptions(
-      apiKey: dotenv.env['FIREBASE_WEB_API_KEY']!,
-      appId: dotenv.env['FIREBASE_WEB_APP_ID']!,
-      messagingSenderId: dotenv.env['FIREBASE_WEB_MESSAGING_SENDER_ID']!,
-      projectId: dotenv.env['FIREBASE_WEB_PROJECT_ID']!,
-      authDomain: dotenv.env['FIREBASE_WEB_AUTH_DOMAIN']!,
-      storageBucket: dotenv.env['FIREBASE_WEB_STORAGE_BUCKET']!,
-      measurementId: dotenv.env['FIREBASE_WEB_MEASUREMENT_ID']!,
-    );
-  } else if (Platform.isMacOS || Platform.isIOS) {
-    options = FirebaseOptions(
-      apiKey: dotenv.env['FIREBASE_IOS_API_KEY']!,
-      appId: dotenv.env['FIREBASE_IOS_APP_ID']!,
-      messagingSenderId: dotenv.env['FIREBASE_IOS_MESSAGING_SENDER_ID']!,
-      projectId: dotenv.env['FIREBASE_IOS_PROJECT_ID']!,
-      storageBucket: dotenv.env['FIREBASE_IOS_STORAGE_BUCKET']!,
-      iosBundleId: dotenv.env['FIREBASE_IOS_IOS_BUNDLED']!,
-    );
-  } else if (Platform.isAndroid) {
-    options = FirebaseOptions(
-      apiKey: dotenv.env['FIREBASE_ANDROID_API_KEY']!,
-      appId: dotenv.env['FIREBASE_ANDROID_APP_ID']!,
-      messagingSenderId: dotenv.env['FIREBASE_ANDROID_MESSAGING_SENDER_ID']!,
-      projectId: dotenv.env['FIREBASE_ANDROID_PROJECT_ID']!,
-      storageBucket: dotenv.env['FIREBASE_ANDROID_STORAGE_BUCKET']!,
-    );
-  } else if (Platform.isWindows) {
-    options = FirebaseOptions(
-      apiKey: dotenv.env['FIREBASE_WINDOWS_API_KEY']!,
-      appId: dotenv.env['FIREBASE_WINDOWS_APP_ID']!,
-      messagingSenderId: dotenv.env['FIREBASE_WINDOWS_MESSAGING_SENDER_ID']!,
-      projectId: dotenv.env['FIREBASE_WINDOWS_PROJECT_ID']!,
-      authDomain: dotenv.env['FIREBASE_WINDOWS_AUTH_DOMAIN']!,
-      storageBucket: dotenv.env['FIREBASE_WINDOWS_STORAGE_BUCKET']!,
-      measurementId: dotenv.env['FIREBASE_WINDOWS_MEASUREMENT_ID'],
-    );
-  } else {
-    throw UnsupportedError(
-      'Firebase initialization is not supported on this platform',
-    );
-  }
-
-  await Firebase.initializeApp(options: options);
-
-  await di.init();
-
-  runApp(
-    BlocProvider(
-      create: (context) {
-        // Get the AuthBloc instance from the service locator
-        return di.sl<AuthBloc>()..add(AuthCheckStatusRequested());
-      },
-      child: const App(),
-    ),
-  );
+  // Run the app immediately. The app itself will handle initialization.
+  runApp(const App());
 }
 
-class App extends StatelessWidget {
+class App extends StatefulWidget {
   const App({super.key});
+
+  @override
+  State<App> createState() => _AppState();
+}
+
+class _AppState extends State<App> {
+  // This Future will hold the state of our initialization.
+  late final Future<void> _initFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    // Start the initialization process when this widget is first created.
+    _initFuture = _initializeApp();
+  }
+
+  // This function now contains all the logic that was in main().
+  Future<void> _initializeApp() async {
+    // 1. Load environment variables
+    await dotenv.load(fileName: ".env");
+
+    // 2. Determine Firebase options
+    FirebaseOptions? options;
+    if (kIsWeb) {
+      options = FirebaseOptions(
+        apiKey: dotenv.env['FIREBASE_WEB_API_KEY']!,
+        appId: dotenv.env['FIREBASE_WEB_APP_ID']!,
+        messagingSenderId: dotenv.env['FIREBASE_WEB_MESSAGING_SENDER_ID']!,
+        projectId: dotenv.env['FIREBASE_WEB_PROJECT_ID']!,
+        authDomain: dotenv.env['FIREBASE_WEB_AUTH_DOMAIN']!,
+        storageBucket: dotenv.env['FIREBASE_WEB_STORAGE_BUCKET']!,
+        measurementId: dotenv.env['FIREBASE_WEB_MEASUREMENT_ID']!,
+      );
+    } else if (Platform.isMacOS || Platform.isIOS) {
+      options = FirebaseOptions(
+        apiKey: dotenv.env['FIREBASE_IOS_API_KEY']!,
+        appId: dotenv.env['FIREBASE_IOS_APP_ID']!,
+        messagingSenderId: dotenv.env['FIREBASE_IOS_MESSAGING_SENDER_ID']!,
+        projectId: dotenv.env['FIREBASE_IOS_PROJECT_ID']!,
+        storageBucket: dotenv.env['FIREBASE_IOS_STORAGE_BUCKET']!,
+        iosBundleId: dotenv.env['FIREBASE_IOS_IOS_BUNDLED']!,
+      );
+    } else if (Platform.isAndroid) {
+      options = FirebaseOptions(
+        apiKey: dotenv.env['FIREBASE_ANDROID_API_KEY']!,
+        appId: dotenv.env['FIREBASE_ANDROID_APP_ID']!,
+        messagingSenderId: dotenv.env['FIREBASE_ANDROID_MESSAGING_SENDER_ID']!,
+        projectId: dotenv.env['FIREBASE_ANDROID_PROJECT_ID']!,
+        storageBucket: dotenv.env['FIREBASE_ANDROID_STORAGE_BUCKET']!,
+      );
+    } else if (Platform.isWindows) {
+      options = FirebaseOptions(
+        apiKey: dotenv.env['FIREBASE_WINDOWS_API_KEY']!,
+        appId: dotenv.env['FIREBASE_WINDOWS_APP_ID']!,
+        messagingSenderId: dotenv.env['FIREBASE_WINDOWS_MESSAGING_SENDER_ID']!,
+        projectId: dotenv.env['FIREBASE_WINDOWS_PROJECT_ID']!,
+        authDomain: dotenv.env['FIREBASE_WINDOWS_AUTH_DOMAIN']!,
+        storageBucket: dotenv.env['FIREBASE_WINDOWS_STORAGE_BUCKET']!,
+        measurementId: dotenv.env['FIREBASE_WINDOWS_MEASUREMENT_ID'],
+      );
+    } else {
+      throw UnsupportedError(
+        'Firebase initialization is not supported on this platform',
+      );
+    }
+
+    // 3. Initialize Firebase
+    await Firebase.initializeApp(options: options);
+
+    // 4. Initialize your service locator (dependency injection)
+    await di.init();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Use a FutureBuilder to listen to the initialization future
+    return FutureBuilder(
+      future: _initFuture,
+      builder: (context, snapshot) {
+        // While the future is running, show a loading screen.
+        // This gets UI on the screen immediately.
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const MaterialApp(
+            debugShowCheckedModeBanner: false,
+            home: Scaffold(
+              body: Center(
+                // You can replace this with your official splash screen widget
+                child: CircularProgressIndicator(),
+              ),
+            ),
+          );
+        }
+
+        // If the future completed with an error, show an error screen.
+        if (snapshot.hasError) {
+          return MaterialApp(
+            debugShowCheckedModeBanner: false,
+            home: Scaffold(
+              body: Center(
+                child: Text(
+                  'Error initializing app: ${snapshot.error}',
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ),
+          );
+        }
+
+        // We put the BlocProvider here, *after* di.init() has run.
+        return BlocProvider(
+          create: (context) {
+            return di.sl<AuthBloc>()..add(AuthCheckStatusRequested());
+          },
+          child: const MainAppContent(),
+        );
+      },
+    );
+  }
+}
+
+// This widget is only built *after* initialization is successful.
+class MainAppContent extends StatelessWidget {
+  const MainAppContent({super.key});
 
   @override
   Widget build(BuildContext context) {

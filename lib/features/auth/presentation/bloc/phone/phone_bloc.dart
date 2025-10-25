@@ -1,6 +1,10 @@
 import 'package:equatable/equatable.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:sparkd/core/utils/logger.dart';
 import 'package:sparkd/features/auth/domain/repositories/sign_up_data_repository.dart';
+import 'package:sparkd/features/auth/domain/usecases/request_otp.dart';
+import 'package:sparkd/features/auth/domain/usecases/verify_otp.dart';
 import 'package:sparkd/features/auth/presentation/bloc/sign_up/sign_up_bloc.dart';
 
 part 'phone_event.dart';
@@ -8,12 +12,21 @@ part 'phone_state.dart';
 
 class PhoneBloc extends Bloc<PhoneEvent, PhoneState> {
   final SignUpDataRepository _signUpDataRepository;
+  final RequestOtpUseCase _requestOtpUseCase;
+  final VerifyOtpUseCase _verifyOtpUseCase;
 
-  PhoneBloc({required SignUpDataRepository signUpDataRepository})
-    : _signUpDataRepository = signUpDataRepository,
-      super(const PhoneState()) {
+  PhoneBloc({
+    required SignUpDataRepository signUpDataRepository,
+    required RequestOtpUseCase requestOtpUseCase,
+    required VerifyOtpUseCase verifyOtpUseCase,
+  }) : _signUpDataRepository = signUpDataRepository,
+       _requestOtpUseCase = requestOtpUseCase,
+       _verifyOtpUseCase = verifyOtpUseCase,
+       super(const PhoneState()) {
     on<PhoneNumberChanged>(_onPhoneNumberChanged);
     on<PhoneNumberSubmitted>(_onPhoneNumberSubmitted);
+    on<OtpCodeChanged>(_onOtpCodeChanged);
+    on<OtpSubmitted>(_onOtpSubmitted);
   }
 
   void _onPhoneNumberChanged(
@@ -44,10 +57,35 @@ class PhoneBloc extends Bloc<PhoneEvent, PhoneState> {
   void _onPhoneNumberSubmitted(
     PhoneNumberSubmitted event,
     Emitter<PhoneState> emit,
-  ){
+  ) async {
     if (state.isPhoneNumberValid) {
       if (!isClosed && state.isPhoneNumberValid) {
         emit(state.copyWith(status: FormStatus.submitting));
+        try {
+          final verificationID = await _requestOtpUseCase(state.phoneNumber);
+          if (!isClosed) {
+            emit(
+              state.copyWith(
+                status: FormStatus.otpSent,
+                verificationId: verificationID,
+              ),
+            );
+            logger.i("PhoneBloc: OTP Sent. Verification ID: $verificationID");
+          }
+        } catch (error) {
+          logger.e("PhoneBloc: Error requesting OTP: $error");
+          if (!isClosed) {
+            emit(
+              state.copyWith(
+                status: FormStatus.failure,
+                errorMessage: error is Exception
+                    ? error.toString()
+                    : 'Failed to send OTP. Please try again.',
+                clearVerificationId: true,
+              ),
+            );
+          }
+        }
       }
     } else {
       emit(
@@ -58,4 +96,87 @@ class PhoneBloc extends Bloc<PhoneEvent, PhoneState> {
       );
     }
   }
-} 
+
+  void _onOtpCodeChanged(OtpCodeChanged event, Emitter<PhoneState> emit) {
+    final smsCode = event.smsCode;
+    final isValid = smsCode.length == 6;
+
+    emit(
+      state.copyWith(
+        smsCode: smsCode,
+        status:
+            state.status == FormStatus.otpSent ||
+                state.status == FormStatus.failure
+            ? (isValid ? FormStatus.otpSent : FormStatus.invalid)
+            : state.status,
+        clearErrorMessage: true,
+      ),
+    );
+  }
+
+  Future<void> _onOtpSubmitted(
+    OtpSubmitted event,
+    Emitter<PhoneState> emit,
+  ) async {
+    logger.t(
+      "PhoneBloc: OtpSubmitted - smsCode: '${state.smsCode}' (len: ${state.smsCode.length}), "
+      "verificationId: ${state.verificationId != null ? 'present' : 'null'}, "
+      "status: ${state.status}",
+    );
+
+    // Check only essential requirements, not the status
+    if (state.smsCode.length != 6) {
+      emit(
+        state.copyWith(
+          status: FormStatus.failure,
+          errorMessage: 'Please enter a 6-digit OTP.',
+        ),
+      );
+      return;
+    }
+
+    if (state.verificationId == null) {
+      emit(
+        state.copyWith(
+          status: FormStatus.failure,
+          errorMessage:
+              'Verification session expired. Please request OTP again.',
+        ),
+      );
+      return;
+    }
+
+    // Prevent double submission
+    if (state.status == FormStatus.submitting) {
+      logger.i("PhoneBloc: Already submitting, ignoring duplicate submission");
+      return;
+    }
+
+    emit(state.copyWith(status: FormStatus.submitting));
+
+    try {
+      // Call the VerifyOtpUseCase
+      UserCredential userCredential = await _verifyOtpUseCase(
+        verificationId: state.verificationId!,
+        smsCode: state.smsCode,
+      );
+
+      // OTP Verified Successfully!
+      if (!isClosed) {
+        logger.i("PhoneBloc: OTP Verified. User: ${userCredential.user?.uid}");
+        emit(state.copyWith(status: FormStatus.success));
+      }
+    } catch (e) {
+      // OTP Verification Failed
+      logger.e("PhoneBloc: Error verifying OTP: $e");
+      if (!isClosed) {
+        emit(
+          state.copyWith(
+            status: FormStatus.failure,
+            errorMessage: 'Invalid OTP. Please try again.',
+          ),
+        );
+      }
+    }
+  }
+}

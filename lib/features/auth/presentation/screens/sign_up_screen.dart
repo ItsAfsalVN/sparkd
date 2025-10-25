@@ -6,6 +6,7 @@ import 'package:sparkd/core/presentation/widgets/divider.dart';
 import 'package:sparkd/core/presentation/widgets/google_sign_in_button.dart';
 import 'package:sparkd/core/utils/app_colors.dart';
 import 'package:sparkd/core/utils/app_text_theme_extension.dart';
+import 'package:sparkd/core/utils/logger.dart';
 import 'package:sparkd/features/auth/domain/repositories/sign_up_data_repository.dart';
 import 'package:sparkd/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:sparkd/features/auth/presentation/bloc/sign_up/sign_up_bloc.dart';
@@ -276,7 +277,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       FocusScope.of(context).unfocus();
       BlocProvider.of<SignUpBloc>(context).add(SignUpSubmitted());
     } else {
-      print("Form validation failed");
+      logger.e("Form validation failed");
     }
   }
 }
