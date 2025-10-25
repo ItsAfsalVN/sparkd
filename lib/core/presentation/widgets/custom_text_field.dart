@@ -14,6 +14,7 @@ class CustomTextField extends StatefulWidget {
   final ValueChanged<String>? onFieldSubmitted;
   final TextInputAction? textInputAction;
   final ValueChanged<String>? onChanged;
+  final bool? autoFocus;
 
   const CustomTextField({
     super.key,
@@ -28,6 +29,7 @@ class CustomTextField extends StatefulWidget {
     this.onFieldSubmitted,
     this.textInputAction,
     this.onChanged,
+    this.autoFocus,
   });
 
   @override
@@ -49,7 +51,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
     final colorScheme = Theme.of(context).colorScheme;
     final textStyles = Theme.of(context).textStyles;
     return Column(
-      spacing: 2, 
+      spacing: 2,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
@@ -68,6 +70,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
           obscureText: _isObscured,
           keyboardType: widget.keyboardType,
           validator: widget.validator,
+          autofocus: widget.autoFocus ?? false,
           decoration: InputDecoration(
             prefixIcon: widget.prefixIcon,
             suffixIcon: widget.obscureText
@@ -84,7 +87,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
                   )
                 : null,
             filled: true,
-            fillColor: colorScheme.surface, 
+            fillColor: colorScheme.surface,
             contentPadding: const EdgeInsets.symmetric(
               vertical: 20,
               horizontal: 12,
@@ -107,17 +110,11 @@ class _CustomTextFieldState extends State<CustomTextField> {
             ),
             errorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(
-                color: colorScheme.error, 
-                width: 1.0,
-              ),
+              borderSide: BorderSide(color: colorScheme.error, width: 1.0),
             ),
             focusedErrorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(
-                color: colorScheme.error, 
-                width: 2.0, 
-              ),
+              borderSide: BorderSide(color: colorScheme.error, width: 2.0),
             ),
           ),
         ),

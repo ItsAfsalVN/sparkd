@@ -6,6 +6,8 @@ class PhoneState extends Equatable {
   final FormStatus status;
   final String? errorMessage;
   final String? verificationId;
+  final String smsCode;
+
 
   const PhoneState({
     this.phoneNumber = '',
@@ -13,6 +15,7 @@ class PhoneState extends Equatable {
     this.status = FormStatus.initial,
     this.errorMessage,
     this.verificationId,
+    this.smsCode = ''
   });
 
   PhoneState copyWith({
@@ -23,6 +26,7 @@ class PhoneState extends Equatable {
     bool clearErrorMessage = false,
     String? verificationId,
     bool clearVerificationId = false,
+    String? smsCode
   }) {
     return PhoneState(
       phoneNumber: phoneNumber ?? this.phoneNumber,
@@ -32,6 +36,7 @@ class PhoneState extends Equatable {
           ? null
           : errorMessage ?? this.errorMessage,
       verificationId: clearVerificationId ? null : verificationId ?? this.verificationId,
+      smsCode:  smsCode ?? this.smsCode
     );
   }
 
@@ -42,5 +47,6 @@ class PhoneState extends Equatable {
     status,
     errorMessage,
     verificationId,
+    smsCode
   ];
 }

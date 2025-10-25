@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:sparkd/core/utils/logger.dart';
 import 'package:sparkd/features/auth/domain/repositories/sign_up_data_repository.dart';
 
 part 'sign_up_event.dart';
@@ -114,9 +115,9 @@ class SignUpBloc extends Bloc<SignUpEvent, SignUpState> {
     if (state.status == FormStatus.valid) {
       await Future.delayed(Duration.zero);
       emit(state.copyWith(status: FormStatus.step1Completed));
-      print("Current data in repo: ${_signUpDataRepository.getData()}");
+      logger.i("Current data in repo: ${_signUpDataRepository.getData()}");
     } else {
-      print("SignUpBloc: Form submitted but invalid.");
+      logger.e("SignUpBloc: Form submitted but invalid.");
     }
   }
 
