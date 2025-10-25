@@ -2,6 +2,7 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:sparkd/core/utils/logger.dart';
 import 'package:sparkd/features/auth/domain/repositories/sign_up_data_repository.dart';
+import 'package:sparkd/features/auth/presentation/bloc/auth_bloc.dart';
 
 part 'sign_up_event.dart';
 part 'sign_up_state.dart';
@@ -111,11 +112,28 @@ class SignUpBloc extends Bloc<SignUpEvent, SignUpState> {
     );
   }
 
-  void _onSubmitted(SignUpSubmitted event, Emitter<SignUpState> emit) async {
+  Future<void> _onSubmitted(
+    SignUpSubmitted event,
+    Emitter<SignUpState> emit,
+  ) async {
     if (state.status == FormStatus.valid) {
+      final currentData = _signUpDataRepository.getData();
+      _signUpDataRepository.updateData(
+        currentData.copyWith(userType: event.userType),
+      );
+      logger.d(
+        "SignUpBloc: Saved userType '${event.userType}' to repository on submit.",
+      );
+
       await Future.delayed(Duration.zero);
-      emit(state.copyWith(status: FormStatus.step1Completed));
-      logger.i("Current data in repo: ${_signUpDataRepository.getData()}");
+
+      if (!isClosed && state.status == FormStatus.valid) {
+        emit(state.copyWith(status: FormStatus.detailsSubmitted));
+        logger.i(
+          "SignUpBloc: Form valid, emitting FormStatus.detailsSubmitted.",
+        );
+        logger.i("Current data in repo: ${_signUpDataRepository.getData()}");
+      }
     } else {
       logger.e("SignUpBloc: Form submitted but invalid.");
     }

@@ -26,3 +26,11 @@ class AuthUnauthenticated extends AuthState {}
 
 // Users first time on the app
 class AuthFirstRun extends AuthState {}
+
+class AuthAwaitingPhoneNumber extends AuthState {
+  final SignUpData signUpData;
+  const AuthAwaitingPhoneNumber(this.signUpData);
+
+  @override
+  List<Object> get props => [signUpData];
+}

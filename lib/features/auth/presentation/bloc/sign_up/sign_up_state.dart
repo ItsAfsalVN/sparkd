@@ -9,7 +9,7 @@ enum FormStatus {
   otpSent,
   failure,
   success,
-  step1Completed,
+  detailsSubmitted,
 }
 
 class SignUpState extends Equatable {

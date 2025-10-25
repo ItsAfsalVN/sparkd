@@ -6,15 +6,13 @@ import 'package:sparkd/core/utils/app_colors.dart';
 import 'package:sparkd/core/utils/app_text_theme_extension.dart';
 import 'package:sparkd/core/utils/logger.dart';
 import 'package:sparkd/core/utils/snackbar_helper.dart';
-import 'package:sparkd/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:sparkd/core/services/service_locator.dart' as di;
 import 'package:sparkd/features/auth/presentation/bloc/phone/phone_bloc.dart';
 import 'package:sparkd/features/auth/presentation/bloc/sign_up/sign_up_bloc.dart';
 import 'package:sparkd/features/auth/presentation/screens/input_otp_screen.dart';
 
 class PhoneInputScreen extends StatefulWidget {
-  final UserType userType;
-  const PhoneInputScreen({super.key, required this.userType});
+  const PhoneInputScreen({super.key});
 
   @override
   State<PhoneInputScreen> createState() => _PhoneInputScreenState();
@@ -24,19 +22,19 @@ class _PhoneInputScreenState extends State<PhoneInputScreen> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _phoneNumberController = TextEditingController();
   final _phoneNumberNode = FocusNode();
-  late final PhoneBloc _phoneBloc; // Store bloc reference
+  late final PhoneBloc _phoneBloc; 
 
   @override
   void initState() {
     super.initState();
-    _phoneBloc = di.sl<PhoneBloc>(); // Create bloc in initState
+    _phoneBloc = di.sl<PhoneBloc>(); 
   }
 
   @override
   void dispose() {
     _phoneNumberController.dispose();
     _phoneNumberNode.dispose();
-    _phoneBloc.close(); // Close bloc when disposing
+    _phoneBloc.close(); 
     super.dispose();
   }
 
@@ -45,7 +43,7 @@ class _PhoneInputScreenState extends State<PhoneInputScreen> {
     final bool isLight = Theme.brightnessOf(context) == Brightness.light;
     final textStyle = Theme.of(context).textStyles;
     return BlocProvider.value(
-      value: _phoneBloc, // Use existing bloc
+      value: _phoneBloc, 
       child: BlocListener<PhoneBloc, PhoneState>(
         listener: (context, state) {
           if (state.status == FormStatus.otpSent) {
@@ -57,7 +55,6 @@ class _PhoneInputScreenState extends State<PhoneInputScreen> {
                   child: InputOtpScreen(
                     phoneNumber: state.phoneNumber,
                     verificationID: state.verificationId!,
-                    userType: widget.userType,
                   ),
                 ),
               ),

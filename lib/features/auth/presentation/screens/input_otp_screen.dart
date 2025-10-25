@@ -8,16 +8,16 @@ import 'package:sparkd/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:sparkd/features/auth/presentation/bloc/phone/phone_bloc.dart';
 import 'package:sparkd/features/auth/presentation/bloc/sign_up/sign_up_bloc.dart';
 import 'package:sparkd/core/utils/snackbar_helper.dart';
+import 'package:sparkd/features/auth/presentation/screens/sme/add_business_details_screen.dart';
+import 'package:sparkd/features/auth/presentation/screens/spark/add_skills_screen.dart';
 
 class InputOtpScreen extends StatefulWidget {
   final String phoneNumber;
   final String verificationID;
-  final UserType userType;
   const InputOtpScreen({
     super.key,
     required this.phoneNumber,
     required this.verificationID,
-    required this.userType,
   });
 
   @override
@@ -53,20 +53,44 @@ class _InputOtpScreenState extends State<InputOtpScreen> {
                 );
                 showSnackbar(
                   context,
-                  "Phone Verified Successfully!",
+                  "Phone Number Verified Successfully!",
                   SnackBarType.success,
                 );
-                // TODO: Navigate to next screen
+
+                final phoneBloc = context.read<PhoneBloc>();
+                final signUpDataRepo = phoneBloc.signUpDataRepository;
+                final signUpData = signUpDataRepo.getData();
+                final userType = signUpData.userType;
+
+                logger.d("Retrieved SignUpData: $signUpData");
+                logger.i("UserType for navigation: $userType");
+
+                if (userType == UserType.spark) {
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(builder: (context) => AddSkillsScreen()),
+                  );
+                } else if (userType == UserType.sme) {
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(
+                      builder: (context) => AddBusinessDetailsScreen(),
+                    ),
+                  );
+                } else {
+                  logger.e("Unimplemented usertype : $userType");
+                }
               } else if (state.status == FormStatus.failure &&
                   state.errorMessage != null) {
                 showSnackbar(context, state.errorMessage!, SnackBarType.error);
+                _otpController.clear();
+                context.read<PhoneBloc>().add(
+                  const OtpCodeChanged(smsCode: ''),
+                );
               }
             },
             child: Column(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // --- Top Section ---
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   spacing: 36,
@@ -196,7 +220,6 @@ class _InputOtpScreenState extends State<InputOtpScreen> {
     if (currentSmsCode.length == 6) {
       FocusScope.of(context).unfocus();
       phoneBloc.add(const OtpSubmitted());
-      
     } else {
       logger.e(
         "Submit called with incorrect code length: ${currentSmsCode.length}",
