@@ -11,7 +11,6 @@ abstract class AuthLocalDataSource {
   Future<bool> getIsFirstRun();
   Future<void> setOnboardingCompleted();
 
-  // --- ADDED METHODS ---
   Future<String?> getCurrentSignUpStep();
   Future<void> setCurrentSignUpStep(String step);
   Future<void> clearSignUpStep();

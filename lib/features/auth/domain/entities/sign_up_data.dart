@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:sparkd/core/utils/logger.dart';
 import 'package:sparkd/features/auth/presentation/bloc/auth_bloc.dart';
 
 class SignUpData extends Equatable {
@@ -49,12 +50,12 @@ class SignUpData extends Equatable {
   ];
 
   factory SignUpData.fromJson(Map<String, dynamic> json) {
-    UserType? _parseUserType(String? typeString) {
+    UserType? parseUserType(String? typeString) {
       if (typeString == null) return null;
       try {
         return UserType.values.firstWhere((e) => e.name == typeString);
       } catch (e) {
-        print("Warning: Could not parse UserType '$typeString'. Defaulting.");
+        logger.w("Warning: Could not parse UserType '$typeString'. Defaulting.");
         return null;
       }
     }
@@ -67,7 +68,7 @@ class SignUpData extends Equatable {
       skills: json['skills'] == null
           ? null
           : List<String>.from(json['skills'] as List<dynamic>? ?? []),
-      userType: _parseUserType(json['userType'] as String?),
+      userType: parseUserType(json['userType'] as String?),
     );
   }
 
