@@ -54,7 +54,7 @@ Future<void> init() async {
   );
 
   sl.registerLazySingleton<SignUpDataRepository>(
-    () => SignUpDataRepositoryImplementation(sharedPreferences: sl()),
+    () => SignUpDataRepositoryImplementation(flutterSecureStorage: sl()),
   );
 
   // Data Sources

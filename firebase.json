@@ -1,1 +1,25 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"afsal-sparkd-app","appId":"1:1071522781624:android:fa6b03507efa6d3ce1174d","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"afsal-sparkd-app","configurations":{"android":"1:1071522781624:android:fa6b03507efa6d3ce1174d","ios":"1:1071522781624:ios:1b4327b02d36cea1e1174d","macos":"1:1071522781624:ios:1b4327b02d36cea1e1174d","web":"1:1071522781624:web:55305b55bdc3a94ee1174d","windows":"1:1071522781624:web:3ef889f06038945ee1174d"}}}}}}
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "afsal-sparkd-app",
+          "appId": "1:1071522781624:android:fa6b03507efa6d3ce1174d",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "afsal-sparkd-app",
+          "configurations": {
+            "android": "1:1071522781624:android:fa6b03507efa6d3ce1174d",
+            "ios": "1:1071522781624:ios:1b4327b02d36cea1e1174d",
+            "macos": "1:1071522781624:ios:1b4327b02d36cea1e1174d",
+            "web": "1:1071522781624:web:55305b55bdc3a94ee1174d",
+            "windows": "1:1071522781624:web:3ef889f06038945ee1174d"
+          }
+        }
+      }
+    }
+  }
+}

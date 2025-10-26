@@ -51,7 +51,7 @@ class _PhoneInputScreenState extends State<PhoneInputScreen> {
               context,
               MaterialPageRoute(
                 builder: (context) => BlocProvider.value(
-                  value: _phoneBloc, // Pass the same bloc reference
+                  value: _phoneBloc, 
                   child: InputOtpScreen(
                     phoneNumber: state.phoneNumber,
                     verificationID: state.verificationId!,

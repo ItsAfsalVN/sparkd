@@ -9,6 +9,8 @@ class SignUpData extends Equatable {
   final String? phoneNumber;
   final List<String>? skills;
   final UserType? userType;
+  final String? verificationID;
+  final String? smsCode;
 
   const SignUpData({
     this.fullName,
@@ -17,6 +19,8 @@ class SignUpData extends Equatable {
     this.phoneNumber,
     this.skills,
     this.userType,
+    this.verificationID,
+    this.smsCode
   });
 
   SignUpData copyWith({
@@ -26,6 +30,8 @@ class SignUpData extends Equatable {
     String? phoneNumber,
     List<String>? skills,
     UserType? userType,
+    String? verificationID,
+    String? smsCode
   }) {
     return SignUpData(
       fullName: fullName ?? this.fullName,
@@ -34,6 +40,8 @@ class SignUpData extends Equatable {
       phoneNumber: phoneNumber ?? this.phoneNumber,
       skills: skills ?? this.skills,
       userType: userType ?? this.userType,
+      verificationID: verificationID ?? this.verificationID,
+      smsCode: smsCode ?? this.smsCode
     );
   }
 
@@ -47,6 +55,8 @@ class SignUpData extends Equatable {
     phoneNumber,
     skills,
     userType,
+    verificationID,
+    smsCode
   ];
 
   factory SignUpData.fromJson(Map<String, dynamic> json) {
