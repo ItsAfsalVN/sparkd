@@ -34,73 +34,84 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthPhoneNumberVerified>(_onAuthPhoneNumberVerified);
   }
 
-  // Method to check if authenticated
   Future<void> _onAuthCheckStatusRequested(
     AuthCheckStatusRequested event,
     Emitter<AuthState> emit,
   ) async {
-    final currentUser = FirebaseAuth.instance.currentUser;
-
-    // If phone number is verified
-    if (currentUser != null) {
-      logger.d(
-        "Authbloc: Firebase user found (UID : ${currentUser.uid}. Checking sign in step...)",
-      );
-
-      final currentStep = await _localDataSource.getCurrentSignUpStep();
-      if (currentStep == STEP_AWAITING_BUSINESS) {
-        final currentData = _signUpDataRepository.getData();
-        emit(AuthAwaitingBusinessDetails(currentData));
-        logger.i("AuthBloc: Resuming sign-up at skills input.");
-        return;
-      } else if (currentStep == STEP_AWAITING_SKILLS) {
-        final currentData = _signUpDataRepository.getData();
-        emit(AuthAwaitingSkills(currentData));
-        logger.i("AuthBloc: Resuming sign-up at skills input.");
-        return;
-      }
-
-      UserType userType = UserType.spark;
-      await _localDataSource.clearSignUpStep();
-      emit(AuthAuthenticated(userType));
-      logger.i("AuthBloc: User authenticated (no pending sign-up step).");
-    } else {
-
-      // Before phone number is verified
+    try {
       final bool isFirstRun = await _getIsFirstRun();
       if (isFirstRun) {
         emit(AuthFirstRun());
         logger.i("AuthBloc: First run detected.");
-      } else {
-        final currentStep = await _localDataSource.getCurrentSignUpStep();
-        logger.d("AuthBloc: Checking sign up step: $currentStep");
+        return;
+      }
+
+      final currentStep = await _localDataSource.getCurrentSignUpStep();
+      logger.d("AuthBloc: Checking sign up step: $currentStep");
+
+      if (currentStep != null && currentStep != STEP_COMPLETE) {
+        final currentData = _signUpDataRepository.getData();
 
         if (currentStep == STEP_AWAITING_PHONE) {
-          final currentData = _signUpDataRepository.getData();
           emit(AuthAwaitingPhoneNumber(currentData));
           logger.i("AuthBloc: Resuming sign-up at phone input.");
-        } else {
-          emit(AuthUnauthenticated());
-          logger.i(
-            "AuthBloc: Not first run, no pending step. Emitting Unauthenticated.",
-          );
+          return;
+        } else if (currentStep == STEP_AWAITING_SKILLS) {
+          if (FirebaseAuth.instance.currentUser != null) {
+            emit(AuthAwaitingSkills(currentData));
+            logger.i("AuthBloc: Resuming sign-up at skills input.");
+          } else {
+            logger.w(
+              "AuthBloc: Step is AWAITING_SKILLS but no Firebase user. Resetting.",
+            );
+            await _localDataSource.clearSignUpStep();
+            emit(AuthUnauthenticated());
+          }
+          return;
+        } else if (currentStep == STEP_AWAITING_BUSINESS) {
+          if (FirebaseAuth.instance.currentUser != null) {
+            emit(AuthAwaitingBusinessDetails(currentData));
+            logger.i("AuthBloc: Resuming sign-up at business details input.");
+          } else {
+            logger.w(
+              "AuthBloc: Step is AWAITING_BUSINESS but no Firebase user. Resetting.",
+            );
+            await _localDataSource.clearSignUpStep();
+            emit(AuthUnauthenticated());
+          }
+          return;
         }
       }
+
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser != null) {
+        UserType userType = UserType.spark;
+        await _localDataSource.clearSignUpStep();
+        emit(AuthAuthenticated(userType));
+        logger.i(
+          "AuthBloc: User authenticated (sign-up complete or already logged in).",
+        );
+      } else {
+        emit(AuthUnauthenticated());
+        logger.i(
+          "AuthBloc: Not first run, no pending step, not logged in. Emitting Unauthenticated.",
+        );
+      }
+    } catch (e, s) {
+      logger.e("AuthBloc: Error during initial check", error: e, stackTrace: s);
+      emit(AuthUnauthenticated());
     }
   }
 
-  // The method to change isFirstRun to false to not show the Onboarding screens
   Future<void> _onAuthOnboardingCompleted(
     AuthOnboardingCompleted event,
     Emitter<AuthState> emit,
   ) async {
     await _setOnboardingCompleted();
 
-    // Now that the flag is saved, emit the next state
     emit(AuthUnauthenticated());
   }
 
-  // Method to fire after getting sign in data before phone number is entered
   Future<void> _onAuthDetailsSubmitted(
     AuthDetailsSubmitted event,
     Emitter<AuthState> emit,
