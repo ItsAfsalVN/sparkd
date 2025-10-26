@@ -162,6 +162,15 @@ class PhoneBloc extends Bloc<PhoneEvent, PhoneState> {
         smsCode: state.smsCode,
       );
 
+      final currentData = _signUpDataRepository.getData();
+      _signUpDataRepository.updateData(
+        currentData.copyWith(
+          verificationID: state.verificationId,
+          smsCode: state.smsCode,
+        ),
+      );
+      logger.i("Phone bloc : Verification ID and smsCode stored to prefs");
+
       // OTP Verified Successfully!
       if (!isClosed) {
         logger.i("PhoneBloc: OTP Verified. User: ${userCredential.user?.uid}");

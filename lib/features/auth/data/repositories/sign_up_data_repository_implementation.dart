@@ -1,42 +1,54 @@
+// lib/features/auth/data/repositories/sign_up_data_repository_implementation.dart
+
 import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart';
+// We ONLY need FlutterSecureStorage for persistence
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:sparkd/core/utils/logger.dart';
 import 'package:sparkd/features/auth/domain/entities/sign_up_data.dart';
 import 'package:sparkd/features/auth/domain/repositories/sign_up_data_repository.dart';
 
+// Key for the secure storage entry
 const String SIGN_UP_DATA_KEY = 'pendingSignUpData';
 
 class SignUpDataRepositoryImplementation implements SignUpDataRepository {
-  final SharedPreferences sharedPreferences;
+  final FlutterSecureStorage flutterSecureStorage;
   SignUpData _cachedData = SignUpData.empty;
 
-  SignUpDataRepositoryImplementation({required this.sharedPreferences}) {
+  SignUpDataRepositoryImplementation({required this.flutterSecureStorage}) {
     _loadDataFromPrefs();
   }
 
-  void _loadDataFromPrefs() {
-    final jsonString = sharedPreferences.getString(SIGN_UP_DATA_KEY);
-    if (jsonString != null) {
-      try {
+  Future<void> _loadDataFromPrefs() async {
+    try {
+      final jsonString = await flutterSecureStorage.read(key: SIGN_UP_DATA_KEY);
+
+      if (jsonString != null) {
         _cachedData = SignUpData.fromJson(jsonDecode(jsonString));
-        logger.i("SignUpDataRepository: Loaded data from prefs: $_cachedData");
-      } catch (e) {
-        logger.e("SignUpDataRepository: Error decoding data from prefs: $e");
+        logger.i(
+          "SignUpDataRepository: Loaded data from secure prefs: $_cachedData",
+        );
+      } else {
         _cachedData = SignUpData.empty;
+        logger.i("SignUpDataRepository: No data found in secure prefs.");
       }
-    } else {
+    } catch (e) {
+      logger.e(
+        "SignUpDataRepository: Error decoding data from secure prefs: $e",
+      );
       _cachedData = SignUpData.empty;
-      logger.e("SignUpDataRepository: No data found in prefs.");
     }
   }
 
   Future<void> _saveDataToPrefs() async {
     try {
       final jsonString = jsonEncode(_cachedData.toJson());
-      await sharedPreferences.setString(SIGN_UP_DATA_KEY, jsonString);
-      logger.i("SignUpDataRepository: Saved data to prefs.");
+      await flutterSecureStorage.write(
+        key: SIGN_UP_DATA_KEY,
+        value: jsonString,
+      );
+      logger.i("SignUpDataRepository: Saved data to secure prefs.");
     } catch (e) {
-      logger.e("SignUpDataRepository: Error encoding data to prefs: $e");
+      logger.e("SignUpDataRepository: Error encoding data to secure prefs: $e");
     }
   }
 
@@ -55,7 +67,7 @@ class SignUpDataRepositoryImplementation implements SignUpDataRepository {
   @override
   void clearData() {
     _cachedData = SignUpData.empty;
-    sharedPreferences.remove(SIGN_UP_DATA_KEY);
-    logger.i("SignUpDataRepository: Data cleared.");
+    flutterSecureStorage.delete(key: SIGN_UP_DATA_KEY);
+    logger.i("SignUpDataRepository: Data cleared from secure storage.");
   }
 }

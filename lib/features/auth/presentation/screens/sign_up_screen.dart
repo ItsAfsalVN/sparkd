@@ -99,6 +99,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           spacing: 16,
                           children: [
                             CustomTextField(
+                              autoFocus: true,
                               hintText: 'Enter you full name',
                               labelText: 'Full Name',
                               controller: _fullNameController,
