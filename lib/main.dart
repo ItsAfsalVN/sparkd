@@ -155,6 +155,7 @@ class MainAppContent extends StatelessWidget {
       // Light Theme
       theme: ThemeData(
         brightness: Brightness.light,
+        appBarTheme: AppBarTheme(backgroundColor: AppColors.white100),
         scaffoldBackgroundColor: AppColors.white100,
         colorScheme: const ColorScheme(
           brightness: Brightness.light,
@@ -172,7 +173,8 @@ class MainAppContent extends StatelessWidget {
         textTheme: const TextTheme(
           displayLarge: AppTextStyles.heading1,
           displayMedium: AppTextStyles.heading2,
-          headlineSmall: AppTextStyles.heading3,
+          headlineMedium: AppTextStyles.heading3,
+          headlineSmall: AppTextStyles.heading5,
           bodyLarge: AppTextStyles.paragraph,
           bodyMedium: AppTextStyles.subtext,
         ),
@@ -185,6 +187,7 @@ class MainAppContent extends StatelessWidget {
       // Dark theme
       darkTheme: ThemeData(
         brightness: Brightness.dark,
+        appBarTheme: AppBarTheme(backgroundColor: AppColors.black),
         scaffoldBackgroundColor: AppColors.black,
         colorScheme: const ColorScheme(
           brightness: Brightness.dark,
@@ -202,7 +205,8 @@ class MainAppContent extends StatelessWidget {
         textTheme: const TextTheme(
           displayLarge: AppTextStyles.heading1,
           displayMedium: AppTextStyles.heading2,
-          headlineSmall: AppTextStyles.heading3,
+          headlineMedium: AppTextStyles.heading3,
+          headlineSmall: AppTextStyles.heading5,
           bodyLarge: AppTextStyles.paragraph,
           bodyMedium: AppTextStyles.subtext,
         ),

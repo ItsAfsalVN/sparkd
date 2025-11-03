@@ -20,6 +20,12 @@ class AppTextStyles {
     fontSize: 24,
     fontStyle: FontStyle.normal,
   );
+  static const TextStyle heading5 = TextStyle(
+    fontFamily: 'Urbanist',
+    fontWeight: FontWeight.w900,
+    fontSize: 14,
+    fontStyle: FontStyle.normal,
+  );
   static const TextStyle paragraph = TextStyle(
     fontFamily: 'Poppins',
     fontWeight: FontWeight.normal,

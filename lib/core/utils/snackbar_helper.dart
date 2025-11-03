@@ -25,7 +25,7 @@ void showSnackbar(
     SnackBar(
       content: Text(message, style: TextStyle(color: textColor)),
       backgroundColor: backgroundColor,
-      behavior: SnackBarBehavior.floating,
+      behavior: SnackBarBehavior.fixed,
     ),
   );
 }

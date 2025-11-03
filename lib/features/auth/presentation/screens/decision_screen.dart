@@ -8,7 +8,7 @@ import 'package:sparkd/features/auth/presentation/screens/phone_input_screen.dar
 // Import logger if you use it
 import 'package:sparkd/core/utils/logger.dart';
 import 'package:sparkd/features/auth/presentation/screens/sme/add_business_details_screen.dart';
-import 'package:sparkd/features/auth/presentation/screens/spark/add_skills_screen.dart';
+import 'package:sparkd/features/spark/presentation/screens/add_skills_screen.dart';
 
 class DecisionScreen extends StatelessWidget {
   const DecisionScreen({super.key});

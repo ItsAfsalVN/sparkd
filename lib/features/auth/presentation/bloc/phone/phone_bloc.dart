@@ -29,6 +29,7 @@ class PhoneBloc extends Bloc<PhoneEvent, PhoneState> {
     on<PhoneNumberSubmitted>(_onPhoneNumberSubmitted);
     on<OtpCodeChanged>(_onOtpCodeChanged);
     on<OtpSubmitted>(_onOtpSubmitted);
+    on<OtpSessionCancelled>(_onOtpSessionCancelled);
   }
 
   void _onPhoneNumberChanged(
@@ -188,5 +189,18 @@ class PhoneBloc extends Bloc<PhoneEvent, PhoneState> {
         );
       }
     }
+  }
+  void _onOtpSessionCancelled(
+    OtpSessionCancelled event,
+    Emitter<PhoneState> emit,
+  ) {
+    emit(
+      state.copyWith(
+        status: FormStatus.valid, 
+        clearVerificationId: true,
+        clearErrorMessage: true,
+      ),
+    );
+    logger.i("PhoneBloc: OTP Session canceled. State reset.");
   }
 }

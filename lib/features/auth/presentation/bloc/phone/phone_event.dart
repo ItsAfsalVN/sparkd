@@ -28,3 +28,6 @@ class OtpCodeChanged extends PhoneEvent {
 class OtpSubmitted extends PhoneEvent {
   const OtpSubmitted();
 }
+
+
+class OtpSessionCancelled extends PhoneEvent {}

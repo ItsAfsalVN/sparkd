@@ -22,43 +22,52 @@ class _PhoneInputScreenState extends State<PhoneInputScreen> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _phoneNumberController = TextEditingController();
   final _phoneNumberNode = FocusNode();
-  late final PhoneBloc _phoneBloc; 
+  late final PhoneBloc _phoneBloc;
+  bool _hasNavigated = false;
 
   @override
   void initState() {
     super.initState();
-    _phoneBloc = di.sl<PhoneBloc>(); 
+    _phoneBloc = di.sl<PhoneBloc>();
   }
 
   @override
   void dispose() {
     _phoneNumberController.dispose();
     _phoneNumberNode.dispose();
-    _phoneBloc.close(); 
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final bool isLight = Theme.brightnessOf(context) == Brightness.light;
+    final logo = isLight
+        ? 'assets/images/logo_light.png'
+        : 'assets/images/logo_dark.png';
     final textStyle = Theme.of(context).textStyles;
     return BlocProvider.value(
-      value: _phoneBloc, 
+      value: _phoneBloc,
       child: BlocListener<PhoneBloc, PhoneState>(
         listener: (context, state) {
-          if (state.status == FormStatus.otpSent) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => BlocProvider.value(
-                  value: _phoneBloc, 
-                  child: InputOtpScreen(
-                    phoneNumber: state.phoneNumber,
-                    verificationID: state.verificationId!,
+          if (state.status == FormStatus.otpSent && !_hasNavigated) {
+            _hasNavigated = true;
+
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (!mounted) return;
+
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => BlocProvider.value(
+                    value: _phoneBloc,
+                    child: InputOtpScreen(
+                      phoneNumber: state.phoneNumber,
+                      verificationID: state.verificationId!,
+                    ),
                   ),
                 ),
-              ),
-            );
+              );
+            });
           } else if (state.status == FormStatus.failure) {
             showSnackbar(
               context,
@@ -68,6 +77,15 @@ class _PhoneInputScreenState extends State<PhoneInputScreen> {
           }
         },
         child: Scaffold(
+          appBar: AppBar(
+            title: Image.asset(
+              logo,
+              width: 105,
+              height: 35,
+              fit: BoxFit.contain,
+            ),
+          ),
+
           body: SafeArea(
             child: Padding(
               padding: const EdgeInsets.only(left: 20, right: 20, bottom: 20),
@@ -81,33 +99,6 @@ class _PhoneInputScreenState extends State<PhoneInputScreen> {
                     Column(
                       spacing: 36,
                       children: [
-                        Row(
-                          spacing: 2,
-                          children: [
-                            IconButton(
-                              onPressed: () {
-                                WidgetsBinding.instance.addPostFrameCallback((
-                                  _,
-                                ) {
-                                  if (context.mounted) Navigator.pop(context);
-                                });
-                              },
-                              icon: Icon(
-                                Icons.arrow_back_ios_new_rounded,
-                                size: 24,
-                                color: AppColors.black400,
-                              ),
-                            ),
-                            Image.asset(
-                              isLight
-                                  ? 'assets/images/logo_light.png'
-                                  : 'assets/images/logo_dark.png',
-                              width: 105,
-                              height: 35,
-                              fit: BoxFit.contain,
-                            ),
-                          ],
-                        ),
                         Column(
                           spacing: 8,
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -141,7 +132,9 @@ class _PhoneInputScreenState extends State<PhoneInputScreen> {
                               textInputAction: TextInputAction.done,
                               autoFocus: true,
                               onFieldSubmitted: (value) {
-                                _submitPhone(context);
+                                if (!_hasNavigated) {
+                                  _submitPhone(context);
+                                }
                               },
                               onChanged: (value) {
                                 _phoneBloc.add(
@@ -188,7 +181,7 @@ class _PhoneInputScreenState extends State<PhoneInputScreen> {
                           );
                         }
                         return CustomButton(
-                          onPressed: state.isPhoneNumberValid
+                          onPressed: state.isPhoneNumberValid && !_hasNavigated
                               ? () => _submitPhone(context)
                               : null,
                           title: 'Next',
