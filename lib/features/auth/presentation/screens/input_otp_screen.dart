@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:sparkd/core/presentation/widgets/otp_input.dart';
+import 'package:sparkd/core/utils/app_color_theme_extension.dart';
 import 'package:sparkd/core/utils/app_colors.dart';
 import 'package:sparkd/core/utils/app_text_theme_extension.dart';
 import 'package:sparkd/core/utils/logger.dart';
@@ -8,8 +9,9 @@ import 'package:sparkd/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:sparkd/features/auth/presentation/bloc/phone/phone_bloc.dart';
 import 'package:sparkd/features/auth/presentation/bloc/sign_up/sign_up_bloc.dart';
 import 'package:sparkd/core/utils/snackbar_helper.dart';
+import 'package:sparkd/features/auth/presentation/screens/phone_input_screen.dart';
 import 'package:sparkd/features/auth/presentation/screens/sme/add_business_details_screen.dart';
-import 'package:sparkd/features/auth/presentation/screens/spark/add_skills_screen.dart';
+import 'package:sparkd/features/spark/presentation/screens/add_skills_screen.dart';
 
 class InputOtpScreen extends StatefulWidget {
   final String phoneNumber;
@@ -26,6 +28,7 @@ class InputOtpScreen extends StatefulWidget {
 
 class _InputOtpScreenState extends State<InputOtpScreen> {
   final TextEditingController _otpController = TextEditingController();
+  bool _hasNavigated = false;
 
   @override
   void dispose() {
@@ -37,8 +40,28 @@ class _InputOtpScreenState extends State<InputOtpScreen> {
   Widget build(BuildContext context) {
     final bool isLight = Theme.brightnessOf(context) == Brightness.light;
     final textStyle = Theme.of(context).textStyles;
+    final logo = isLight
+        ? 'assets/images/logo_light.png'
+        : 'assets/images/logo_dark.png';
 
     return Scaffold(
+      appBar: AppBar(
+        leading: IconButton(
+          onPressed: () {
+            if (!_hasNavigated) {
+              BlocProvider.of<PhoneBloc>(context).add(OtpSessionCancelled());
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const PhoneInputScreen(),
+                ),
+              );
+            }
+          },
+          icon: Icon(Icons.arrow_back_outlined),
+        ),
+        title: Image.asset(logo, width: 105, height: 35, fit: BoxFit.contain),
+      ),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.only(left: 20, right: 20, bottom: 20),
@@ -46,15 +69,12 @@ class _InputOtpScreenState extends State<InputOtpScreen> {
             listenWhen: (previous, current) =>
                 previous.status != current.status,
             listener: (context, state) {
-              if (state.status == FormStatus.success) {
+              if (state.status == FormStatus.success && !_hasNavigated) {
+                _hasNavigated = true;
+
                 // OTP Verified successfully!
                 logger.i(
                   "OTP Verified! Triggering final sign up/login in AuthBloc...",
-                );
-                showSnackbar(
-                  context,
-                  "Phone Number Verified Successfully!",
-                  SnackBarType.success,
                 );
 
                 BlocProvider.of<AuthBloc>(
@@ -70,19 +90,32 @@ class _InputOtpScreenState extends State<InputOtpScreen> {
                 logger.d("Retrieved SignUpData: $signUpData");
                 logger.i("UserType for navigation: $userType");
 
-                if (userType == UserType.spark) {
-                  Navigator.of(context).pushReplacement(
-                    MaterialPageRoute(builder: (context) => AddSkillsScreen()),
+                // Navigate after frame is complete
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (!mounted) return;
+
+                  showSnackbar(
+                    context,
+                    "Phone Number Verified Successfully!",
+                    SnackBarType.success,
                   );
-                } else if (userType == UserType.sme) {
-                  Navigator.of(context).pushReplacement(
-                    MaterialPageRoute(
-                      builder: (context) => AddBusinessDetailsScreen(),
-                    ),
-                  );
-                } else {
-                  logger.e("Unimplemented usertype : $userType");
-                }
+
+                  if (userType == UserType.spark) {
+                    Navigator.of(context).pushReplacement(
+                      MaterialPageRoute(
+                        builder: (context) => const AddSkillsScreen(),
+                      ),
+                    );
+                  } else if (userType == UserType.sme) {
+                    Navigator.of(context).pushReplacement(
+                      MaterialPageRoute(
+                        builder: (context) => const AddBusinessDetailsScreen(),
+                      ),
+                    );
+                  } else {
+                    logger.e("Unimplemented usertype : $userType");
+                  }
+                });
               } else if (state.status == FormStatus.failure &&
                   state.errorMessage != null) {
                 showSnackbar(context, state.errorMessage!, SnackBarType.error);
@@ -100,31 +133,6 @@ class _InputOtpScreenState extends State<InputOtpScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   spacing: 36,
                   children: [
-                    Row(
-                      spacing: 2,
-                      children: [
-                        IconButton(
-                          onPressed: () {
-                            WidgetsBinding.instance.addPostFrameCallback((_) {
-                              if (context.mounted) Navigator.pop(context);
-                            });
-                          },
-                          icon: Icon(
-                            Icons.arrow_back_ios_new_rounded,
-                            size: 24,
-                            color: AppColors.black400,
-                          ),
-                        ),
-                        Image.asset(
-                          isLight
-                              ? 'assets/images/logo_light.png'
-                              : 'assets/images/logo_dark.png',
-                          width: 105,
-                          height: 35,
-                          fit: BoxFit.contain,
-                        ),
-                      ],
-                    ),
                     Column(
                       spacing: 8,
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -173,11 +181,10 @@ class _InputOtpScreenState extends State<InputOtpScreen> {
                           },
                           onCompleted: (pin) {
                             logger.i("OTP Entered: $pin");
-                            // Use a small delay to ensure state is updated
                             Future.delayed(
                               const Duration(milliseconds: 100),
                               () {
-                                if (mounted) {
+                                if (mounted && !_hasNavigated) {
                                   _submitOtp();
                                 }
                               },
@@ -214,7 +221,6 @@ class _InputOtpScreenState extends State<InputOtpScreen> {
   }
 
   void _submitOtp() {
-    // Get the current state from the bloc
     final phoneBloc = context.read<PhoneBloc>();
     final currentSmsCode = phoneBloc.state.smsCode;
 

@@ -32,6 +32,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthOnboardingCompleted>(_onAuthOnboardingCompleted);
     on<AuthDetailsSubmitted>(_onAuthDetailsSubmitted);
     on<AuthPhoneNumberVerified>(_onAuthPhoneNumberVerified);
+    // on<AuthFinalizeSignUp>(_onAuthFinalizeSignUp);
   }
 
   Future<void> _onAuthCheckStatusRequested(
@@ -158,4 +159,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       logger.e("AuthBloc: Error saving next step after phone verify", error: e);
     }
   }
+
+  // Future<void> _onAuthFinalizeSignUp() async{
+
+  // }
 }

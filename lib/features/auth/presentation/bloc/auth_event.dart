@@ -14,3 +14,9 @@ class AuthOnboardingCompleted extends AuthEvent {}
 class AuthDetailsSubmitted extends AuthEvent {}
 
 class AuthPhoneNumberVerified extends AuthEvent {}
+
+class AuthFinalizeSignUp extends AuthEvent {
+  const AuthFinalizeSignUp();
+  @override
+  List<Object> get props => [];
+}
