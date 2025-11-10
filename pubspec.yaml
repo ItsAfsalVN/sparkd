@@ -28,6 +28,7 @@ dependencies:
   pinput: ^5.0.2
   logger: ^2.6.2
   flutter_secure_storage: ^9.2.4
+  cloud_firestore: ^6.1.0
 
 # Dev dependencies
 dev_dependencies:

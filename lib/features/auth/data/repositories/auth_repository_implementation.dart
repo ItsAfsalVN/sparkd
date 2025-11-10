@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:sparkd/core/utils/logger.dart';
 import 'package:sparkd/features/auth/data/datasources/auth_local_data_source.dart';
 import 'package:sparkd/features/auth/data/datasources/auth_remote_data_source.dart';
+import 'package:sparkd/features/auth/domain/entities/user_profile.dart';
 import 'package:sparkd/features/auth/domain/repositories/auth_repository.dart';
 
 class AuthRepositoryImplementation implements AuthRepository {
@@ -75,7 +76,7 @@ class AuthRepositoryImplementation implements AuthRepository {
       );
     } catch (error) {
       logger.e("AuthRepositoryImplementation Error creating user: $error");
-      rethrow; 
+      rethrow;
     }
   }
 
@@ -93,7 +94,19 @@ class AuthRepositoryImplementation implements AuthRepository {
       );
     } catch (error) {
       logger.e("AuthRepositoryImplementation Error linking phone: $error");
-      rethrow; 
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> saveUserProfile({required UserProfile profile}) async {
+    try {
+      await remoteDataSource.saveUserProfile(profile);
+    } catch (error) {
+      logger.e(
+        "AuthRepositoryImplementation Error saving user profile : $error",
+      );
+      rethrow;
     }
   }
 }

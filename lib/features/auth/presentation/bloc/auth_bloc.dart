@@ -4,10 +4,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:sparkd/core/utils/logger.dart';
 import 'package:sparkd/features/auth/data/datasources/auth_local_data_source.dart';
 import 'package:sparkd/features/auth/domain/entities/sign_up_data.dart';
+import 'package:sparkd/features/auth/domain/entities/user_profile.dart';
 import 'package:sparkd/features/auth/domain/repositories/sign_up_data_repository.dart';
 import 'package:sparkd/features/auth/domain/usecases/create_user_with_email_and_password.dart';
 import 'package:sparkd/features/auth/domain/usecases/get_is_first_run.dart';
 import 'package:sparkd/features/auth/domain/usecases/link_phone_credential.dart';
+import 'package:sparkd/features/auth/domain/usecases/save_user_profile.dart';
 import 'package:sparkd/features/auth/domain/usecases/set_onboarding_complete.dart';
 
 part 'auth_state.dart';
@@ -22,6 +24,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
   final CreateUserWithEmailUseCase _createUserWithEmailUseCase;
   final LinkPhoneCredentialUseCase _linkPhoneCredentialUseCase;
+  final SaveUserProfileUseCase _saveUserProfileUseCase;
 
   AuthBloc({
     required GetIsFirstRun getIsFirstRun,
@@ -29,13 +32,15 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     required AuthLocalDataSource localDataSource,
     required SignUpDataRepository signUpDataRepository,
     required CreateUserWithEmailUseCase createUserWithEmailUseCase,
-    required LinkPhoneCredentialUseCase linkPhoneCredentialUseCase
+    required LinkPhoneCredentialUseCase linkPhoneCredentialUseCase,
+    required SaveUserProfileUseCase saveUserProfileUseCase
   }) : _getIsFirstRun = getIsFirstRun,
        _setOnboardingCompleted = setOnboardingCompleted,
        _localDataSource = localDataSource,
        _signUpDataRepository = signUpDataRepository,
        _createUserWithEmailUseCase = createUserWithEmailUseCase,
        _linkPhoneCredentialUseCase = linkPhoneCredentialUseCase,
+       _saveUserProfileUseCase = saveUserProfileUseCase,
        super(AuthInitial()) {
     on<AuthCheckStatusRequested>(_onAuthCheckStatusRequested);
     on<AuthOnboardingCompleted>(_onAuthOnboardingCompleted);
@@ -214,7 +219,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       );
       logger.i("AuthBloc: Phone number linked successfully.");
 
-      logger.w("TODO: Implement Database Profile Saving Here.");
+      final UserProfile userProfile = UserProfile.fromSignUpData(newUser.uid, signUpData);
+
+      await _saveUserProfileUseCase(userProfile);
+      logger.i("AuthBloc: User profile successfully persisted to Firestore.");
 
       await _localDataSource
           .clearSignUpStep();

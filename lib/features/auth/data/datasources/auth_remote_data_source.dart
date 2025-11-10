@@ -1,7 +1,9 @@
 import 'dart:async';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:sparkd/core/utils/logger.dart';
+import 'package:sparkd/features/auth/domain/entities/user_profile.dart';
 
 abstract class AuthRemoteDataSource {
   Future<String> requestOtp(String phoneNumber);
@@ -18,12 +20,17 @@ abstract class AuthRemoteDataSource {
     required String smsCode,
     required String phoneNumber,
   });
+  Future<void> saveUserProfile(UserProfile profile);
 }
 
 class AuthRemoteDataSourceImplementation extends AuthRemoteDataSource {
   final FirebaseAuth firebaseAuth;
+  final FirebaseFirestore firebaseFirestore;
 
-  AuthRemoteDataSourceImplementation({required this.firebaseAuth});
+  AuthRemoteDataSourceImplementation({
+    required this.firebaseAuth,
+    required this.firebaseFirestore,
+  });
 
   @override
   Future<String> requestOtp(String phoneNumber) async {
@@ -131,6 +138,20 @@ class AuthRemoteDataSourceImplementation extends AuthRemoteDataSource {
       );
     } catch (error) {
       throw Exception('Error linking phone credential with auth: $error');
+    }
+  }
+
+  @override
+  Future<void> saveUserProfile(UserProfile profile) async {
+    try {
+      await firebaseFirestore
+          .collection('users')
+          .doc(profile.uid)
+          .set(profile.toFirestore());
+      logger.i("Firestore: User profile saved for UID: ${profile.uid}");
+    } catch (e) {
+      logger.e("Firestore: Failed to save user profile.", error: e);
+      throw Exception('Database error: Failed to save profile.');
     }
   }
 }
