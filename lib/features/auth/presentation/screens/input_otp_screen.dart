@@ -1,15 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:sparkd/core/presentation/widgets/otp_input.dart';
-import 'package:sparkd/core/utils/app_color_theme_extension.dart';
-import 'package:sparkd/core/utils/app_colors.dart';
 import 'package:sparkd/core/utils/app_text_theme_extension.dart';
 import 'package:sparkd/core/utils/logger.dart';
 import 'package:sparkd/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:sparkd/features/auth/presentation/bloc/phone/phone_bloc.dart';
 import 'package:sparkd/features/auth/presentation/bloc/sign_up/sign_up_bloc.dart';
 import 'package:sparkd/core/utils/snackbar_helper.dart';
-import 'package:sparkd/features/auth/presentation/screens/phone_input_screen.dart';
 import 'package:sparkd/features/auth/presentation/screens/sme/add_business_details_screen.dart';
 import 'package:sparkd/features/spark/presentation/screens/add_skills_screen.dart';
 
@@ -50,12 +47,7 @@ class _InputOtpScreenState extends State<InputOtpScreen> {
           onPressed: () {
             if (!_hasNavigated) {
               BlocProvider.of<PhoneBloc>(context).add(OtpSessionCancelled());
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const PhoneInputScreen(),
-                ),
-              );
+              Navigator.pop(context);
             }
           },
           icon: Icon(Icons.arrow_back_outlined),

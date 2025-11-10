@@ -2,14 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:sparkd/core/presentation/widgets/custom_button.dart';
 import 'package:sparkd/core/presentation/widgets/custom_text_field.dart';
-import 'package:sparkd/core/utils/app_colors.dart';
 import 'package:sparkd/core/utils/app_text_theme_extension.dart';
 import 'package:sparkd/core/utils/logger.dart';
 import 'package:sparkd/core/utils/snackbar_helper.dart';
 import 'package:sparkd/core/services/service_locator.dart' as di;
+import 'package:sparkd/features/auth/domain/repositories/sign_up_data_repository.dart';
+import 'package:sparkd/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:sparkd/features/auth/presentation/bloc/phone/phone_bloc.dart';
 import 'package:sparkd/features/auth/presentation/bloc/sign_up/sign_up_bloc.dart';
 import 'package:sparkd/features/auth/presentation/screens/input_otp_screen.dart';
+import 'package:sparkd/features/auth/presentation/screens/sign_up_screen.dart';
 
 class PhoneInputScreen extends StatefulWidget {
   const PhoneInputScreen({super.key});
@@ -25,10 +27,26 @@ class _PhoneInputScreenState extends State<PhoneInputScreen> {
   late final PhoneBloc _phoneBloc;
   bool _hasNavigated = false;
 
+  UserType? _userType;
+
   @override
   void initState() {
     super.initState();
     _phoneBloc = di.sl<PhoneBloc>();
+
+    final SignUpDataRepository signUpDataRepository =
+        _phoneBloc.signUpDataRepository;
+    final savedData = signUpDataRepository.getData();
+
+    // Get userType from saved data
+    _userType = savedData.userType;
+
+    // Pre-fill phone number from bloc state (which was initialized from repository)
+    _phoneNumberController.text = _phoneBloc.state.phoneNumber;
+
+    logger.i(
+      "PhoneInputScreen: Pre-filled phone number from repository: ${_phoneBloc.state.phoneNumber}",
+    );
   }
 
   @override
@@ -45,6 +63,10 @@ class _PhoneInputScreenState extends State<PhoneInputScreen> {
         ? 'assets/images/logo_light.png'
         : 'assets/images/logo_dark.png';
     final textStyle = Theme.of(context).textStyles;
+
+    // Ensure userType is safe before passing
+    final UserType safeUserType = _userType ?? UserType.spark;
+
     return BlocProvider.value(
       value: _phoneBloc,
       child: BlocListener<PhoneBloc, PhoneState>(
@@ -55,7 +77,7 @@ class _PhoneInputScreenState extends State<PhoneInputScreen> {
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (!mounted) return;
 
-              Navigator.pushReplacement(
+              Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder: (context) => BlocProvider.value(
@@ -78,6 +100,17 @@ class _PhoneInputScreenState extends State<PhoneInputScreen> {
         },
         child: Scaffold(
           appBar: AppBar(
+            leading: IconButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => SignUpScreen(userType: safeUserType),
+                  ),
+                );
+              },
+              icon: Icon(Icons.arrow_back_outlined),
+            ),
             title: Image.asset(
               logo,
               width: 105,
@@ -88,7 +121,7 @@ class _PhoneInputScreenState extends State<PhoneInputScreen> {
 
           body: SafeArea(
             child: Padding(
-              padding: const EdgeInsets.only(left: 20, right: 20, bottom: 20),
+              padding: const EdgeInsets.all(20),
               child: Form(
                 autovalidateMode: AutovalidateMode.onUserInteraction,
                 key: _formKey,
@@ -130,7 +163,9 @@ class _PhoneInputScreenState extends State<PhoneInputScreen> {
                               controller: _phoneNumberController,
                               focusNode: _phoneNumberNode,
                               textInputAction: TextInputAction.done,
-                              autoFocus: true,
+                              autoFocus: _phoneNumberController
+                                  .text
+                                  .isEmpty, // Only autofocus if field is empty
                               onFieldSubmitted: (value) {
                                 if (!_hasNavigated) {
                                   _submitPhone(context);

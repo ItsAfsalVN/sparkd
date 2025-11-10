@@ -12,13 +12,48 @@ class SignUpBloc extends Bloc<SignUpEvent, SignUpState> {
 
   SignUpBloc({required SignUpDataRepository signUpDataRepository})
     : _signUpDataRepository = signUpDataRepository,
-      super(const SignUpState()) {
+      super(_initialState(signUpDataRepository)) {
     on<SignUpFullNameChanged>(_onFullNameChanged);
     on<SignUpEmailChanged>(_onEmailChanged);
     on<SignUpPasswordChanged>(_onPasswordChanged);
     on<SignUpConfirmPasswordChanged>(_onConfirmPasswordChanged);
     on<SignUpSubmitted>(_onSubmitted);
     on<SignUpStatusReset>(_onStatusReset);
+  }
+
+  static SignUpState _initialState(SignUpDataRepository repository) {
+    final savedData = repository.getData();
+
+    final fullName = savedData.fullName ?? '';
+    final email = savedData.email ?? '';
+    final password = savedData.password ?? '';
+
+    final isFullNameValid = fullName.isNotEmpty;
+    final isEmailValid = email.isNotEmpty && email.contains('@');
+    final isPasswordValid = password.isNotEmpty && password.length >= 6;
+    final doPasswordsMatch =
+        password.isNotEmpty &&
+        password == password; 
+
+    FormStatus initialStatus = FormStatus.invalid;
+    if (isFullNameValid &&
+        isEmailValid &&
+        isPasswordValid &&
+        doPasswordsMatch) {
+      initialStatus = FormStatus.valid;
+    }
+
+    return SignUpState(
+      fullName: fullName,
+      email: email,
+      password: password,
+      confirmPassword: password, 
+      isFullNameValid: isFullNameValid,
+      isEmailValid: isEmailValid,
+      isPasswordValid: isPasswordValid,
+      doPasswordsMatch: doPasswordsMatch,
+      status: initialStatus,
+    );
   }
 
   void _onFullNameChanged(

@@ -1,18 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+// Core Widgets
 import 'package:sparkd/core/presentation/widgets/custom_button.dart';
 import 'package:sparkd/core/presentation/widgets/custom_text_field.dart';
 import 'package:sparkd/core/presentation/widgets/divider.dart';
 import 'package:sparkd/core/presentation/widgets/google_sign_in_button.dart';
+// Utilities
 import 'package:sparkd/core/utils/app_colors.dart';
 import 'package:sparkd/core/utils/app_text_theme_extension.dart';
 import 'package:sparkd/core/utils/logger.dart';
-import 'package:sparkd/features/auth/domain/repositories/sign_up_data_repository.dart';
+import 'package:sparkd/core/services/service_locator.dart' as di;
+// BLoCs and States
 import 'package:sparkd/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:sparkd/features/auth/presentation/bloc/sign_up/sign_up_bloc.dart';
+// Screens for Navigation
 import 'package:sparkd/features/auth/presentation/screens/login_screen.dart';
-import 'package:sparkd/core/services/service_locator.dart' as di;
 import 'package:sparkd/features/auth/presentation/screens/phone_input_screen.dart';
+import 'package:sparkd/features/auth/presentation/screens/role_selection_screen.dart';
 
 class SignUpScreen extends StatefulWidget {
   final UserType userType;
@@ -23,16 +27,54 @@ class SignUpScreen extends StatefulWidget {
 }
 
 class _SignUpScreenState extends State<SignUpScreen> {
+  // Focus Nodes
   final _fullNameFocusNode = FocusNode();
   final _emailFocusNode = FocusNode();
   final _passwordFocusNode = FocusNode();
   final _confirmPasswordFocusNode = FocusNode();
 
+  // Form Key & Controllers
   final _formKey = GlobalKey<FormState>();
   final _fullNameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+
+  // BLoC Instance created in initState
+  late final SignUpBloc _signUpBloc;
+
+  @override
+  void initState() {
+    super.initState();
+    _signUpBloc = SignUpBloc(signUpDataRepository: di.sl());
+
+    final savedData = _signUpBloc.state;
+
+    _fullNameController.text = savedData.fullName;
+    _emailController.text = savedData.email;
+    _passwordController.text = savedData.password;
+    _confirmPasswordController.text = savedData.password;
+
+    logger.i("SignUpScreen: Pre-filled form fields from repository.");
+
+    if (_fullNameController.text.isNotEmpty) {
+      _signUpBloc.add(SignUpFullNameChanged(_fullNameController.text));
+    }
+
+    if (_emailController.text.isNotEmpty) {
+      _signUpBloc.add(SignUpEmailChanged(_emailController.text));
+    }
+
+    if (_passwordController.text.isNotEmpty) {
+      _signUpBloc.add(SignUpPasswordChanged(_passwordController.text));
+    }
+
+    if (_confirmPasswordController.text.isNotEmpty) {
+      _signUpBloc.add(
+        SignUpConfirmPasswordChanged(_confirmPasswordController.text),
+      );
+    }
+  }
 
   @override
   void dispose() {
@@ -50,10 +92,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
   @override
   Widget build(BuildContext context) {
     final bool isLight = Theme.brightnessOf(context) == Brightness.light;
+    final textStyles = Theme.of(context).textStyles;
 
-    return BlocProvider(
-      create: (context) =>
-          SignUpBloc(signUpDataRepository: di.sl<SignUpDataRepository>()),
+    return BlocProvider.value(
+      value: _signUpBloc,
       child: Scaffold(
         body: SingleChildScrollView(
           child: SafeArea(
@@ -65,12 +107,18 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 child: Column(
                   spacing: 20,
                   children: [
+                    // --- Header Row ---
                     Row(
                       spacing: 2,
                       children: [
                         IconButton(
                           onPressed: () {
-                            Navigator.of(context).pop();
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => RoleSelectionScreen(),
+                              ),
+                            );
                           },
                           icon: Icon(
                             Icons.arrow_back_ios_new_rounded,
@@ -88,11 +136,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         ),
                       ],
                     ),
-                    Text(
-                      "Let's Get You Started",
-                      style: Theme.of(context).textStyles.heading1,
-                    ),
+                    Text("Let's Get You Started", style: textStyles.heading1),
 
+                    // --- Form Fields Builder ---
                     BlocBuilder<SignUpBloc, SignUpState>(
                       builder: (context, state) {
                         return Column(
@@ -108,17 +154,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               onFieldSubmitted: (value) => FocusScope.of(
                                 context,
                               ).requestFocus(_emailFocusNode),
-                              onChanged: (value) {
-                                context.read<SignUpBloc>().add(
-                                  SignUpFullNameChanged(value),
-                                );
-                              },
-                              validator: (_) {
-                                return !state.isFullNameValid &&
-                                        state.fullName.isNotEmpty
-                                    ? 'Name cannot be empty'
-                                    : null;
-                              },
+                              onChanged: (value) => context
+                                  .read<SignUpBloc>()
+                                  .add(SignUpFullNameChanged(value)),
+                              validator: (_) =>
+                                  !state.isFullNameValid &&
+                                      state.fullName.isNotEmpty
+                                  ? 'Name cannot be empty'
+                                  : null,
                             ),
                             CustomTextField(
                               hintText: 'Enter valid email',
@@ -130,17 +173,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               onFieldSubmitted: (value) => FocusScope.of(
                                 context,
                               ).requestFocus(_passwordFocusNode),
-                              onChanged: (value) {
-                                context.read<SignUpBloc>().add(
-                                  SignUpEmailChanged(value),
-                                );
-                              },
-                              validator: (_) {
-                                return !state.isEmailValid &&
-                                        state.email.isNotEmpty
-                                    ? 'Please enter a valid email'
-                                    : null;
-                              },
+                              onChanged: (value) => context
+                                  .read<SignUpBloc>()
+                                  .add(SignUpEmailChanged(value)),
+                              validator: (_) =>
+                                  !state.isEmailValid && state.email.isNotEmpty
+                                  ? 'Please enter a valid email'
+                                  : null,
                             ),
                             CustomTextField(
                               hintText: 'Enter the password',
@@ -152,17 +191,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               onFieldSubmitted: (value) => FocusScope.of(
                                 context,
                               ).requestFocus(_confirmPasswordFocusNode),
-                              onChanged: (value) {
-                                context.read<SignUpBloc>().add(
-                                  SignUpPasswordChanged(value),
-                                );
-                              },
-                              validator: (_) {
-                                return !state.isPasswordValid &&
-                                        state.password.isNotEmpty
-                                    ? 'Password must be at least 6 characters'
-                                    : null;
-                              },
+                              onChanged: (value) => context
+                                  .read<SignUpBloc>()
+                                  .add(SignUpPasswordChanged(value)),
+                              validator: (_) =>
+                                  !state.isPasswordValid &&
+                                      state.password.isNotEmpty
+                                  ? 'Password must be at least 6 characters'
+                                  : null,
                             ),
                             CustomTextField(
                               hintText: 'Confirm password',
@@ -172,45 +208,38 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               focusNode: _confirmPasswordFocusNode,
                               textInputAction: TextInputAction.done,
                               onFieldSubmitted: (_) => _submitForm(context),
-                              onChanged: (value) {
-                                context.read<SignUpBloc>().add(
-                                  SignUpConfirmPasswordChanged(value),
-                                );
-                              },
-                              validator: (_) {
-                                return !state.doPasswordsMatch &&
-                                        state.confirmPassword.isNotEmpty
-                                    ? 'Passwords do not match'
-                                    : null;
-                              },
+                              onChanged: (value) => context
+                                  .read<SignUpBloc>()
+                                  .add(SignUpConfirmPasswordChanged(value)),
+                              validator: (_) =>
+                                  !state.doPasswordsMatch &&
+                                      state.confirmPassword.isNotEmpty
+                                  ? 'Passwords do not match'
+                                  : null,
                             ),
                           ],
                         );
                       },
                     ),
+
+                    // --- Submission Button & Listener ---
                     BlocListener<SignUpBloc, SignUpState>(
                       listenWhen: (prev, curr) => prev.status != curr.status,
                       listener: (context, state) {
                         if (state.status == FormStatus.detailsSubmitted) {
+                          // 1. Notify AuthBloc (to save persistence step)
                           BlocProvider.of<AuthBloc>(
                             context,
                           ).add(AuthDetailsSubmitted());
-                          logger.i(
-                            "SignUpScreen: Heard DetailsSubmitted, notifying AuthBloc.",
-                          );
 
-                          logger.i(
-                            "SignUpScreen: Navigating to PhoneInputScreen...",
-                          );
+                          // 2. Navigate immediately to Phone Input
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => PhoneInputScreen(),
+                              builder: (context) => const PhoneInputScreen(),
                             ),
                           ).then((_) {
-                            logger.d(
-                              "SignUpScreen: Returned from PhoneInputScreen, resetting status.",
-                            );
+                            // 3. Reset state when user pops back from PhoneInputScreen
                             context.read<SignUpBloc>().add(SignUpStatusReset());
                           });
                         }
@@ -231,6 +260,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       ),
                     ),
 
+                    // --- Bottom Widgets (Divider, Google Sign-in, Login Link) ---
                     Column(
                       spacing: 6,
                       children: [
@@ -287,6 +317,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   void _submitForm(BuildContext context) {
     if (_formKey.currentState?.validate() ?? false) {
       FocusScope.of(context).unfocus();
+      // Pass the userType from the Widget instance to the BLoC event
       BlocProvider.of<SignUpBloc>(
         context,
       ).add(SignUpSubmitted(widget.userType));
