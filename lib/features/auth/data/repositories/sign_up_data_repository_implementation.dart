@@ -1,13 +1,9 @@
-// lib/features/auth/data/repositories/sign_up_data_repository_implementation.dart
-
 import 'dart:convert';
-// We ONLY need FlutterSecureStorage for persistence
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:sparkd/core/utils/logger.dart';
 import 'package:sparkd/features/auth/domain/entities/sign_up_data.dart';
 import 'package:sparkd/features/auth/domain/repositories/sign_up_data_repository.dart';
 
-// Key for the secure storage entry
 const String SIGN_UP_DATA_KEY = 'pendingSignUpData';
 
 class SignUpDataRepositoryImplementation implements SignUpDataRepository {

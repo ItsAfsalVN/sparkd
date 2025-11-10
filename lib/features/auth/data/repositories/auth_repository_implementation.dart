@@ -62,4 +62,38 @@ class AuthRepositoryImplementation implements AuthRepository {
   Future<void> clearSignUpStep() async {
     await localDataSource.clearSignUpStep();
   }
+
+  @override
+  Future<UserCredential> createUserWithEmailAndPassword({
+    required String email,
+    required String password,
+  }) async {
+    try {
+      return await remoteDataSource.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+    } catch (error) {
+      logger.e("AuthRepositoryImplementation Error creating user: $error");
+      rethrow; 
+    }
+  }
+
+  @override
+  Future<void> linkPhoneCredential({
+    required String verificationID,
+    required String smsCode,
+    required String phoneNumber,
+  }) async {
+    try {
+      await remoteDataSource.linkPhoneCredential(
+        verificationID: verificationID,
+        smsCode: smsCode,
+        phoneNumber: phoneNumber,
+      );
+    } catch (error) {
+      logger.e("AuthRepositoryImplementation Error linking phone: $error");
+      rethrow; 
+    }
+  }
 }

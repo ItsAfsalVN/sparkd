@@ -5,7 +5,9 @@ import 'package:sparkd/core/utils/logger.dart';
 import 'package:sparkd/features/auth/data/datasources/auth_local_data_source.dart';
 import 'package:sparkd/features/auth/domain/entities/sign_up_data.dart';
 import 'package:sparkd/features/auth/domain/repositories/sign_up_data_repository.dart';
+import 'package:sparkd/features/auth/domain/usecases/create_user_with_email_and_password.dart';
 import 'package:sparkd/features/auth/domain/usecases/get_is_first_run.dart';
+import 'package:sparkd/features/auth/domain/usecases/link_phone_credential.dart';
 import 'package:sparkd/features/auth/domain/usecases/set_onboarding_complete.dart';
 
 part 'auth_state.dart';
@@ -18,21 +20,28 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final AuthLocalDataSource _localDataSource;
   final SignUpDataRepository _signUpDataRepository;
 
+  final CreateUserWithEmailUseCase _createUserWithEmailUseCase;
+  final LinkPhoneCredentialUseCase _linkPhoneCredentialUseCase;
+
   AuthBloc({
     required GetIsFirstRun getIsFirstRun,
     required SetOnboardingComplete setOnboardingCompleted,
     required AuthLocalDataSource localDataSource,
     required SignUpDataRepository signUpDataRepository,
+    required CreateUserWithEmailUseCase createUserWithEmailUseCase,
+    required LinkPhoneCredentialUseCase linkPhoneCredentialUseCase
   }) : _getIsFirstRun = getIsFirstRun,
        _setOnboardingCompleted = setOnboardingCompleted,
        _localDataSource = localDataSource,
        _signUpDataRepository = signUpDataRepository,
+       _createUserWithEmailUseCase = createUserWithEmailUseCase,
+       _linkPhoneCredentialUseCase = linkPhoneCredentialUseCase,
        super(AuthInitial()) {
     on<AuthCheckStatusRequested>(_onAuthCheckStatusRequested);
     on<AuthOnboardingCompleted>(_onAuthOnboardingCompleted);
     on<AuthDetailsSubmitted>(_onAuthDetailsSubmitted);
     on<AuthPhoneNumberVerified>(_onAuthPhoneNumberVerified);
-    // on<AuthFinalizeSignUp>(_onAuthFinalizeSignUp);
+    on<AuthFinalizeSignUp>(_onAuthFinalizeSignUp);
   }
 
   Future<void> _onAuthCheckStatusRequested(
@@ -160,7 +169,73 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     }
   }
 
-  // Future<void> _onAuthFinalizeSignUp() async{
+  Future<void> _onAuthFinalizeSignUp(
+    AuthFinalizeSignUp event,
+    Emitter<AuthState> emit,
+  ) async {
 
-  // }
+    final signUpData = _signUpDataRepository.getData();
+    logger.i("AuthBloc: Starting final sign up for user: ${signUpData.email}");
+
+    if (signUpData.email == null ||
+        signUpData.password == null ||
+        signUpData.verificationID == null ||
+        signUpData.smsCode == null ||
+        signUpData.phoneNumber == null ||
+        signUpData.userType == null) {
+      logger.e("AuthBloc: Missing critical data for final sign up. Aborting.");
+
+      _signUpDataRepository.clearData();
+      await _localDataSource.clearSignUpStep();
+      emit(AuthUnauthenticated()); 
+      return;
+    }
+
+    emit(AuthInitial());
+
+    try {
+
+      final userCredential = await _createUserWithEmailUseCase(
+        email: signUpData.email!,
+        password: signUpData.password!,
+      );
+      final newUser = userCredential.user;
+      if (newUser == null){
+        throw Exception("Firebase user object is null after creation.");
+      }
+      logger.i(
+        "AuthBloc: Email/Pass user created successfully. UID: ${newUser.uid}",
+      );
+
+      await _linkPhoneCredentialUseCase(
+        verificationID: signUpData.verificationID!,
+        smsCode: signUpData.smsCode!,
+        phoneNumber: signUpData.phoneNumber!,
+      );
+      logger.i("AuthBloc: Phone number linked successfully.");
+
+      logger.w("TODO: Implement Database Profile Saving Here.");
+
+      await _localDataSource
+          .clearSignUpStep();
+      _signUpDataRepository
+          .clearData(); 
+
+      emit(AuthAuthenticated(signUpData.userType!));
+      logger.i("AuthBloc: Sign-up finalized. Emitting AuthAuthenticated.");
+    } catch (e, s) {
+      logger.e(
+        "AuthBloc: Fatal Error during Final Sign Up/Linking.",
+        error: e,
+        stackTrace: s,
+      );
+
+      await _localDataSource.clearSignUpStep();
+      _signUpDataRepository.clearData();
+
+      emit(
+        AuthUnauthenticated(),
+      ); 
+    }
+  }
 }

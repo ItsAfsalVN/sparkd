@@ -12,4 +12,13 @@ abstract class AuthRepository {
   Future<String?> getCurrentSignUpStep();
   Future<void> setCurrentSignUpStep(String step);
   Future<void> clearSignUpStep();
+  Future<UserCredential> createUserWithEmailAndPassword({
+    required String email,
+    required String password,
+  });
+  Future<void> linkPhoneCredential({
+    required String verificationID,
+    required String smsCode,
+    required String phoneNumber,
+  });
 }
