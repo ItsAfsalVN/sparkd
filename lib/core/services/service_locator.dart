@@ -1,9 +1,11 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sparkd/features/auth/domain/usecases/create_user_with_email_and_password.dart';
 import 'package:sparkd/features/auth/domain/usecases/link_phone_credential.dart';
+import 'package:sparkd/features/auth/domain/usecases/save_user_profile.dart';
 import 'package:sparkd/features/spark/data/datasources/static_skill_data_source.dart';
 import 'package:sparkd/features/spark/presentation/bloc/skills_bloc.dart';
 import 'package:sparkd/features/auth/data/datasources/auth_local_data_source.dart';
@@ -32,7 +34,8 @@ Future<void> init() async {
       localDataSource: sl(),
       signUpDataRepository: sl(),
       createUserWithEmailUseCase: sl(),
-      linkPhoneCredentialUseCase: sl()
+      linkPhoneCredentialUseCase: sl(),
+      saveUserProfileUseCase: sl(),
     ),
   );
 
@@ -53,8 +56,13 @@ Future<void> init() async {
   sl.registerLazySingleton(() => SetOnboardingComplete(sl()));
   sl.registerLazySingleton(() => RequestOtpUseCase(authRepository: sl()));
   sl.registerLazySingleton(() => VerifyOtpUseCase(sl()));
-  sl.registerLazySingleton(() => CreateUserWithEmailUseCase(authRepository: sl()));
-  sl.registerLazySingleton(() => LinkPhoneCredentialUseCase(authRepository: sl()));
+  sl.registerLazySingleton(
+    () => CreateUserWithEmailUseCase(authRepository: sl()),
+  );
+  sl.registerLazySingleton(
+    () => LinkPhoneCredentialUseCase(authRepository: sl()),
+  );
+  sl.registerLazySingleton(() => SaveUserProfileUseCase(authRepository: sl()));
 
   // Repositories
   sl.registerLazySingleton<AuthRepository>(
@@ -74,7 +82,10 @@ Future<void> init() async {
   );
 
   sl.registerLazySingleton<AuthRemoteDataSource>(
-    () => AuthRemoteDataSourceImplementation(firebaseAuth: sl()),
+    () => AuthRemoteDataSourceImplementation(
+      firebaseAuth: sl(),
+      firebaseFirestore: sl(),
+    ),
   );
 
   sl.registerLazySingleton(() => StaticSkillDataSource());
@@ -83,5 +94,6 @@ Future<void> init() async {
   final sharedPreferences = await SharedPreferences.getInstance();
   sl.registerLazySingleton(() => sharedPreferences);
   sl.registerLazySingleton(() => FirebaseAuth.instance);
+  sl.registerLazySingleton(() => FirebaseFirestore.instance);
   sl.registerLazySingleton(() => const FlutterSecureStorage());
 }

@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:sparkd/features/auth/domain/entities/user_profile.dart';
 
 abstract class AuthRepository {
   Future<bool> getIsFirstRun();
@@ -21,4 +22,6 @@ abstract class AuthRepository {
     required String smsCode,
     required String phoneNumber,
   });
+
+  Future<void> saveUserProfile({required UserProfile profile});
 }
