@@ -98,16 +98,14 @@ class AddSkillsScreen extends StatelessWidget {
           appBar: AppBar(
             leading: IconButton(
               onPressed: () {
-                WidgetsBinding.instance.addPersistentFrameCallback((_) {
-                  if (context.mounted) {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => PhoneInputScreen(),
-                      ),
-                    );
-                  }
-                });
+                // FIXED: Use pushReplacement to go back to PhoneInputScreen
+                // This maintains the signup flow and prevents black screen
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const PhoneInputScreen(),
+                  ),
+                );
               },
               icon: Icon(Icons.arrow_back_outlined),
             ),

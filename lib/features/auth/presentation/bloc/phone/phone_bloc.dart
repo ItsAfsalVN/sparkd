@@ -24,12 +24,39 @@ class PhoneBloc extends Bloc<PhoneEvent, PhoneState> {
   }) : _signUpDataRepository = signUpDataRepository,
        _requestOtpUseCase = requestOtpUseCase,
        _verifyOtpUseCase = verifyOtpUseCase,
-       super(const PhoneState()) {
+       super(_initialState(signUpDataRepository)) {
+    // CHANGED: Load initial state from repository
     on<PhoneNumberChanged>(_onPhoneNumberChanged);
     on<PhoneNumberSubmitted>(_onPhoneNumberSubmitted);
     on<OtpCodeChanged>(_onOtpCodeChanged);
     on<OtpSubmitted>(_onOtpSubmitted);
     on<OtpSessionCancelled>(_onOtpSessionCancelled);
+  }
+
+  // NEW: Static method to create initial state from repository
+  static PhoneState _initialState(SignUpDataRepository repository) {
+    final savedData = repository.getData();
+
+    // Handle nullable phone number with default empty string
+    final phoneNumber = savedData.phoneNumber ?? '';
+
+    // Validate the phone number
+    final isPhoneNumberValid =
+        phoneNumber.length == 10 && int.tryParse(phoneNumber) != null;
+
+    // Determine initial form status
+    final initialStatus = isPhoneNumberValid
+        ? FormStatus.valid
+        : FormStatus.invalid;
+
+    return PhoneState(
+      phoneNumber: phoneNumber,
+      isPhoneNumberValid: isPhoneNumberValid,
+      status: initialStatus,
+      smsCode: '',
+      verificationId: null,
+      errorMessage: null,
+    );
   }
 
   void _onPhoneNumberChanged(
@@ -190,13 +217,14 @@ class PhoneBloc extends Bloc<PhoneEvent, PhoneState> {
       }
     }
   }
+
   void _onOtpSessionCancelled(
     OtpSessionCancelled event,
     Emitter<PhoneState> emit,
   ) {
     emit(
       state.copyWith(
-        status: FormStatus.valid, 
+        status: FormStatus.valid,
         clearVerificationId: true,
         clearErrorMessage: true,
       ),
