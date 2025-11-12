@@ -185,7 +185,7 @@ class PhoneBloc extends Bloc<PhoneEvent, PhoneState> {
 
     try {
       // Call the VerifyOtpUseCase
-      UserCredential userCredential = await _verifyOtpUseCase(
+      await _verifyOtpUseCase(
         verificationId: state.verificationId!,
         smsCode: state.smsCode,
       );
@@ -197,11 +197,12 @@ class PhoneBloc extends Bloc<PhoneEvent, PhoneState> {
           smsCode: state.smsCode,
         ),
       );
+      
       logger.i("Phone bloc : Verification ID and smsCode stored to prefs");
 
       // OTP Verified Successfully!
       if (!isClosed) {
-        logger.i("PhoneBloc: OTP Verified. User: ${userCredential.user?.uid}");
+        logger.i("PhoneBloc: OTP Verified.");
         emit(state.copyWith(status: FormStatus.success));
       }
     } catch (e) {

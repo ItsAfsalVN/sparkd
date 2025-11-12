@@ -5,7 +5,7 @@ abstract class AuthRepository {
   Future<bool> getIsFirstRun();
   Future<void> setOnboardingCompleted();
   Future<String> requestOtp(String phoneNumber);
-  Future<UserCredential> verifyOtp({
+  Future<void> verifyOtp({
     required String verificationId,
     required String smsCode,
   });

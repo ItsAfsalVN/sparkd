@@ -26,8 +26,7 @@ final sl = GetIt.instance;
 Future<void> init() async {
   // --- Auth Feature ---
 
-  // BLoCs
-  sl.registerFactory(
+  sl.registerLazySingleton(
     () => AuthBloc(
       getIsFirstRun: sl(),
       setOnboardingCompleted: sl(),

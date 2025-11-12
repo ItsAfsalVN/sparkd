@@ -33,7 +33,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     required SignUpDataRepository signUpDataRepository,
     required CreateUserWithEmailUseCase createUserWithEmailUseCase,
     required LinkPhoneCredentialUseCase linkPhoneCredentialUseCase,
-    required SaveUserProfileUseCase saveUserProfileUseCase
+    required SaveUserProfileUseCase saveUserProfileUseCase,
   }) : _getIsFirstRun = getIsFirstRun,
        _setOnboardingCompleted = setOnboardingCompleted,
        _localDataSource = localDataSource,
@@ -178,7 +178,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     AuthFinalizeSignUp event,
     Emitter<AuthState> emit,
   ) async {
-
     final signUpData = _signUpDataRepository.getData();
     logger.i("AuthBloc: Starting final sign up for user: ${signUpData.email}");
 
@@ -192,20 +191,17 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
       _signUpDataRepository.clearData();
       await _localDataSource.clearSignUpStep();
-      emit(AuthUnauthenticated()); 
+      emit(AuthUnauthenticated());
       return;
     }
 
-    emit(AuthInitial());
-
     try {
-
       final userCredential = await _createUserWithEmailUseCase(
         email: signUpData.email!,
         password: signUpData.password!,
       );
       final newUser = userCredential.user;
-      if (newUser == null){
+      if (newUser == null) {
         throw Exception("Firebase user object is null after creation.");
       }
       logger.i(
@@ -219,15 +215,16 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       );
       logger.i("AuthBloc: Phone number linked successfully.");
 
-      final UserProfile userProfile = UserProfile.fromSignUpData(newUser.uid, signUpData);
+      final UserProfile userProfile = UserProfile.fromSignUpData(
+        newUser.uid,
+        signUpData,
+      );
 
       await _saveUserProfileUseCase(userProfile);
       logger.i("AuthBloc: User profile successfully persisted to Firestore.");
 
-      await _localDataSource
-          .clearSignUpStep();
-      _signUpDataRepository
-          .clearData(); 
+      await _localDataSource.clearSignUpStep();
+      _signUpDataRepository.clearData();
 
       emit(AuthAuthenticated(signUpData.userType!));
       logger.i("AuthBloc: Sign-up finalized. Emitting AuthAuthenticated.");
@@ -241,9 +238,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       await _localDataSource.clearSignUpStep();
       _signUpDataRepository.clearData();
 
-      emit(
-        AuthUnauthenticated(),
-      ); 
+      emit(AuthUnauthenticated());
     }
   }
 }

@@ -20,7 +20,7 @@ dependencies:
   smooth_page_indicator: ^1.2.1
   shared_preferences: ^2.5.3
   get_it: ^8.2.0
-  flutter_svg: ^2.2.1
+  flutter_svg: ^2.2.2
   firebase_core: ^4.2.0
   firebase_auth: ^6.1.1
   firebase_app_check: ^0.4.1+1
@@ -45,6 +45,7 @@ flutter:
   assets:
     - .env
     - assets/icons/
+    - assets/icons/spark/
     - assets/fonts/
     - assets/images/
     - assets/images/onboarding/
