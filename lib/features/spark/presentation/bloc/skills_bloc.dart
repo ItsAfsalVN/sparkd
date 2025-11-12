@@ -199,10 +199,19 @@ class SkillsBloc extends Bloc<SkillsEvent, SkillsState> {
       logger.i("SkillsBloc: Saved final skills to repository.");
 
       final AuthBloc authBloc = di.sl<AuthBloc>();
-      authBloc.add(const AuthFinalizeSignUp());
-      logger.i("SkillsBloc: Notified AuthBloc to finalize sign-up.");
+      logger.i("SkillsBloc: AuthBloc instance hashCode: ${authBloc.hashCode}");
+      logger.i(
+        "SkillsBloc: AuthBloc current state before event: ${authBloc.state.runtimeType}",
+      );
 
-      emit(state.copyWith(status: FormStatus.success));
+      authBloc.add(const AuthFinalizeSignUp());
+      logger.i("SkillsBloc: AuthFinalizeSignUp event added to AuthBloc.");
+
+      // Wait a moment and check state again
+      await Future.delayed(Duration(milliseconds: 100));
+      logger.i(
+        "SkillsBloc: AuthBloc state after event: ${authBloc.state.runtimeType}",
+      );
     } catch (e, s) {
       logger.e("SkillsBloc: Final submission failed.", error: e, stackTrace: s);
       emit(

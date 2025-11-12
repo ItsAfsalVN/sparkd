@@ -7,7 +7,7 @@ import 'package:sparkd/features/auth/domain/entities/user_profile.dart';
 
 abstract class AuthRemoteDataSource {
   Future<String> requestOtp(String phoneNumber);
-  Future<UserCredential> verifyOtp({
+  Future<void> verifyOtp({
     required String verificationId,
     required String smsCode,
   });
@@ -69,7 +69,7 @@ class AuthRemoteDataSourceImplementation extends AuthRemoteDataSource {
   }
 
   @override
-  Future<UserCredential> verifyOtp({
+  Future<void> verifyOtp({
     required String verificationId,
     required String smsCode,
   }) async {
@@ -79,13 +79,19 @@ class AuthRemoteDataSourceImplementation extends AuthRemoteDataSource {
         smsCode: smsCode,
       );
 
-      UserCredential userCredential = await firebaseAuth.signInWithCredential(
-        credential,
-      );
+      UserCredential tempUserCredential = await firebaseAuth
+          .signInWithCredential(credential);
+
       logger.i(
-        "OTP Verified Successfully! User UID: ${userCredential.user?.uid}",
+        "OTP Verified Successfully! Temp User UID: ${tempUserCredential.user?.uid}",
       );
-      return userCredential;
+
+      await tempUserCredential.user?.delete();
+      logger.i(
+        "AuthRemoteDataSource: Deleted temporary phone user after verification.",
+      );
+
+      await firebaseAuth.signOut();
     } on FirebaseAuthException catch (e) {
       logger.e(
         "OTP Verification Failed (FirebaseAuthException): ${e.code} - ${e.message}",
@@ -105,6 +111,9 @@ class AuthRemoteDataSourceImplementation extends AuthRemoteDataSource {
     try {
       final UserCredential userCredential = await firebaseAuth
           .createUserWithEmailAndPassword(email: email, password: password);
+      logger.i(
+        "Email/Password account created successfully! User UID: ${userCredential.user?.uid}",
+      );
       return userCredential;
     } on FirebaseAuthException catch (error) {
       throw Exception(
@@ -126,17 +135,26 @@ class AuthRemoteDataSourceImplementation extends AuthRemoteDataSource {
         verificationId: verificationID,
         smsCode: smsCode,
       );
+
       if (firebaseAuth.currentUser == null) {
         throw Exception(
           "Cannot link credential: No user is currently signed in.",
         );
       }
+
       await firebaseAuth.currentUser!.linkWithCredential(credential);
+      logger.i(
+        "Phone credential linked successfully to user: ${firebaseAuth.currentUser!.uid}",
+      );
     } on FirebaseAuthException catch (error) {
+      logger.e(
+        "Error linking phone credential: ${error.code} - ${error.message}",
+      );
       throw Exception(
         'Error linking phone credential: ${error.message ?? error.code}',
       );
     } catch (error) {
+      logger.e("Error linking phone credential: $error");
       throw Exception('Error linking phone credential with auth: $error');
     }
   }

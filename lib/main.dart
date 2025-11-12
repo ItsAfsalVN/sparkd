@@ -102,21 +102,18 @@ class _AppState extends State<App> {
     return FutureBuilder(
       future: _initFuture,
       builder: (context, snapshot) {
-        // While the future is running, show a loading screen.
-        // This gets UI on the screen immediately.
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const MaterialApp(
             debugShowCheckedModeBanner: false,
-            home: Scaffold(
-              body: Center(
-                // You can replace this with your official splash screen widget
+            home: Scaffold( 
+            
+               body: Center(
                 child: CircularProgressIndicator(),
               ),
             ),
           );
         }
 
-        // If the future completed with an error, show an error screen.
         if (snapshot.hasError) {
           return MaterialApp(
             debugShowCheckedModeBanner: false,
@@ -131,7 +128,6 @@ class _AppState extends State<App> {
           );
         }
 
-        // We put the BlocProvider here, *after* di.init() has run.
         return BlocProvider(
           create: (context) {
             return di.sl<AuthBloc>()..add(AuthCheckStatusRequested());
@@ -143,7 +139,6 @@ class _AppState extends State<App> {
   }
 }
 
-// This widget is only built *after* initialization is successful.
 class MainAppContent extends StatelessWidget {
   const MainAppContent({super.key});
 

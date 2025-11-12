@@ -34,19 +34,14 @@ class AuthRepositoryImplementation implements AuthRepository {
   }
 
   @override
-  Future<UserCredential> verifyOtp({
+  Future<void> verifyOtp({
     required String verificationId,
     required String smsCode,
   }) async {
-    try {
-      return await remoteDataSource.verifyOtp(
-        verificationId: verificationId,
-        smsCode: smsCode,
-      );
-    } catch (e) {
-      logger.e("AuthRepositoryImplementation Error verifying OTP: $e");
-      throw Exception('Failed to verify OTP: $e');
-    }
+    return await remoteDataSource.verifyOtp(
+      verificationId: verificationId,
+      smsCode: smsCode,
+    );
   }
 
   @override

@@ -9,6 +9,7 @@ import 'package:sparkd/features/auth/presentation/screens/phone_input_screen.dar
 import 'package:sparkd/core/utils/logger.dart';
 import 'package:sparkd/features/auth/presentation/screens/sme/add_business_details_screen.dart';
 import 'package:sparkd/features/spark/presentation/screens/add_skills_screen.dart';
+import 'package:sparkd/features/spark/presentation/screens/tabs/spark_dashboard_screen.dart';
 
 class DecisionScreen extends StatelessWidget {
   const DecisionScreen({super.key});
@@ -25,7 +26,10 @@ class DecisionScreen extends StatelessWidget {
           logger.i("Navigating based on role: ${state.userType}");
           switch (state.userType) {
             case UserType.spark:
-              // Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => SparkDashboard()));
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => SparkDashboardScreen()),
+              );
               break;
             case UserType.sme:
               // Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => SmeDashboard()));
