@@ -4,7 +4,6 @@ import 'package:sparkd/core/presentation/widgets/custom_button.dart';
 import 'package:sparkd/core/presentation/widgets/custom_text_field.dart';
 import 'package:sparkd/core/presentation/widgets/divider.dart';
 import 'package:sparkd/core/presentation/widgets/google_sign_in_button.dart';
-import 'package:sparkd/core/utils/app_colors.dart';
 import 'package:sparkd/core/utils/app_text_theme_extension.dart';
 import 'package:sparkd/core/utils/logger.dart';
 import 'package:sparkd/core/services/service_locator.dart' as di;
@@ -91,49 +90,38 @@ class _SignUpScreenState extends State<SignUpScreen> {
   Widget build(BuildContext context) {
     final bool isLight = Theme.brightnessOf(context) == Brightness.light;
     final textStyles = Theme.of(context).textStyles;
+    final String logo = isLight
+        ? 'assets/images/logo_light.png'
+        : 'assets/images/logo_dark.png';
 
     return BlocProvider.value(
       value: _signUpBloc,
       child: Scaffold(
+        appBar: AppBar(
+          surfaceTintColor: Colors.transparent,
+          scrolledUnderElevation: 0.0,
+          automaticallyImplyLeading: false,
+          leading: IconButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => RoleSelectionScreen()),
+              );
+            },
+            icon: Icon(Icons.arrow_back_rounded),
+          ),
+          title: Image.asset(logo, height: 35, width: 105, fit: BoxFit.contain),
+        ),
         body: SingleChildScrollView(
           child: SafeArea(
             child: Padding(
-              padding: const EdgeInsets.only(left: 20.0, right: 20, bottom: 20),
+              padding: const EdgeInsets.all(20.0),
               child: Form(
                 key: _formKey,
                 autovalidateMode: AutovalidateMode.onUserInteraction,
                 child: Column(
                   spacing: 20,
                   children: [
-                    // --- Header Row ---
-                    Row(
-                      spacing: 2,
-                      children: [
-                        IconButton(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => RoleSelectionScreen(),
-                              ),
-                            );
-                          },
-                          icon: Icon(
-                            Icons.arrow_back_rounded,
-                            size: 24,
-                            color: AppColors.black400,
-                          ),
-                        ),
-                        Image.asset(
-                          isLight
-                              ? 'assets/images/logo_light.png'
-                              : 'assets/images/logo_dark.png',
-                          width: 105,
-                          height: 35,
-                          fit: BoxFit.contain,
-                        ),
-                      ],
-                    ),
                     Text("Let's Get You Started", style: textStyles.heading1),
 
                     // --- Form Fields Builder ---
@@ -157,7 +145,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                   .add(SignUpFullNameChanged(value)),
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
-                                  return null; 
+                                  return null;
                                 }
                                 if (value.isNotEmpty && value.length < 2) {
                                   return 'Name cannot be empty';
@@ -252,15 +240,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           ).add(AuthDetailsSubmitted());
 
                           // 2. Navigate immediately to Phone Input
-                          Navigator.push(
+                          Navigator.pushReplacement(
                             context,
                             MaterialPageRoute(
                               builder: (context) => const PhoneInputScreen(),
                             ),
-                          ).then((_) {
-                            // 3. Reset state when user pops back from PhoneInputScreen
-                            context.read<SignUpBloc>().add(SignUpStatusReset());
-                          });
+                          );
                         }
                       },
                       child: BlocBuilder<SignUpBloc, SignUpState>(

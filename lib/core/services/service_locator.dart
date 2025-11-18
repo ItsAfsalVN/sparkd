@@ -18,8 +18,10 @@ import 'package:sparkd/features/auth/domain/usecases/get_is_first_run.dart';
 import 'package:sparkd/features/auth/domain/usecases/request_otp.dart';
 import 'package:sparkd/features/auth/domain/usecases/set_onboarding_complete.dart';
 import 'package:sparkd/features/auth/domain/usecases/verify_otp.dart';
+import 'package:sparkd/features/auth/domain/usecases/login_user.dart';
 import 'package:sparkd/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:sparkd/features/auth/presentation/bloc/phone/phone_bloc.dart';
+import 'package:sparkd/features/auth/presentation/bloc/sign_in/sign_in_bloc.dart';
 
 final sl = GetIt.instance;
 
@@ -35,7 +37,6 @@ Future<void> init() async {
       createUserWithEmailUseCase: sl(),
       linkPhoneCredentialUseCase: sl(),
       saveUserProfileUseCase: sl(),
-      
     ),
   );
 
@@ -46,6 +47,8 @@ Future<void> init() async {
       verifyOtpUseCase: sl(),
     ),
   );
+
+  sl.registerFactory(() => SignInBloc(loginUserUseCase: sl()));
 
   sl.registerFactory(
     () => SkillsBloc(signUpDataRepository: sl(), staticDataSource: sl()),
@@ -63,6 +66,7 @@ Future<void> init() async {
     () => LinkPhoneCredentialUseCase(authRepository: sl()),
   );
   sl.registerLazySingleton(() => SaveUserProfileUseCase(authRepository: sl()));
+  sl.registerLazySingleton(() => LoginUserUseCase(authRepository: sl()));
 
   // Repositories
   sl.registerLazySingleton<AuthRepository>(
