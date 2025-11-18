@@ -12,6 +12,9 @@ class GoogleSignInButton extends StatelessWidget {
     return ElevatedButton(
       onPressed: () {},
       style: ElevatedButton.styleFrom(
+        shadowColor: Theme.of(
+          context,
+        ).colorScheme.onSurface.withValues(alpha: .4),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
           side: BorderSide(

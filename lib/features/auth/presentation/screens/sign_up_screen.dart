@@ -119,7 +119,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             );
                           },
                           icon: Icon(
-                            Icons.arrow_back_ios_new_rounded,
+                            Icons.arrow_back_rounded,
                             size: 24,
                             color: AppColors.black400,
                           ),
@@ -157,7 +157,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                   .add(SignUpFullNameChanged(value)),
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
-                                  return null; // Don't show error for empty field
+                                  return null; 
                                 }
                                 if (value.isNotEmpty && value.length < 2) {
                                   return 'Name cannot be empty';
