@@ -30,7 +30,7 @@ class RoleSelectionScreen extends StatelessWidget {
                   children: [
                     // Spark Section
                     GestureDetector(
-                      onTap: () => Navigator.push(
+                      onTap: () => Navigator.pushReplacement(
                         context,
                         MaterialPageRoute(
                           builder: (context) =>
@@ -84,7 +84,7 @@ class RoleSelectionScreen extends StatelessWidget {
 
                     // SME Section
                     GestureDetector(
-                      onTap: () => Navigator.push(
+                      onTap: () => Navigator.pushReplacement(
                         context,
                         MaterialPageRoute(
                           builder: (context) =>
@@ -155,7 +155,7 @@ class RoleSelectionScreen extends StatelessWidget {
                       ),
                     ),
                     GestureDetector(
-                      onTap: () => Navigator.push(
+                      onTap: () => Navigator.pushReplacement(
                         context,
                         MaterialPageRoute(builder: (context) => LoginScreen()),
                       ),

@@ -4,11 +4,14 @@ class CustomButton extends StatelessWidget {
   final String title;
   final Color? color;
   final VoidCallback? onPressed;
+  final bool isLoading;
+
   const CustomButton({
     super.key,
     required this.onPressed,
     required this.title,
     this.color,
+    this.isLoading = false,
   });
 
   @override
@@ -20,14 +23,39 @@ class CustomButton extends StatelessWidget {
         foregroundColor: Theme.of(context).colorScheme.onPrimary,
         minimumSize: const Size(double.infinity, 50),
       ),
-      child: Text(
-        title,
-        style: TextStyle(
-          fontFamily: 'Urbanist',
-          fontSize: 18,
-          fontWeight: FontWeight.w900,
-        ),
-      ),
+      child: isLoading
+          ? Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      Theme.of(context).colorScheme.onPrimary,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontFamily: 'Urbanist',
+                    fontSize: 18,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ],
+            )
+          : Text(
+              title,
+              style: TextStyle(
+                fontFamily: 'Urbanist',
+                fontSize: 18,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
     );
   }
 }
