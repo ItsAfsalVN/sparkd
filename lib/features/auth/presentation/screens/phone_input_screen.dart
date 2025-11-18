@@ -9,9 +9,9 @@ import 'package:sparkd/core/services/service_locator.dart' as di;
 import 'package:sparkd/features/auth/domain/repositories/sign_up_data_repository.dart';
 import 'package:sparkd/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:sparkd/features/auth/presentation/bloc/phone/phone_bloc.dart';
-import 'package:sparkd/features/auth/presentation/bloc/sign_up/sign_up_bloc.dart';
 import 'package:sparkd/features/auth/presentation/screens/input_otp_screen.dart';
 import 'package:sparkd/features/auth/presentation/screens/sign_up_screen.dart';
+import 'package:sparkd/core/utils/form_statuses.dart';
 
 class PhoneInputScreen extends StatefulWidget {
   const PhoneInputScreen({super.key});
@@ -38,10 +38,8 @@ class _PhoneInputScreenState extends State<PhoneInputScreen> {
         _phoneBloc.signUpDataRepository;
     final savedData = signUpDataRepository.getData();
 
-    // Get userType from saved data
     _userType = savedData.userType;
 
-    // Pre-fill phone number from bloc state (which was initialized from repository)
     _phoneNumberController.text = _phoneBloc.state.phoneNumber;
 
     logger.i(

@@ -4,7 +4,7 @@ import 'package:sparkd/core/utils/logger.dart';
 import 'package:sparkd/features/auth/domain/repositories/sign_up_data_repository.dart';
 import 'package:sparkd/features/auth/domain/usecases/request_otp.dart';
 import 'package:sparkd/features/auth/domain/usecases/verify_otp.dart';
-import 'package:sparkd/features/auth/presentation/bloc/sign_up/sign_up_bloc.dart';
+import 'package:sparkd/core/utils/form_statuses.dart';
 
 part 'phone_event.dart';
 part 'phone_state.dart';

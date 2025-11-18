@@ -1,22 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-// Core Widgets
 import 'package:sparkd/core/presentation/widgets/custom_button.dart';
 import 'package:sparkd/core/presentation/widgets/custom_text_field.dart';
 import 'package:sparkd/core/presentation/widgets/divider.dart';
 import 'package:sparkd/core/presentation/widgets/google_sign_in_button.dart';
-// Utilities
 import 'package:sparkd/core/utils/app_colors.dart';
 import 'package:sparkd/core/utils/app_text_theme_extension.dart';
 import 'package:sparkd/core/utils/logger.dart';
 import 'package:sparkd/core/services/service_locator.dart' as di;
-// BLoCs and States
 import 'package:sparkd/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:sparkd/features/auth/presentation/bloc/sign_up/sign_up_bloc.dart';
-// Screens for Navigation
 import 'package:sparkd/features/auth/presentation/screens/login_screen.dart';
 import 'package:sparkd/features/auth/presentation/screens/phone_input_screen.dart';
 import 'package:sparkd/features/auth/presentation/screens/role_selection_screen.dart';
+import 'package:sparkd/core/utils/form_statuses.dart';
 
 class SignUpScreen extends StatefulWidget {
   final UserType userType;

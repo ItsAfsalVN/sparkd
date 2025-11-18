@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:sparkd/core/utils/logger.dart';
 import 'package:sparkd/features/auth/domain/repositories/sign_up_data_repository.dart';
 import 'package:sparkd/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:sparkd/core/utils/form_statuses.dart';
 
 part 'sign_up_event.dart';
 part 'sign_up_state.dart';
