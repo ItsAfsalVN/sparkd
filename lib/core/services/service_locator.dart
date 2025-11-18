@@ -35,6 +35,7 @@ Future<void> init() async {
       createUserWithEmailUseCase: sl(),
       linkPhoneCredentialUseCase: sl(),
       saveUserProfileUseCase: sl(),
+      
     ),
   );
 

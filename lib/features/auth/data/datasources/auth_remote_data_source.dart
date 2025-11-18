@@ -21,6 +21,10 @@ abstract class AuthRemoteDataSource {
     required String phoneNumber,
   });
   Future<void> saveUserProfile(UserProfile profile);
+  Future<UserCredential> loginUser({
+    required String email,
+    required String password,
+  });
 }
 
 class AuthRemoteDataSourceImplementation extends AuthRemoteDataSource {
@@ -172,4 +176,26 @@ class AuthRemoteDataSourceImplementation extends AuthRemoteDataSource {
       throw Exception('Database error: Failed to save profile.');
     }
   }
+  
+  @override
+  Future<UserCredential> loginUser({
+    required String email,
+    required String password,
+  }) async {
+    try {
+      final UserCredential userCredential = await firebaseAuth
+          .signInWithEmailAndPassword(email: email, password: password);
+      logger.i(
+        "User logged in successfully! User UID: ${userCredential.user?.uid}",
+      );
+      return userCredential;
+    } on FirebaseAuthException catch (error) {
+      throw Exception(
+        'Failed to login: ${error.message ?? error.code}',
+      );
+    } catch (error) {
+      throw Exception('Error logging in user: $error');
+    }
+  }
+  
 }

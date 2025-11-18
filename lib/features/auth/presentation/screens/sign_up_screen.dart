@@ -50,10 +50,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
     _fullNameController.text = savedData.fullName;
     _emailController.text = savedData.email;
     _passwordController.text = savedData.password;
-    _confirmPasswordController.text = savedData.password;
+    _confirmPasswordController.text = savedData.confirmPassword;
 
     logger.i("SignUpScreen: Pre-filled form fields from repository.");
 
+    // Trigger validation for all pre-filled fields
     if (_fullNameController.text.isNotEmpty) {
       _signUpBloc.add(SignUpFullNameChanged(_fullNameController.text));
     }
@@ -154,11 +155,15 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               onChanged: (value) => context
                                   .read<SignUpBloc>()
                                   .add(SignUpFullNameChanged(value)),
-                              validator: (_) =>
-                                  !state.isFullNameValid &&
-                                      state.fullName.isNotEmpty
-                                  ? 'Name cannot be empty'
-                                  : null,
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return null; // Don't show error for empty field
+                                }
+                                if (value.isNotEmpty && value.length < 2) {
+                                  return 'Name cannot be empty';
+                                }
+                                return null;
+                              },
                             ),
                             CustomTextField(
                               hintText: 'Enter valid email',
@@ -173,10 +178,18 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               onChanged: (value) => context
                                   .read<SignUpBloc>()
                                   .add(SignUpEmailChanged(value)),
-                              validator: (_) =>
-                                  !state.isEmailValid && state.email.isNotEmpty
-                                  ? 'Please enter a valid email'
-                                  : null,
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return null; // Don't show error for empty field
+                                }
+                                final emailRegex = RegExp(
+                                  r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
+                                );
+                                if (!emailRegex.hasMatch(value)) {
+                                  return 'Please enter a valid email';
+                                }
+                                return null;
+                              },
                             ),
                             CustomTextField(
                               hintText: 'Enter the password',
@@ -191,11 +204,15 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               onChanged: (value) => context
                                   .read<SignUpBloc>()
                                   .add(SignUpPasswordChanged(value)),
-                              validator: (_) =>
-                                  !state.isPasswordValid &&
-                                      state.password.isNotEmpty
-                                  ? 'Password must be at least 6 characters'
-                                  : null,
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return null; // Don't show error for empty field
+                                }
+                                if (value.length < 6) {
+                                  return 'Password must be at least 6 characters';
+                                }
+                                return null;
+                              },
                             ),
                             CustomTextField(
                               hintText: 'Confirm password',
@@ -208,11 +225,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               onChanged: (value) => context
                                   .read<SignUpBloc>()
                                   .add(SignUpConfirmPasswordChanged(value)),
-                              validator: (_) =>
-                                  !state.doPasswordsMatch &&
-                                      state.confirmPassword.isNotEmpty
-                                  ? 'Passwords do not match'
-                                  : null,
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return null; // Don't show error for empty field
+                                }
+                                final password = _passwordController.text;
+                                if (password.isNotEmpty && value != password) {
+                                  return 'Passwords do not match';
+                                }
+                                return null;
+                              },
                             ),
                           ],
                         );
