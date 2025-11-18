@@ -50,7 +50,7 @@ class _InputOtpScreenState extends State<InputOtpScreen> {
               Navigator.pop(context);
             }
           },
-          icon: Icon(Icons.arrow_back_outlined),
+          icon: Icon(Icons.arrow_back_rounded),
         ),
         title: Image.asset(logo, width: 105, height: 35, fit: BoxFit.contain),
       ),

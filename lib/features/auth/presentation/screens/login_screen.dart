@@ -20,6 +20,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _passwordController = TextEditingController();
   final _emailFocusNode = FocusNode();
   final _passwordFocusNode = FocusNode();
+
   @override
   Widget build(BuildContext context) {
     final bool isLightMode = Theme.of(context).brightness == Brightness.light;
@@ -28,6 +29,7 @@ class _LoginScreenState extends State<LoginScreen> {
         : 'assets/images/logo_dark.png';
     final textStyles = Theme.of(context).textStyles;
     final ColorScheme colorScheme = Theme.of(context).colorScheme;
+
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
@@ -39,108 +41,129 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
         title: Image.asset(logo, height: 35, width: 105, fit: BoxFit.contain),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text("Welcome\nBack!", style: textStyles.heading1),
-              Column(
-                spacing: 16,
-                children: [
-                  GoogleSignInButton(),
-                  LabeledDivider(label: 'Or'),
-                ],
-              ),
-              Column(
-                spacing: 16,
-                children: [
-                  CustomTextField(
-                    labelText: "Email",
-                    hintText: "Enter valid email",
-                    autoFocus: true,
-                    controller: _emailController,
-                    focusNode: _emailFocusNode,
-                    keyboardType: TextInputType.emailAddress,
-                    onFieldSubmitted: (value) => {
-                      _passwordFocusNode.requestFocus(),
-                    },
-                  ),
-                  CustomTextField(
-                    labelText: "Password",
-                    hintText: "Enter the password",
-                    obscureText: true,
-                    controller: _passwordController,
-                    focusNode: _passwordFocusNode,
-                    keyboardType: TextInputType.visiblePassword,
-                    onFieldSubmitted: (value) => {_passwordFocusNode.unfocus()},
-                  ),
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: InkWell(
-                      onTap: () => {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => ResetPasswordScreen(),
-                          ),
+      body: SafeArea(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text("Welcome\nBack!", style: textStyles.heading1),
+                        Column(
+                          spacing: 16,
+                          children: [
+                            GoogleSignInButton(),
+                            LabeledDivider(label: 'Or'),
+                            CustomTextField(
+                              labelText: "Email",
+                              hintText: "Enter valid email",
+                              autoFocus: true,
+                              controller: _emailController,
+                              focusNode: _emailFocusNode,
+                              keyboardType: TextInputType.emailAddress,
+                              onFieldSubmitted: (value) => {
+                                _passwordFocusNode.requestFocus(),
+                              },
+                            ),
+                            CustomTextField(
+                              labelText: "Password",
+                              hintText: "Enter the password",
+                              obscureText: true,
+                              controller: _passwordController,
+                              focusNode: _passwordFocusNode,
+                              keyboardType: TextInputType.visiblePassword,
+                              onFieldSubmitted: (value) => {
+                                _passwordFocusNode.unfocus(),
+                              },
+                            ),
+                            Align(
+                              alignment: Alignment.centerRight,
+                              child: InkWell(
+                                onTap: () => {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          ResetPasswordScreen(),
+                                    ),
+                                  ),
+                                },
+                                child: Text(
+                                  "Forgot Password?",
+                                  style: textStyles.subtext.copyWith(
+                                    fontWeight: FontWeight.w900,
+                                    color: colorScheme.onSurface.withValues(
+                                      alpha: .5,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                      },
-                      child: Text(
-                        "Forgot Password?",
-                        style: textStyles.subtext.copyWith(
-                          fontWeight: FontWeight.w900,
-                          color: colorScheme.onSurface.withValues(alpha: .5),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          spacing: 32,
+                          children: [
+                            CustomButton(onPressed: () {}, title: "Sign In"),
+                            SizedBox(
+                              width: double.infinity,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                spacing: 8,
+                                children: [
+                                  Text(
+                                    "Don't have an account?",
+                                    style: TextStyle(
+                                      fontFamily: 'Poppins',
+                                      fontSize: 14,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurface
+                                          .withValues(alpha: .8),
+                                    ),
+                                  ),
+                                  GestureDetector(
+                                    onTap: () {
+                                      Navigator.pushReplacement(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              RoleSelectionScreen(),
+                                        ),
+                                      );
+                                    },
+                                    child: Text(
+                                      'Sign up',
+                                      style: TextStyle(
+                                        fontFamily: 'Poppins',
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w700,
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.primary,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
+                      ],
                     ),
                   ),
-                ],
-              ),
-              CustomButton(onPressed: () {}, title: "Sign In"),
-              SizedBox(
-                width: double.infinity,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  spacing: 8,
-                  children: [
-                    Text(
-                      "Don't have an account?",
-                      style: TextStyle(
-                        fontFamily: 'Poppins',
-                        fontSize: 14,
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.onSurface.withValues(alpha: .8),
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => RoleSelectionScreen(),
-                          ),
-                        );
-                      },
-                      child: Text(
-                        'Sign up',
-                        style: TextStyle(
-                          fontFamily: 'Poppins',
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                      ),
-                    ),
-                  ],
                 ),
               ),
-            ],
-          ),
+            );
+          },
         ),
       ),
     );

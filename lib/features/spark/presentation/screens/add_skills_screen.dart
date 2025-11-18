@@ -124,7 +124,7 @@ class _AddSkillsScreenState extends State<AddSkillsScreen> {
                   ),
                 );
               },
-              icon: Icon(Icons.arrow_back_outlined),
+              icon: Icon(Icons.arrow_back_rounded),
             ),
             title: Image.asset(
               logo,
