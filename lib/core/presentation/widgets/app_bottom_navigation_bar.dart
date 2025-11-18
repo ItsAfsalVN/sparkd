@@ -38,11 +38,11 @@ class AppBottomNavigationBar extends StatelessWidget {
       selectedItemColor: activeColor,
       unselectedItemColor: inactiveColor,
       backgroundColor: colorScheme.surface,
-      selectedLabelStyle: textStyles?.subtext.copyWith(
+      selectedLabelStyle: textStyles.subtext.copyWith(
         fontWeight: FontWeight.bold,
         fontSize: 11,
       ),
-      unselectedLabelStyle: textStyles?.subtext.copyWith(
+      unselectedLabelStyle: textStyles.subtext.copyWith(
         fontWeight: FontWeight.normal,
         fontSize: 11,
       ),

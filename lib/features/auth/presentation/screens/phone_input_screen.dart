@@ -109,7 +109,7 @@ class _PhoneInputScreenState extends State<PhoneInputScreen> {
                   ),
                 );
               },
-              icon: Icon(Icons.arrow_back_outlined),
+              icon: Icon(Icons.arrow_back_rounded),
             ),
             title: Image.asset(
               logo,

@@ -5,7 +5,7 @@ import 'package:sparkd/core/utils/app_text_styles.dart';
 class AppTextThemeExtension extends ThemeExtension<AppTextThemeExtension> {
   final TextStyle heading1;
   final TextStyle heading2;
-  final TextStyle heading3; 
+  final TextStyle heading3;
   final TextStyle heading5;
   final TextStyle paragraph;
   final TextStyle subtext;
@@ -13,7 +13,7 @@ class AppTextThemeExtension extends ThemeExtension<AppTextThemeExtension> {
   const AppTextThemeExtension({
     required this.heading1,
     required this.heading2,
-    required this.heading3, 
+    required this.heading3,
     required this.heading5,
     required this.paragraph,
     required this.subtext,
@@ -23,15 +23,16 @@ class AppTextThemeExtension extends ThemeExtension<AppTextThemeExtension> {
   ThemeExtension<AppTextThemeExtension> copyWith({
     TextStyle? heading1,
     TextStyle? heading2,
-    TextStyle? heading3, 
+    TextStyle? heading3,
+    TextStyle? heading5,
     TextStyle? paragraph,
     TextStyle? subtext,
   }) {
     return AppTextThemeExtension(
       heading1: heading1 ?? this.heading1,
       heading2: heading2 ?? this.heading2,
-      heading3: heading3 ?? this.heading3, 
-      heading5:  heading5 ?? this.heading5,
+      heading3: heading3 ?? this.heading3,
+      heading5: heading5 ?? this.heading5,
       paragraph: paragraph ?? this.paragraph,
       subtext: subtext ?? this.subtext,
     );
@@ -48,7 +49,7 @@ class AppTextThemeExtension extends ThemeExtension<AppTextThemeExtension> {
     return AppTextThemeExtension(
       heading1: TextStyle.lerp(heading1, other.heading1, t)!,
       heading2: TextStyle.lerp(heading2, other.heading2, t)!,
-      heading3: TextStyle.lerp(heading3, other.heading3, t)!, 
+      heading3: TextStyle.lerp(heading3, other.heading3, t)!,
       heading5: TextStyle.lerp(heading5, other.heading5, t)!,
       paragraph: TextStyle.lerp(paragraph, other.paragraph, t)!,
       subtext: TextStyle.lerp(subtext, other.subtext, t)!,
