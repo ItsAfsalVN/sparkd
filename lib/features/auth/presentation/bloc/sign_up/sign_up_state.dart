@@ -1,8 +1,5 @@
 part of 'sign_up_bloc.dart';
 
-// You can use an enum to track the overall form status
-
-
 class SignUpState extends Equatable {
   final String fullName;
   final String email;

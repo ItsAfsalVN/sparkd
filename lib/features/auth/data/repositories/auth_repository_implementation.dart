@@ -104,4 +104,14 @@ class AuthRepositoryImplementation implements AuthRepository {
       rethrow;
     }
   }
+  
+  @override
+  Future<UserCredential> loginUser({required String email, required String password}) {
+    try {
+      return remoteDataSource.loginUser(email: email, password: password);
+    } catch (error) {
+      logger.e("AuthRepositoryImplementation Error logging in user: $error");
+      rethrow;
+    }
+  }
 }

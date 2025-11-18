@@ -28,13 +28,17 @@ class SignUpBloc extends Bloc<SignUpEvent, SignUpState> {
     final fullName = savedData.fullName ?? '';
     final email = savedData.email ?? '';
     final password = savedData.password ?? '';
+    final confirmPassword =
+        savedData.password ?? ''; // Use saved password for confirm password
 
     final isFullNameValid = fullName.isNotEmpty;
-    final isEmailValid = email.isNotEmpty && email.contains('@');
+    // More comprehensive email validation
+    final emailRegex = RegExp(
+      r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
+    );
+    final isEmailValid = email.isNotEmpty && emailRegex.hasMatch(email);
     final isPasswordValid = password.isNotEmpty && password.length >= 6;
-    final doPasswordsMatch =
-        password.isNotEmpty &&
-        password == password; 
+    final doPasswordsMatch = password == confirmPassword;
 
     FormStatus initialStatus = FormStatus.invalid;
     if (isFullNameValid &&
@@ -48,7 +52,7 @@ class SignUpBloc extends Bloc<SignUpEvent, SignUpState> {
       fullName: fullName,
       email: email,
       password: password,
-      confirmPassword: password, 
+      confirmPassword: confirmPassword,
       isFullNameValid: isFullNameValid,
       isEmailValid: isEmailValid,
       isPasswordValid: isPasswordValid,
@@ -63,37 +67,41 @@ class SignUpBloc extends Bloc<SignUpEvent, SignUpState> {
   ) {
     final fullName = event.value;
     final isValid = fullName.isNotEmpty;
-
+    final doPasswordsMatch = state.password == state.confirmPassword;
     emit(
       state.copyWith(
         fullName: fullName,
         isFullNameValid: isValid,
+        doPasswordsMatch: doPasswordsMatch,
         status: _validateForm(
           isFullNameValid: isValid,
           isEmailValid: state.isEmailValid,
           isPasswordValid: state.isPasswordValid,
-          doPasswordsMatch: state.doPasswordsMatch,
+          doPasswordsMatch: doPasswordsMatch,
         ),
       ),
     );
-
     final currentData = _signUpDataRepository.getData();
     _signUpDataRepository.updateData(currentData.copyWith(fullName: fullName));
   }
 
   void _onEmailChanged(SignUpEmailChanged event, Emitter<SignUpState> emit) {
     final email = event.value;
-    final isValid = email.isNotEmpty && email.contains('@');
-
+    final emailRegex = RegExp(
+      r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
+    );
+    final isValid = email.isNotEmpty && emailRegex.hasMatch(email);
+    final doPasswordsMatch = state.password == state.confirmPassword;
     emit(
       state.copyWith(
         email: email,
         isEmailValid: isValid,
+        doPasswordsMatch: doPasswordsMatch,
         status: _validateForm(
           isFullNameValid: state.isFullNameValid,
           isEmailValid: isValid,
           isPasswordValid: state.isPasswordValid,
-          doPasswordsMatch: state.doPasswordsMatch,
+          doPasswordsMatch: doPasswordsMatch,
         ),
       ),
     );
@@ -107,22 +115,20 @@ class SignUpBloc extends Bloc<SignUpEvent, SignUpState> {
   ) {
     final password = event.value;
     final isValid = password.isNotEmpty && password.length >= 6;
-    final doPasswordMatch = password == state.confirmPassword;
-
+    final doPasswordsMatch = password == state.confirmPassword;
     emit(
       state.copyWith(
         password: password,
         isPasswordValid: isValid,
-        doPasswordsMatch: doPasswordMatch,
+        doPasswordsMatch: doPasswordsMatch,
         status: _validateForm(
           isFullNameValid: state.isFullNameValid,
           isEmailValid: state.isEmailValid,
           isPasswordValid: isValid,
-          doPasswordsMatch: doPasswordMatch,
+          doPasswordsMatch: doPasswordsMatch,
         ),
       ),
     );
-
     final currentData = _signUpDataRepository.getData();
     _signUpDataRepository.updateData(currentData.copyWith(password: password));
   }
@@ -132,17 +138,16 @@ class SignUpBloc extends Bloc<SignUpEvent, SignUpState> {
     Emitter<SignUpState> emit,
   ) {
     final confirmPassword = event.value;
-    final doPasswordMatch = state.password == confirmPassword;
-
+    final doPasswordsMatch = state.password == confirmPassword;
     emit(
       state.copyWith(
         confirmPassword: confirmPassword,
-        doPasswordsMatch: doPasswordMatch,
+        doPasswordsMatch: doPasswordsMatch,
         status: _validateForm(
           isFullNameValid: state.isFullNameValid,
           isEmailValid: state.isEmailValid,
           isPasswordValid: state.isPasswordValid,
-          doPasswordsMatch: doPasswordMatch,
+          doPasswordsMatch: doPasswordsMatch,
         ),
       ),
     );
@@ -194,6 +199,7 @@ class SignUpBloc extends Bloc<SignUpEvent, SignUpState> {
     required bool isPasswordValid,
     required bool doPasswordsMatch,
   }) {
+    // Form is valid if all individual fields are valid and passwords match
     if (isFullNameValid &&
         isEmailValid &&
         isPasswordValid &&

@@ -24,4 +24,8 @@ abstract class AuthRepository {
   });
 
   Future<void> saveUserProfile({required UserProfile profile});
+  Future<UserCredential> loginUser({
+    required String email,
+    required String password,
+  });
 }
