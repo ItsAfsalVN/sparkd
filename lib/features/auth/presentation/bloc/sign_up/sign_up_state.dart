@@ -1,18 +1,7 @@
 part of 'sign_up_bloc.dart';
 
 // You can use an enum to track the overall form status
-enum FormStatus {
-  initial,
-  loading,
-  loaded,
-  invalid,
-  valid,
-  submitting,
-  otpSent,
-  failure,
-  success,
-  detailsSubmitted,
-}
+
 
 class SignUpState extends Equatable {
   final String fullName;
