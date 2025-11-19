@@ -56,9 +56,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   }
 
   void _onEmailChanged(String value) {
-    setState(() {
-      _emailTouched = true;
-    });
+    // Mark field as touched when user types
+    if (!_emailTouched) {
+      setState(() {
+        _emailTouched = true;
+      });
+    }
     _forgotPasswordBloc.add(ForgotPasswordEmailChanged(value));
   }
 
@@ -102,7 +105,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         listener: (context, state) {
           if (state.status == FormStatus.success) {
             // Navigate to confirmation screen
-            Navigator.pushReplacement(
+            Navigator.push(
               context,
               MaterialPageRoute(
                 builder: (context) =>
@@ -138,6 +141,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           body: SafeArea(
             child: Form(
               key: _formKey,
+              autovalidateMode: AutovalidateMode.onUserInteraction,
               child: Padding(
                 padding: EdgeInsets.all(20),
                 child: Column(
@@ -177,13 +181,13 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                               keyboardType: TextInputType.emailAddress,
                               onChanged: _onEmailChanged,
                               validator: (value) {
-                                // Only show validation errors if the user has interacted with this field
+                                // Show validation errors after user has interacted with the field
                                 if (!_emailTouched) return null;
 
-                                if (value == null || value.isEmpty) {
+                                if (value == null || value.trim().isEmpty) {
                                   return 'Email is required';
                                 }
-                                if (!value.contains('@')) {
+                                if (!value.trim().contains('@')) {
                                   return 'Please enter a valid email address';
                                 }
                                 return null;

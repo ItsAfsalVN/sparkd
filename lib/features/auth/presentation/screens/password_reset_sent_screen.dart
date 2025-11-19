@@ -34,28 +34,10 @@ class PasswordResetSentScreen extends StatelessWidget {
               // Content Section
               Expanded(
                 child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // Success Icon
-                    Container(
-                      width: 100,
-                      height: 100,
-                      decoration: BoxDecoration(
-                        color: colorScheme.primary.withValues(alpha: 0.1),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        Icons.mark_email_read_outlined,
-                        size: 60,
-                        color: colorScheme.primary,
-                      ),
-                    ),
-
-                    const SizedBox(height: 32),
-
-                    // Title
+                    SizedBox(height: 60),
                     Text(
-                      "Check Your Email",
+                      "Check Your Inbox!",
                       style: textStyles.heading2.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
@@ -68,62 +50,29 @@ class PasswordResetSentScreen extends StatelessWidget {
                     Text(
                       "We've sent a password reset link to:",
                       style: textStyles.subtext.copyWith(
-                        color: colorScheme.onSurface.withValues(alpha: 0.7),
+                        color: colorScheme.onSurface.withValues(alpha: 0.5),
                         fontSize: 16,
                       ),
                       textAlign: TextAlign.center,
                     ),
-
-                    const SizedBox(height: 8),
 
                     // Email
                     Text(
                       email,
                       style: textStyles.subtext.copyWith(
                         color: colorScheme.primary,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w900,
                         fontSize: 16,
                       ),
                       textAlign: TextAlign.center,
                     ),
 
-                    const SizedBox(height: 24),
-
-                    // Additional Instructions
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: colorScheme.surface,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: colorScheme.outline.withValues(alpha: 0.2),
-                        ),
+                    Text(
+                      "If you don't see it in a few minutes, please check your spam folder.",
+                      style: textStyles.subtext.copyWith(
+                        color: colorScheme.onSurface.withValues(alpha: 0.5),
                       ),
-                      child: Column(
-                        children: [
-                          Text(
-                            "Check your email and click on the password reset link to create a new password.",
-                            style: textStyles.subtext.copyWith(
-                              color: colorScheme.onSurface.withValues(
-                                alpha: 0.8,
-                              ),
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            "Can't find the email? Check your spam folder.",
-                            style: textStyles.subtext.copyWith(
-                              color: colorScheme.onSurface.withValues(
-                                alpha: 0.6,
-                              ),
-                              fontSize: 14,
-                              fontStyle: FontStyle.italic,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
-                      ),
+                      textAlign: TextAlign.center,
                     ),
                   ],
                 ),
@@ -131,7 +80,7 @@ class PasswordResetSentScreen extends StatelessWidget {
 
               // Actions Section
               Column(
-                spacing: 16,
+                spacing: 8,
                 children: [
                   CustomButton(
                     onPressed: () {
