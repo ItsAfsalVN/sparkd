@@ -222,25 +222,18 @@ class _AddSkillsScreenState extends State<AddSkillsScreen> {
                           state.selectedSkills.isNotEmpty &&
                           state.status != FormStatus.loading &&
                           state.status != FormStatus.submitting;
-
-                      if (state.status == FormStatus.submitting) {
-                        return const Center(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [CircularProgressIndicator()],
-                          ),
-                        );
-                      }
+                      final isLoading = state.status == FormStatus.submitting;
 
                       return CustomButton(
-                        onPressed: isValid
+                        onPressed: isValid && !isLoading
                             ? () {
                                 context.read<SkillsBloc>().add(
                                   SkillsSubmitted(),
                                 );
                               }
                             : null,
-                        title: "Complete Sign up",
+                        title: isLoading ? "Completing..." : "Complete Sign up",
+                        isLoading: isLoading,
                       );
                     },
                   ),

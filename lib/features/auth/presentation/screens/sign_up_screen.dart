@@ -23,7 +23,6 @@ class SignUpScreen extends StatefulWidget {
 }
 
 class _SignUpScreenState extends State<SignUpScreen> {
-  
   final _fullNameFocusNode = FocusNode();
   final _emailFocusNode = FocusNode();
   final _passwordFocusNode = FocusNode();
@@ -190,7 +189,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                   .add(SignUpPasswordChanged(value)),
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
-                                  return null; 
+                                  return null;
                                 }
                                 if (value.length < 6) {
                                   return 'Password must be at least 6 characters';
@@ -211,7 +210,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                   .add(SignUpConfirmPasswordChanged(value)),
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
-                                  return null; 
+                                  return null;
                                 }
                                 final password = _passwordController.text;
                                 if (password.isNotEmpty && value != password) {
@@ -244,14 +243,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       child: BlocBuilder<SignUpBloc, SignUpState>(
                         buildWhen: (prev, curr) => prev.status != curr.status,
                         builder: (context, state) {
-                          if (state.status == FormStatus.submitting) {
-                            return const CircularProgressIndicator();
-                          }
+                          final isLoading =
+                              state.status == FormStatus.submitting;
+
                           return CustomButton(
-                            onPressed: state.status == FormStatus.valid
+                            onPressed:
+                                state.status == FormStatus.valid && !isLoading
                                 ? () => _submitForm(context)
                                 : null,
-                            title: "Sign up",
+                            title: isLoading ? "Signing Up..." : "Sign up",
+                            isLoading: isLoading,
                           );
                         },
                       ),

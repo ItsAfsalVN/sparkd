@@ -208,16 +208,17 @@ class _PhoneInputScreenState extends State<PhoneInputScreen> {
                     BlocBuilder<PhoneBloc, PhoneState>(
                       buildWhen: (prev, curr) => prev.status != curr.status,
                       builder: (context, state) {
-                        if (state.status == FormStatus.submitting) {
-                          return const Center(
-                            child: CircularProgressIndicator(),
-                          );
-                        }
+                        final isLoading = state.status == FormStatus.submitting;
+
                         return CustomButton(
-                          onPressed: state.isPhoneNumberValid && !_hasNavigated
+                          onPressed:
+                              state.isPhoneNumberValid &&
+                                  !_hasNavigated &&
+                                  !isLoading
                               ? () => _submitPhone(context)
                               : null,
-                          title: 'Next',
+                          title: isLoading ? "Sending..." : "Next",
+                          isLoading: isLoading,
                         );
                       },
                     ),
