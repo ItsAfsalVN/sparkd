@@ -4,6 +4,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sparkd/features/auth/domain/usecases/create_user_with_email_and_password.dart';
+import 'package:sparkd/features/auth/domain/usecases/forgot_password.dart';
 import 'package:sparkd/features/auth/domain/usecases/link_phone_credential.dart';
 import 'package:sparkd/features/auth/domain/usecases/save_user_profile.dart';
 import 'package:sparkd/features/spark/data/datasources/static_skill_data_source.dart';
@@ -22,6 +23,7 @@ import 'package:sparkd/features/auth/domain/usecases/login_user.dart';
 import 'package:sparkd/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:sparkd/features/auth/presentation/bloc/phone/phone_bloc.dart';
 import 'package:sparkd/features/auth/presentation/bloc/sign_in/sign_in_bloc.dart';
+import 'package:sparkd/features/auth/presentation/bloc/forgot_password/forgot_password_bloc.dart';
 
 final sl = GetIt.instance;
 
@@ -50,6 +52,8 @@ Future<void> init() async {
 
   sl.registerFactory(() => SignInBloc(loginUserUseCase: sl()));
 
+  sl.registerFactory(() => ForgotPasswordBloc(forgotPasswordUseCase: sl()));
+
   sl.registerFactory(
     () => SkillsBloc(signUpDataRepository: sl(), staticDataSource: sl()),
   );
@@ -67,6 +71,7 @@ Future<void> init() async {
   );
   sl.registerLazySingleton(() => SaveUserProfileUseCase(authRepository: sl()));
   sl.registerLazySingleton(() => LoginUserUseCase(authRepository: sl()));
+  sl.registerLazySingleton(() => ForgotPasswordUseCase(authRepository: sl()));
 
   // Repositories
   sl.registerLazySingleton<AuthRepository>(

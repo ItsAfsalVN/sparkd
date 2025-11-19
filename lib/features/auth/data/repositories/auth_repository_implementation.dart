@@ -114,4 +114,16 @@ class AuthRepositoryImplementation implements AuthRepository {
       rethrow;
     }
   }
+  
+  @override
+  Future<void> forgotPassword({required String email}) {
+    try {
+      return remoteDataSource.forgotPassword(email: email);
+    } catch (error) {
+      logger.e("AuthRepositoryImplementation Error in forgot password: $error");
+      rethrow;
+    }
+  }
+  
+  
 }

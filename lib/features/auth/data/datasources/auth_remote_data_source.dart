@@ -25,6 +25,8 @@ abstract class AuthRemoteDataSource {
     required String email,
     required String password,
   });
+
+  Future<void> forgotPassword({required String email});
 }
 
 class AuthRemoteDataSourceImplementation extends AuthRemoteDataSource {
@@ -195,6 +197,19 @@ class AuthRemoteDataSourceImplementation extends AuthRemoteDataSource {
       );
     } catch (error) {
       throw Exception('Error logging in user: $error');
+    }
+  }
+  
+  @override
+  Future<void> forgotPassword({required String email}) {
+    try {
+      return firebaseAuth.sendPasswordResetEmail(email: email);
+    } on FirebaseAuthException catch (error) {
+      throw Exception(
+        'Failed to send password reset email: ${error.message ?? error.code}',
+      );
+    } catch (error) {
+      throw Exception('Error sending password reset email: $error');
     }
   }
   

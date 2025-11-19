@@ -7,9 +7,10 @@ import 'package:sparkd/core/presentation/widgets/google_sign_in_button.dart';
 import 'package:sparkd/core/utils/app_text_theme_extension.dart';
 import 'package:sparkd/core/utils/form_statuses.dart';
 import 'package:sparkd/core/utils/logger.dart';
+import 'package:sparkd/core/utils/snackbar_helper.dart';
 import 'package:sparkd/core/services/service_locator.dart' as di;
 import 'package:sparkd/features/auth/presentation/bloc/sign_in/sign_in_bloc.dart';
-import 'package:sparkd/features/auth/presentation/screens/reset_password_screen.dart';
+import 'package:sparkd/features/auth/presentation/screens/forgot_password_screen.dart';
 import 'package:sparkd/features/auth/presentation/screens/role_selection_screen.dart';
 import 'package:sparkd/features/spark/presentation/screens/tabs/spark_dashboard_screen.dart';
 
@@ -98,41 +99,25 @@ class _LoginScreenState extends State<LoginScreen> {
     final password = _passwordController.text.trim();
 
     if (email.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter your email'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      showSnackbar(context, 'Please enter your email', SnackBarType.error);
       return;
     }
 
     if (!email.contains('@')) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter a valid email'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      showSnackbar(context, 'Please enter a valid email', SnackBarType.error);
       return;
     }
 
     if (password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter your password'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      showSnackbar(context, 'Please enter your password', SnackBarType.error);
       return;
     }
 
     if (password.length < 6) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Password must be at least 6 characters'),
-          backgroundColor: Colors.red,
-        ),
+      showSnackbar(
+        context,
+        'Password must be at least 6 characters',
+        SnackBarType.error,
       );
       return;
     }
@@ -164,12 +149,7 @@ class _LoginScreenState extends State<LoginScreen> {
           } else if (state.status == FormStatus.failure &&
               state.errorMessage != null) {
             // Show error message
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.errorMessage!),
-                backgroundColor: Colors.red,
-              ),
-            );
+            showSnackbar(context, state.errorMessage!, SnackBarType.error);
             logger.e("LoginScreen: Login failed - ${state.errorMessage}");
           }
         },
@@ -267,10 +247,10 @@ class _LoginScreenState extends State<LoginScreen> {
                           alignment: Alignment.centerRight,
                           child: InkWell(
                             onTap: () => {
-                              Navigator.pushReplacement(
+                              Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => ResetPasswordScreen(),
+                                  builder: (context) => ForgotPasswordScreen(),
                                 ),
                               ),
                             },
