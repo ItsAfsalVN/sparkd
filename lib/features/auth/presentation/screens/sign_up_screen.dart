@@ -23,20 +23,18 @@ class SignUpScreen extends StatefulWidget {
 }
 
 class _SignUpScreenState extends State<SignUpScreen> {
-  // Focus Nodes
+  
   final _fullNameFocusNode = FocusNode();
   final _emailFocusNode = FocusNode();
   final _passwordFocusNode = FocusNode();
   final _confirmPasswordFocusNode = FocusNode();
 
-  // Form Key & Controllers
   final _formKey = GlobalKey<FormState>();
   final _fullNameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
 
-  // BLoC Instance created in initState
   late final SignUpBloc _signUpBloc;
 
   @override
@@ -53,7 +51,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
     logger.i("SignUpScreen: Pre-filled form fields from repository.");
 
-    // Trigger validation for all pre-filled fields
     if (_fullNameController.text.isNotEmpty) {
       _signUpBloc.add(SignUpFullNameChanged(_fullNameController.text));
     }
@@ -124,7 +121,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   children: [
                     Text("Let's Get You Started", style: textStyles.heading1),
 
-                    // --- Form Fields Builder ---
                     BlocBuilder<SignUpBloc, SignUpState>(
                       builder: (context, state) {
                         return Column(
@@ -168,7 +164,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                   .add(SignUpEmailChanged(value)),
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
-                                  return null; // Don't show error for empty field
+                                  return null;
                                 }
                                 final emailRegex = RegExp(
                                   r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
@@ -194,7 +190,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                   .add(SignUpPasswordChanged(value)),
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
-                                  return null; // Don't show error for empty field
+                                  return null; 
                                 }
                                 if (value.length < 6) {
                                   return 'Password must be at least 6 characters';
@@ -215,7 +211,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                   .add(SignUpConfirmPasswordChanged(value)),
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
-                                  return null; // Don't show error for empty field
+                                  return null; 
                                 }
                                 final password = _passwordController.text;
                                 if (password.isNotEmpty && value != password) {
@@ -229,17 +225,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       },
                     ),
 
-                    // --- Submission Button & Listener ---
                     BlocListener<SignUpBloc, SignUpState>(
                       listenWhen: (prev, curr) => prev.status != curr.status,
                       listener: (context, state) {
                         if (state.status == FormStatus.detailsSubmitted) {
-                          // 1. Notify AuthBloc (to save persistence step)
                           BlocProvider.of<AuthBloc>(
                             context,
                           ).add(AuthDetailsSubmitted());
 
-                          // 2. Navigate immediately to Phone Input
                           Navigator.pushReplacement(
                             context,
                             MaterialPageRoute(
@@ -264,7 +257,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       ),
                     ),
 
-                    // --- Bottom Widgets (Divider, Google Sign-in, Login Link) ---
                     Column(
                       spacing: 6,
                       children: [
@@ -321,7 +313,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
   void _submitForm(BuildContext context) {
     if (_formKey.currentState?.validate() ?? false) {
       FocusScope.of(context).unfocus();
-      // Pass the userType from the Widget instance to the BLoC event
       BlocProvider.of<SignUpBloc>(
         context,
       ).add(SignUpSubmitted(widget.userType));
