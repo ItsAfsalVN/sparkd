@@ -75,7 +75,7 @@ class _ImageUploadState extends State<ImageUpload> {
       }
     } catch (e) {
         if (mounted) {
-          showSnackbar(context, "Error picking image $e", SnackBarType.error)
+          showSnackbar(context, "Error picking image $e", SnackBarType.error);
       }
     } finally {
       if (mounted) {

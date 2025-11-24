@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:sparkd/core/presentation/widgets/custom_button.dart';
 import 'package:sparkd/core/presentation/widgets/ui_card.dart';
 import 'package:sparkd/core/utils/app_text_theme_extension.dart';
+import 'package:sparkd/features/spark/presentation/screens/edit_gig_screen.dart';
 
 class GigCard extends StatelessWidget {
   final String? title;
@@ -153,7 +154,11 @@ class GigCard extends StatelessWidget {
           ),
 
           CustomButton(
-            onPressed: () {},
+            onPressed: () {
+              Navigator.of(
+                context,
+              ).push(MaterialPageRoute(builder: (context) => EditGigScreen()));
+            },
             title: "Edit",
             borderRadius: BorderRadius.circular(12),
           ),
