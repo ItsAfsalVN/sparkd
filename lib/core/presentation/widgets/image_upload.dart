@@ -1,0 +1,314 @@
+import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:sparkd/core/utils/app_text_theme_extension.dart';
+import 'dart:io';
+
+class ImageUpload extends StatefulWidget {
+  final String? label;
+  final String hintText;
+  final String? imageUrl;
+  final Function(String?) onChanged;
+  final bool isRequired;
+  final double? aspectRatio;
+
+  const ImageUpload({
+    super.key,
+    this.label,
+    this.hintText = "Upload an image",
+    this.imageUrl,
+    required this.onChanged,
+    this.isRequired = false,
+    this.aspectRatio,
+  });
+
+  @override
+  State<ImageUpload> createState() => _ImageUploadState();
+}
+
+class _ImageUploadState extends State<ImageUpload> {
+  bool _isUploading = false;
+  final ImagePicker _picker = ImagePicker();
+
+  Future<void> _pickImage() async {
+    try {
+      setState(() {
+        _isUploading = true;
+      });
+
+      // Show source selection dialog
+      final ImageSource? source = await _showImageSourceDialog();
+      if (source == null) {
+        setState(() {
+          _isUploading = false;
+        });
+        return;
+      }
+
+      // Pick image from selected source
+      final XFile? image = await _picker.pickImage(
+        source: source,
+        maxWidth: 1920,
+        maxHeight: 1080,
+        imageQuality: 85,
+      );
+
+      if (image != null) {
+        // TODO: Upload to cloud storage (Firebase Storage, AWS S3, etc.)
+        // For now, using the local file path
+        final String imagePath = image.path;
+        widget.onChanged(imagePath);
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text("Image selected successfully!"),
+              behavior: SnackBarBehavior.floating,
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Error picking image: $e"),
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isUploading = false;
+        });
+      }
+    }
+  }
+
+  Future<ImageSource?> _showImageSourceDialog() async {
+    return showDialog<ImageSource>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Select Image Source'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.camera_alt),
+                title: const Text('Camera'),
+                onTap: () => Navigator.of(context).pop(ImageSource.camera),
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library),
+                title: const Text('Gallery'),
+                onTap: () => Navigator.of(context).pop(ImageSource.gallery),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _removeImage() {
+    widget.onChanged(null);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textStyles = Theme.of(context).textStyles;
+    final hasImage = widget.imageUrl != null && widget.imageUrl!.isNotEmpty;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      spacing: 8,
+      children: [
+        // Label
+        if (widget.label != null)
+          Row(
+            children: [
+              Text(widget.label!, style: textStyles.heading5),
+              if (widget.isRequired)
+                Text(
+                  " *",
+                  style: textStyles.heading5.copyWith(color: Colors.red),
+                ),
+            ],
+          ),
+
+        // Upload container
+        Container(
+          height: widget.aspectRatio != null ? null : 200,
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: colorScheme.surface,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: colorScheme.outline.withValues(alpha: 0.3),
+              width: 2,
+              strokeAlign: BorderSide.strokeAlignInside,
+            ),
+          ),
+          child: hasImage
+              ? _buildImagePreview(colorScheme)
+              : _buildUploadArea(colorScheme, textStyles),
+        ),
+
+        // Helper text
+        if (!hasImage)
+          Text(
+            "Supported formats: JPG, PNG, GIF (Max 5MB)",
+            style: textStyles.paragraph.copyWith(
+              fontSize: 12,
+              color: colorScheme.onSurface.withValues(alpha: 0.6),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildImagePreview(ColorScheme colorScheme) {
+    return Stack(
+      children: [
+        // Image preview
+        ClipRRect(
+          borderRadius: BorderRadius.circular(10),
+          child: Container(
+            width: double.infinity,
+            height: double.infinity,
+            decoration: BoxDecoration(
+              color: colorScheme.surfaceContainerHighest,
+            ),
+            child: _buildImageWidget(),
+          ),
+        ),
+
+        // Remove button
+        Positioned(
+          top: 8,
+          right: 8,
+          child: GestureDetector(
+            onTap: _removeImage,
+            child: Container(
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: Colors.red,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.3),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: const Icon(Icons.close, color: Colors.white, size: 16),
+            ),
+          ),
+        ),
+
+        // Replace button
+        Positioned(
+          bottom: 8,
+          right: 8,
+          child: GestureDetector(
+            onTap: _isUploading ? null : _pickImage,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: colorScheme.primary,
+                borderRadius: BorderRadius.circular(8),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.2),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Text(
+                "Replace",
+                style: TextStyle(
+                  color: colorScheme.onPrimary,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildUploadArea(
+    ColorScheme colorScheme,
+    AppTextThemeExtension textStyles,
+  ) {
+    return Material(
+      color: colorScheme.surface,
+      child: InkWell(
+        onTap: _isUploading ? null : _pickImage,
+        borderRadius: BorderRadius.circular(12),
+        child: SizedBox(
+          width: double.infinity,
+          height: double.infinity,
+          child: _isUploading
+              ? Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    CircularProgressIndicator(color: colorScheme.primary),
+                    const SizedBox(height: 12),
+                    Text(
+                      "Uploading...",
+                      style: textStyles.paragraph.copyWith(
+                        color: colorScheme.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                )
+              : Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.cloud_upload_outlined,
+                      size: 48,
+                      color: colorScheme.onSurface.withValues(alpha: 0.4),
+                    ),
+                  ],
+                ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildImageWidget() {
+    if (widget.imageUrl == null || widget.imageUrl!.isEmpty) {
+      return const Icon(Icons.image, size: 50, color: Colors.grey);
+    }
+
+    // Check if it's a URL or local file path
+    if (widget.imageUrl!.startsWith('http')) {
+      return Image.network(
+        widget.imageUrl!,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          return const Icon(Icons.broken_image, size: 50, color: Colors.grey);
+        },
+      );
+    } else {
+      return Image.file(
+        File(widget.imageUrl!),
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          return const Icon(Icons.broken_image, size: 50, color: Colors.grey);
+        },
+      );
+    }
+  }
+}

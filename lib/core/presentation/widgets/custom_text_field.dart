@@ -14,6 +14,7 @@ class CustomTextField extends StatefulWidget {
   final ValueChanged<String>? onFieldSubmitted;
   final TextInputAction? textInputAction;
   final ValueChanged<String>? onChanged;
+  final int? maxLines;
   final bool? autoFocus;
 
   const CustomTextField({
@@ -30,6 +31,7 @@ class CustomTextField extends StatefulWidget {
     this.textInputAction,
     this.onChanged,
     this.autoFocus,
+    this.maxLines,
   });
 
   @override
@@ -57,8 +59,9 @@ class _CustomTextFieldState extends State<CustomTextField> {
         Text(
           widget.labelText,
           style: textStyles.subtext.copyWith(
+            fontWeight: FontWeight.w900,
             fontSize: 14,
-            color: isLight ? AppColors.white400 : AppColors.black300,
+            color: colorScheme.onSurface.withValues(alpha: 0.5),
           ),
         ),
         TextFormField(
@@ -71,6 +74,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
           keyboardType: widget.keyboardType,
           validator: widget.validator,
           autofocus: widget.autoFocus ?? false,
+          maxLines: widget.maxLines,
           decoration: InputDecoration(
             prefixIcon: widget.prefixIcon,
             suffixIcon: widget.obscureText
