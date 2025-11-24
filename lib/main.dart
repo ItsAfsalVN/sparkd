@@ -105,12 +105,7 @@ class _AppState extends State<App> {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const MaterialApp(
             debugShowCheckedModeBanner: false,
-            home: Scaffold( 
-            
-               body: Center(
-                child: CircularProgressIndicator(),
-              ),
-            ),
+            home: Scaffold(body: Center(child: CircularProgressIndicator())),
           );
         }
 
@@ -201,7 +196,8 @@ class MainAppContent extends StatelessWidget {
           displayLarge: AppTextStyles.heading1,
           displayMedium: AppTextStyles.heading2,
           headlineMedium: AppTextStyles.heading3,
-          headlineSmall: AppTextStyles.heading5,
+          headlineSmall: AppTextStyles.heading4,
+          titleLarge: AppTextStyles.heading5,
           bodyLarge: AppTextStyles.paragraph,
           bodyMedium: AppTextStyles.subtext,
         ),

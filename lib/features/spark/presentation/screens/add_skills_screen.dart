@@ -112,7 +112,6 @@ class _AddSkillsScreenState extends State<AddSkillsScreen> {
           ),
         ],
         child: Scaffold(
-          // ... rest of your UI
           appBar: AppBar(
             automaticallyImplyLeading: false,
             leading: IconButton(

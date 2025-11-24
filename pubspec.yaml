@@ -29,6 +29,8 @@ dependencies:
   logger: ^2.6.2
   flutter_secure_storage: ^9.2.4
   cloud_firestore: ^6.1.0
+  image_picker: ^1.1.2
+  file_picker: ^8.1.2
 
 # Dev dependencies
 dev_dependencies:
@@ -49,6 +51,7 @@ flutter:
     - assets/fonts/
     - assets/images/
     - assets/images/onboarding/
+    - assets/images/spark/
 
   fonts:
     - family: Urbanist

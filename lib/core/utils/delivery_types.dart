@@ -1,0 +1,4 @@
+enum DeliveryTypes {
+  file,
+  serviceCompletion
+}

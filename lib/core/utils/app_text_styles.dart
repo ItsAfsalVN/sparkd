@@ -21,6 +21,12 @@ class AppTextStyles {
     fontSize: 24,
     fontStyle: FontStyle.normal,
   );
+  static const TextStyle heading4 = TextStyle(
+    fontFamily: 'Urbanist',
+    fontWeight: FontWeight.w900,
+    fontSize: 16,
+    fontStyle: FontStyle.normal,
+  );
   static const TextStyle heading5 = TextStyle(
     fontFamily: 'Urbanist',
     fontWeight: FontWeight.w900,

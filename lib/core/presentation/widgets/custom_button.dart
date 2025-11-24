@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 class CustomButton extends StatelessWidget {
   final String title;
   final Color? color;
+  final BorderRadius? borderRadius;
   final VoidCallback? onPressed;
   final bool isLoading;
 
@@ -12,6 +13,7 @@ class CustomButton extends StatelessWidget {
     required this.title,
     this.color,
     this.isLoading = false,
+    this.borderRadius,
   });
 
   @override
@@ -22,6 +24,9 @@ class CustomButton extends StatelessWidget {
         backgroundColor: Theme.of(context).colorScheme.primary,
         foregroundColor: Theme.of(context).colorScheme.onPrimary,
         minimumSize: const Size(double.infinity, 50),
+        shape: RoundedRectangleBorder(
+          borderRadius: borderRadius ?? BorderRadius.circular(100),
+        ),
       ),
       child: isLoading
           ? Row(
