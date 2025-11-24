@@ -165,22 +165,11 @@ class _VideoUploadState extends State<VideoUpload>
             ),
             child: TabBar(
               controller: _tabController,
-              indicator: BoxDecoration(
-                color: colorScheme.primary,
-                borderRadius: BorderRadius.circular(6),
-              ),
               indicatorSize: TabBarIndicatorSize.tab,
-              labelColor: colorScheme.onPrimary,
+              labelStyle: textStyles.paragraph.copyWith(fontSize: 14),
+              unselectedLabelStyle: textStyles.paragraph.copyWith(fontSize: 14),
               unselectedLabelColor: colorScheme.onSurface.withValues(
                 alpha: 0.6,
-              ),
-              labelStyle: textStyles.paragraph.copyWith(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-              ),
-              unselectedLabelStyle: textStyles.paragraph.copyWith(
-                fontSize: 14,
-                fontWeight: FontWeight.normal,
               ),
               tabs: const [
                 Tab(text: "Upload"),
@@ -231,8 +220,8 @@ class _VideoUploadState extends State<VideoUpload>
       return _buildVideoPreview(colorScheme, textStyles);
     }
 
-    return Material(
-      color: Colors.transparent,
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12),
       child: InkWell(
         onTap: _isUploading ? null : _pickVideo,
         borderRadius: BorderRadius.circular(12),
