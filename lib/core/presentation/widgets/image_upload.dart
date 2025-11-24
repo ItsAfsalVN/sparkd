@@ -53,7 +53,6 @@ class _ImageUploadState extends State<ImageUpload> {
       );
 
       if (image != null) {
-        // TODO: Upload to cloud storage (Firebase Storage, AWS S3, etc.)
         // For now, using the local file path
         final String imagePath = image.path;
         widget.onChanged(imagePath);
@@ -125,13 +124,19 @@ class _ImageUploadState extends State<ImageUpload> {
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      spacing: 8,
+      spacing: 4,
       children: [
         // Label
         if (widget.label != null)
           Row(
             children: [
-              Text(widget.label!, style: textStyles.heading5),
+              Text(
+                widget.label!,
+                style: textStyles.subtext.copyWith(
+                  color: colorScheme.onSurface.withValues(alpha: 0.5),
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
               if (widget.isRequired)
                 Text(
                   " *",
@@ -149,8 +154,6 @@ class _ImageUploadState extends State<ImageUpload> {
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: colorScheme.outline.withValues(alpha: 0.3),
-              width: 2,
-              strokeAlign: BorderSide.strokeAlignInside,
             ),
           ),
           child: hasImage
@@ -176,7 +179,7 @@ class _ImageUploadState extends State<ImageUpload> {
       children: [
         // Image preview
         ClipRRect(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(12),
           child: Container(
             width: double.infinity,
             height: double.infinity,
@@ -249,8 +252,8 @@ class _ImageUploadState extends State<ImageUpload> {
     ColorScheme colorScheme,
     AppTextThemeExtension textStyles,
   ) {
-    return Material(
-      color: colorScheme.surface,
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12),
       child: InkWell(
         onTap: _isUploading ? null : _pickImage,
         borderRadius: BorderRadius.circular(12),
@@ -292,7 +295,6 @@ class _ImageUploadState extends State<ImageUpload> {
       return const Icon(Icons.image, size: 50, color: Colors.grey);
     }
 
-    // Check if it's a URL or local file path
     if (widget.imageUrl!.startsWith('http')) {
       return Image.network(
         widget.imageUrl!,
