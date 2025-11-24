@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sparkd/core/utils/app_text_theme_extension.dart';
+import 'package:sparkd/core/utils/snackbar_helper.dart';
 
 class MandatoryRequirements extends StatefulWidget {
   final String? label;
@@ -69,23 +70,11 @@ class _MandatoryRequirementsState extends State<MandatoryRequirements> {
   }
 
   void _showMaxRequirementsSnackBar() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text("Maximum ${widget.maxRequirements} requirements allowed"),
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: Colors.orange,
-      ),
-    );
+    showSnackbar(context, "Maximum ${widget.maxRequirements} requirements allowed", SnackBarType.info);
   }
 
   void _showDuplicateSnackBar() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text("This requirement already exists"),
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: Colors.orange,
-      ),
-    );
+    showSnackbar(context, "This requirement already exists", SnackBarType.error);
   }
 
   @override

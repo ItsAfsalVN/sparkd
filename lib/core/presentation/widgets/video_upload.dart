@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:sparkd/core/utils/app_text_theme_extension.dart';
+import 'package:sparkd/core/services/service_locator.dart';
+import 'package:sparkd/core/services/storage_service.dart';
 import 'dart:io';
+
+import 'package:sparkd/core/utils/snackbar_helper.dart';
 
 class VideoUpload extends StatefulWidget {
   final String? label;
@@ -72,41 +76,30 @@ class _VideoUploadState extends State<VideoUpload>
 
         if (fileSize > maxSize) {
           if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text(
-                  "Video file is too large. Please select a file under 50MB.",
-                ),
-                behavior: SnackBarBehavior.floating,
-                backgroundColor: Colors.red,
-              ),
-            );
+            showSnackbar(context, "Video file is too large. Please select a file under 50MB.", SnackBarType.error);
           }
           return;
         }
 
-        widget.onChanged(videoPath);
-        _urlController.text = videoPath;
+        // Upload to Firebase Storage
+        final storageService = sl<StorageService>();
+        final fileName = '${DateTime.now().millisecondsSinceEpoch}.mp4';
+        final storagePath = 'gigs/videos/$fileName';
+
+        final downloadUrl = await storageService.uploadVideo(
+          videoFile,
+          storagePath,
+        );
+        widget.onChanged(downloadUrl);
+        _urlController.text = downloadUrl;
 
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text("Video selected successfully!"),
-              behavior: SnackBarBehavior.floating,
-              duration: Duration(seconds: 2),
-            ),
-          );
+          showSnackbar(context, "Video uploaded successfully!", SnackBarType.success);
         }
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("Error picking video: $e"),
-            behavior: SnackBarBehavior.floating,
-            backgroundColor: Colors.red,
-          ),
-        );
+        showSnackbar(context, "Error picking video: $e", SnackBarType.error);
       }
     } finally {
       if (mounted) {

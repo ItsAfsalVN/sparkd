@@ -6,14 +6,17 @@ import 'package:sparkd/core/utils/logger.dart';
 import 'package:sparkd/features/spark/domain/entities/gig_entity.dart';
 import 'package:sparkd/features/spark/domain/entities/skill_entity.dart';
 import 'package:sparkd/features/spark/domain/usecases/create_new_gig.dart';
+import 'package:sparkd/features/spark/domain/usecases/get_user_gigs.dart';
 
 part 'gig_event.dart';
 part 'gig_state.dart';
 
 class GigBloc extends Bloc<GigEvent, GigState> {
   final CreateNewGigUseCase createNewGigUseCase;
+  final GetUserGigsUseCase getUserGigsUseCase;
 
-  GigBloc({required this.createNewGigUseCase}) : super(const GigState()) {
+  GigBloc({required this.createNewGigUseCase, required this.getUserGigsUseCase})
+    : super(const GigState()) {
     on<GigTitleChanged>(_onTitleChanged);
     on<GigDescriptionChanged>(_onDescriptionChanged);
     on<GigCategoryChanged>(_onCategoryChanged);
@@ -30,6 +33,7 @@ class GigBloc extends Bloc<GigEvent, GigState> {
     on<GigDemoVideoChanged>(_onDemoVideoChanged);
     on<CreateGigSubmitted>(_onSubmitted);
     on<CreateGigStatusReset>(_onStatusReset);
+    on<LoadUserGigs>(_onLoadUserGigs);
   }
 
   // --- Text Handlers ---
@@ -167,5 +171,20 @@ class GigBloc extends Bloc<GigEvent, GigState> {
         demoVideo: null,
       ),
     );
+  }
+
+  Future<void> _onLoadUserGigs(
+    LoadUserGigs event,
+    Emitter<GigState> emit,
+  ) async {
+    emit(state.copyWith(status: FormStatus.loading));
+
+    try {
+      final gigs = await getUserGigsUseCase(event.userId);
+      emit(state.copyWith(userGigs: gigs, status: FormStatus.success));
+    } catch (error) {
+      logger.e('Error loading user gigs: $error');
+      emit(state.copyWith(status: FormStatus.failure));
+    }
   }
 }

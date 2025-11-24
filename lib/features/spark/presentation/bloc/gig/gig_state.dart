@@ -15,6 +15,7 @@ class GigState extends Equatable {
   final List<String> requirements;
   final DeliveryTypes? deliveryType;
   final List<String> postGigInstructions;
+  final List<GigEntity> userGigs;
   final FormStatus? status;
 
   const GigState({
@@ -32,6 +33,7 @@ class GigState extends Equatable {
     this.requirements = const [],
     this.deliveryType,
     this.postGigInstructions = const [],
+    this.userGigs = const [],
     this.status = FormStatus.initial,
   });
 
@@ -50,6 +52,7 @@ class GigState extends Equatable {
     List<String>? requirements,
     DeliveryTypes? deliveryType,
     List<String>? postGigInstructions,
+    List<GigEntity>? userGigs,
     FormStatus? status,
   }) {
     return GigState(
@@ -67,6 +70,7 @@ class GigState extends Equatable {
       requirements: requirements ?? this.requirements,
       deliveryType: deliveryType ?? this.deliveryType,
       postGigInstructions: postGigInstructions ?? this.postGigInstructions,
+      userGigs: userGigs ?? this.userGigs,
       status: status ?? this.status,
     );
   }
@@ -87,6 +91,7 @@ class GigState extends Equatable {
     requirements,
     deliveryType,
     postGigInstructions,
+    userGigs,
     status,
   ];
 }
