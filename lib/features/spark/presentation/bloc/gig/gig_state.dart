@@ -1,24 +1,25 @@
-part of 'create_new_gig_bloc.dart';
+part of 'gig_bloc.dart';
 
-class CreateNewGigState extends Equatable {
+class GigState extends Equatable {
   final String title;
-  final SkillEntity? category; 
+  final SkillEntity? category;
   final List<String> tags;
   final String description;
   final double price;
   final int deliveryTimeInDays;
   final int revisions;
   final List<String> deliverables;
-  final String? thumbnailImage; 
+  final String? thumbnailImage;
   final List<String> galleryImages;
+  final String? demoVideo;
   final List<String> requirements;
-  final DeliveryTypes? deliveryType; 
+  final DeliveryTypes? deliveryType;
   final List<String> postGigInstructions;
   final FormStatus? status;
 
-  const CreateNewGigState({
+  const GigState({
     this.title = '',
-    this.category, 
+    this.category,
     this.tags = const [],
     this.description = '',
     this.price = 0.0,
@@ -27,13 +28,14 @@ class CreateNewGigState extends Equatable {
     this.deliverables = const [],
     this.thumbnailImage,
     this.galleryImages = const [],
+    this.demoVideo,
     this.requirements = const [],
     this.deliveryType,
     this.postGigInstructions = const [],
-    this.status = FormStatus.initial
+    this.status = FormStatus.initial,
   });
 
-  CreateNewGigState copyWith({
+  GigState copyWith({
     String? title,
     SkillEntity? category,
     List<String>? tags,
@@ -44,12 +46,13 @@ class CreateNewGigState extends Equatable {
     List<String>? deliverables,
     String? thumbnailImage,
     List<String>? galleryImages,
+    String? demoVideo,
     List<String>? requirements,
     DeliveryTypes? deliveryType,
     List<String>? postGigInstructions,
     FormStatus? status,
   }) {
-    return CreateNewGigState(
+    return GigState(
       title: title ?? this.title,
       category: category ?? this.category,
       tags: tags ?? this.tags,
@@ -60,10 +63,11 @@ class CreateNewGigState extends Equatable {
       deliverables: deliverables ?? this.deliverables,
       thumbnailImage: thumbnailImage ?? this.thumbnailImage,
       galleryImages: galleryImages ?? this.galleryImages,
+      demoVideo: demoVideo ?? this.demoVideo,
       requirements: requirements ?? this.requirements,
       deliveryType: deliveryType ?? this.deliveryType,
       postGigInstructions: postGigInstructions ?? this.postGigInstructions,
-      status: status ?? this.status
+      status: status ?? this.status,
     );
   }
 
@@ -79,9 +83,10 @@ class CreateNewGigState extends Equatable {
     deliverables,
     thumbnailImage,
     galleryImages,
+    demoVideo,
     requirements,
     deliveryType,
     postGigInstructions,
-    status
+    status,
   ];
 }

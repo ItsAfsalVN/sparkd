@@ -8,6 +8,11 @@ import 'package:sparkd/features/auth/domain/usecases/forgot_password.dart';
 import 'package:sparkd/features/auth/domain/usecases/link_phone_credential.dart';
 import 'package:sparkd/features/auth/domain/usecases/save_user_profile.dart';
 import 'package:sparkd/features/spark/data/datasources/static_skill_data_source.dart';
+import 'package:sparkd/features/spark/data/datasources/gig_remote_data_source.dart';
+import 'package:sparkd/features/spark/data/repositories/gig_repository_impl.dart';
+import 'package:sparkd/features/spark/domain/repositories/gig_repository.dart';
+import 'package:sparkd/features/spark/domain/usecases/create_new_gig.dart';
+import 'package:sparkd/features/spark/presentation/bloc/gig/gig_bloc.dart';
 import 'package:sparkd/features/spark/presentation/bloc/skills_bloc.dart';
 import 'package:sparkd/features/auth/data/datasources/auth_local_data_source.dart';
 import 'package:sparkd/features/auth/data/datasources/auth_remote_data_source.dart';
@@ -98,6 +103,19 @@ Future<void> init() async {
   );
 
   sl.registerLazySingleton(() => StaticSkillDataSource());
+
+  // --- Gig Feature ---
+  sl.registerFactory(() => GigBloc(createNewGigUseCase: sl()));
+
+  sl.registerLazySingleton(() => CreateNewGigUseCase(repository: sl()));
+
+  sl.registerLazySingleton<GigRepository>(
+    () => GigRepositoryImpl(remoteDataSource: sl()),
+  );
+
+  sl.registerLazySingleton<GigRemoteDataSource>(
+    () => GigRemoteDataSourceImpl(firestore: sl(), auth: sl()),
+  );
 
   // --- External ---
   final sharedPreferences = await SharedPreferences.getInstance();
