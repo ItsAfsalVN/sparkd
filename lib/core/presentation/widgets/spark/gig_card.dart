@@ -5,7 +5,20 @@ import 'package:sparkd/core/presentation/widgets/ui_card.dart';
 import 'package:sparkd/core/utils/app_text_theme_extension.dart';
 
 class GigCard extends StatelessWidget {
-  const GigCard({super.key});
+  final String? title;
+  final String? description;
+  final double? price;
+  final String? thumbnailImage;
+  final String? category;
+
+  const GigCard({
+    super.key,
+    this.title,
+    this.description,
+    this.price,
+    this.thumbnailImage,
+    this.category,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -16,26 +29,33 @@ class GigCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
-        spacing: 8, 
+        spacing: 8,
         children: [
           // Image Section
           ClipRRect(
             borderRadius: BorderRadius.circular(12),
             child: SizedBox(
               width: double.infinity,
-              child: Image.asset(
-                'assets/images/spark/placeholder.png',
-                fit: BoxFit.cover,
-                height: 160,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    height: 160,
-                    width: double.infinity,
-                    color: Colors.grey[300],
-                    child: const Icon(Icons.image, color: Colors.grey),
-                  );
-                },
-              ),
+              child: thumbnailImage != null
+                  ? Image.network(
+                      thumbnailImage!,
+                      fit: BoxFit.cover,
+                      height: 160,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          height: 160,
+                          width: double.infinity,
+                          color: Colors.grey[300],
+                          child: const Icon(Icons.image, color: Colors.grey),
+                        );
+                      },
+                    )
+                  : Container(
+                      height: 160,
+                      width: double.infinity,
+                      color: Colors.grey[300],
+                      child: const Icon(Icons.image, color: Colors.grey),
+                    ),
             ),
           ),
 
@@ -46,7 +66,7 @@ class GigCard extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  "Instagram Reels Video Editing (3-Pack)",
+                  title ?? "Untitled Gig",
                   style: textStyles.heading4,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
@@ -100,7 +120,7 @@ class GigCard extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        "3,000",
+                        "${price?.toStringAsFixed(0)}",
                         style: textStyles.heading2.copyWith(
                           color: colorScheme.onSurface.withValues(alpha: .8),
                           height: 1,

@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:sparkd/core/utils/app_text_theme_extension.dart';
+import 'package:sparkd/core/services/service_locator.dart';
+import 'package:sparkd/core/services/storage_service.dart';
 import 'dart:io';
+
+import 'package:sparkd/core/utils/snackbar_helper.dart';
 
 class ImageUpload extends StatefulWidget {
   final String? label;
@@ -53,29 +57,25 @@ class _ImageUploadState extends State<ImageUpload> {
       );
 
       if (image != null) {
-        // For now, using the local file path
-        final String imagePath = image.path;
-        widget.onChanged(imagePath);
+        // Upload to Firebase Storage
+        final storageService = sl<StorageService>();
+        final imageFile = File(image.path);
+        final fileName = '${DateTime.now().millisecondsSinceEpoch}.jpg';
+        final storagePath = 'gigs/images/$fileName';
+
+        final downloadUrl = await storageService.uploadImage(
+          imageFile,
+          storagePath,
+        );
+        widget.onChanged(downloadUrl);
 
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text("Image selected successfully!"),
-              behavior: SnackBarBehavior.floating,
-              duration: Duration(seconds: 2),
-            ),
-          );
+          showSnackbar(context, "Image uploaded successfully!", SnackBarType.success);
         }
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("Error picking image: $e"),
-            behavior: SnackBarBehavior.floating,
-            backgroundColor: Colors.red,
-          ),
-        );
+        if (mounted) {
+          showSnackbar(context, "Error picking image $e", SnackBarType.error)
       }
     } finally {
       if (mounted) {

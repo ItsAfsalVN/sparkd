@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sparkd/core/services/storage_service.dart';
 import 'package:sparkd/features/auth/domain/usecases/create_user_with_email_and_password.dart';
 import 'package:sparkd/features/auth/domain/usecases/forgot_password.dart';
 import 'package:sparkd/features/auth/domain/usecases/link_phone_credential.dart';
@@ -12,6 +13,7 @@ import 'package:sparkd/features/spark/data/datasources/gig_remote_data_source.da
 import 'package:sparkd/features/spark/data/repositories/gig_repository_impl.dart';
 import 'package:sparkd/features/spark/domain/repositories/gig_repository.dart';
 import 'package:sparkd/features/spark/domain/usecases/create_new_gig.dart';
+import 'package:sparkd/features/spark/domain/usecases/get_user_gigs.dart';
 import 'package:sparkd/features/spark/presentation/bloc/gig/gig_bloc.dart';
 import 'package:sparkd/features/spark/presentation/bloc/skills_bloc.dart';
 import 'package:sparkd/features/auth/data/datasources/auth_local_data_source.dart';
@@ -105,9 +107,13 @@ Future<void> init() async {
   sl.registerLazySingleton(() => StaticSkillDataSource());
 
   // --- Gig Feature ---
-  sl.registerFactory(() => GigBloc(createNewGigUseCase: sl()));
+  sl.registerFactory(
+    () => GigBloc(createNewGigUseCase: sl(), getUserGigsUseCase: sl()),
+  );
 
   sl.registerLazySingleton(() => CreateNewGigUseCase(repository: sl()));
+
+  sl.registerLazySingleton(() => GetUserGigsUseCase(repository: sl()));
 
   sl.registerLazySingleton<GigRepository>(
     () => GigRepositoryImpl(remoteDataSource: sl()),
@@ -123,4 +129,7 @@ Future<void> init() async {
   sl.registerLazySingleton(() => FirebaseAuth.instance);
   sl.registerLazySingleton(() => FirebaseFirestore.instance);
   sl.registerLazySingleton(() => const FlutterSecureStorage());
+
+  // --- Core Services ---
+  sl.registerLazySingleton<StorageService>(() => FirebaseStorageService());
 }

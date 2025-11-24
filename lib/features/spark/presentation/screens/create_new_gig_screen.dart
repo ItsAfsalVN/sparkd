@@ -16,6 +16,7 @@ import 'package:sparkd/core/utils/app_text_theme_extension.dart';
 import 'package:sparkd/core/utils/delivery_types.dart';
 import 'package:sparkd/core/utils/form_statuses.dart';
 import 'package:sparkd/core/utils/logger.dart';
+import 'package:sparkd/core/utils/snackbar_helper.dart';
 import 'package:sparkd/features/spark/data/datasources/static_skill_data_source.dart';
 import 'package:sparkd/features/spark/domain/entities/skill_entity.dart';
 import 'package:sparkd/features/spark/presentation/bloc/gig/gig_bloc.dart';
@@ -80,19 +81,17 @@ class _CreateNewGigScreenState extends State<CreateNewGigScreen> {
     return BlocListener<GigBloc, GigState>(
       listener: (context, state) {
         if (state.status == FormStatus.success) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Gig created successfully!'),
-              backgroundColor: Colors.green,
-            ),
+          showSnackbar(
+            context,
+            "Gig created successfully!",
+            SnackBarType.success,
           );
-          Navigator.of(context).pop();
+          Navigator.of(context).pop(true); // Return true to indicate success
         } else if (state.status == FormStatus.failure) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Failed to create gig. Please try again.'),
-              backgroundColor: Colors.red,
-            ),
+          showSnackbar(
+            context,
+            "Failed to create gig. Please try again.",
+            SnackBarType.error,
           );
         }
       },

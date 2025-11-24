@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:sparkd/core/utils/app_text_theme_extension.dart';
+import 'package:sparkd/core/services/service_locator.dart';
+import 'package:sparkd/core/services/storage_service.dart';
 import 'dart:io';
+
+import 'package:sparkd/core/utils/snackbar_helper.dart';
 
 class MultiImageUpload extends StatefulWidget {
   final String? label;
@@ -65,34 +69,31 @@ class _MultiImageUploadState extends State<MultiImageUpload> {
       );
 
       if (image != null) {
-        // For now, using the local file path
-        final String imagePath = image.path;
+        // Upload to Firebase Storage
+        final storageService = sl<StorageService>();
+        final imageFile = File(image.path);
+        final fileName = '${DateTime.now().millisecondsSinceEpoch}.jpg';
+        final storagePath = 'gigs/portfolio/$fileName';
+
+        final downloadUrl = await storageService.uploadImage(
+          imageFile,
+          storagePath,
+        );
 
         setState(() {
-          _images.add(imagePath);
+          _images.add(downloadUrl);
         });
 
         widget.onChanged(_images);
 
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text("Image added successfully!"),
-              behavior: SnackBarBehavior.floating,
-              duration: Duration(seconds: 2),
-            ),
-          );
+          
+          showSnackbar(context, "Image uploaded successfully!", SnackBarType.success);
         }
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("Error picking image: $e"),
-            behavior: SnackBarBehavior.floating,
-            backgroundColor: Colors.red,
-          ),
-        );
+      if (mounted) {        
+        showSnackbar(context, "Error picking image: $e", SnackBarType.error);
       }
     } finally {
       if (mounted) {
@@ -138,15 +139,7 @@ class _MultiImageUploadState extends State<MultiImageUpload> {
 
   void _showMaxImagesSnackBar() {
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'You can upload a maximum of ${widget.maxImages} images',
-          ),
-          behavior: SnackBarBehavior.floating,
-          duration: const Duration(seconds: 2),
-        ),
-      );
+      showSnackbar(context, "You can upload a maximum of ${widget.maxImages} images", SnackBarType.info);
     }
   }
 

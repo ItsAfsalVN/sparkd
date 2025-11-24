@@ -112,3 +112,10 @@ class CreateGigSubmitted extends GigEvent {
 class CreateGigStatusReset extends GigEvent {
   const CreateGigStatusReset();
 }
+
+class LoadUserGigs extends GigEvent {
+  final String userId;
+  const LoadUserGigs(this.userId);
+  @override
+  List<Object> get props => [userId];
+}
