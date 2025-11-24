@@ -85,8 +85,6 @@ class _VideoUploadState extends State<VideoUpload>
           return;
         }
 
-        // TODO: Upload to cloud storage (Firebase Storage, AWS S3, etc.)
-        // For now, using the local file path
         widget.onChanged(videoPath);
         _urlController.text = videoPath;
 
@@ -137,13 +135,19 @@ class _VideoUploadState extends State<VideoUpload>
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      spacing: 8,
+      spacing: 4,
       children: [
         // Label
         if (widget.label != null)
           Row(
             children: [
-              Text(widget.label!, style: textStyles.heading5),
+              Text(
+                widget.label!,
+                style: textStyles.subtext.copyWith(
+                  color: colorScheme.onSurface.withValues(alpha: 0.5),
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
               if (widget.isRequired)
                 Text(
                   " *",
@@ -193,8 +197,6 @@ class _VideoUploadState extends State<VideoUpload>
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: colorScheme.outline.withValues(alpha: 0.3),
-              width: 2,
-              strokeAlign: BorderSide.strokeAlignInside,
             ),
           ),
           child: widget.allowUrlInput
@@ -266,16 +268,9 @@ class _VideoUploadState extends State<VideoUpload>
                     Icon(
                       Icons.videocam_outlined,
                       size: 48,
-                      color: colorScheme.primary,
+                      color: colorScheme.onSurface.withValues(alpha: 0.4),
                     ),
-                    const SizedBox(height: 12),
-                    Text(
-                      widget.hintText,
-                      style: textStyles.paragraph.copyWith(
-                        color: colorScheme.primary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
+
                     const SizedBox(height: 4),
                     Text(
                       "Click to browse files",
@@ -307,12 +302,13 @@ class _VideoUploadState extends State<VideoUpload>
             decoration: InputDecoration(
               hintText: "Paste YouTube, Vimeo, or direct video URL",
               hintStyle: textStyles.paragraph.copyWith(
+                fontSize: 12,
                 color: colorScheme.onSurface.withValues(alpha: 0.6),
               ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
                 borderSide: BorderSide(
-                  color: colorScheme.outline.withValues(alpha: 0.3),
+                  color: colorScheme.onSurface.withValues(alpha: 0.3),
                 ),
               ),
               focusedBorder: OutlineInputBorder(

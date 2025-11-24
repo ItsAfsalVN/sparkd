@@ -65,7 +65,6 @@ class _MultiImageUploadState extends State<MultiImageUpload> {
       );
 
       if (image != null) {
-        // TODO: Upload to cloud storage (Firebase Storage, AWS S3, etc.)
         // For now, using the local file path
         final String imagePath = image.path;
 
@@ -158,7 +157,7 @@ class _MultiImageUploadState extends State<MultiImageUpload> {
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      spacing: 8,
+      spacing: 4,
       children: [
         // Label and counter
         Row(
@@ -167,7 +166,13 @@ class _MultiImageUploadState extends State<MultiImageUpload> {
             if (widget.label != null)
               Row(
                 children: [
-                  Text(widget.label!, style: textStyles.heading5),
+                  Text(
+                    widget.label!,
+                    style: textStyles.subtext.copyWith(
+                      color: colorScheme.onSurface.withValues(alpha: 0.5),
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
                   if (widget.isRequired)
                     Text(
                       " *",
@@ -305,8 +310,6 @@ class _MultiImageUploadState extends State<MultiImageUpload> {
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
                   color: colorScheme.outline.withValues(alpha: 0.3),
-                  width: 2,
-                  strokeAlign: BorderSide.strokeAlignInside,
                 ),
               ),
               child: Column(
@@ -315,23 +318,7 @@ class _MultiImageUploadState extends State<MultiImageUpload> {
                   Icon(
                     Icons.collections_outlined,
                     size: 48,
-                    color: colorScheme.primary,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    widget.hintText,
-                    style: textStyles.paragraph.copyWith(
-                      color: colorScheme.primary,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    "Click to add portfolio samples",
-                    style: textStyles.paragraph.copyWith(
-                      fontSize: 14,
-                      color: colorScheme.onSurface.withValues(alpha: 0.6),
-                    ),
+                    color: colorScheme.onSurface.withValues(alpha: 0.4),
                   ),
                 ],
               ),

@@ -4,12 +4,15 @@ import 'package:sparkd/core/presentation/widgets/custom_button.dart';
 import 'package:sparkd/core/presentation/widgets/custom_dropdown.dart';
 import 'package:sparkd/core/presentation/widgets/custom_text_field.dart';
 import 'package:sparkd/core/presentation/widgets/deliverables_checklist.dart';
+import 'package:sparkd/core/presentation/widgets/delivery_type_selector.dart';
 import 'package:sparkd/core/presentation/widgets/image_upload.dart';
+import 'package:sparkd/core/presentation/widgets/mandatory_requirements.dart';
 import 'package:sparkd/core/presentation/widgets/multi_image_upload.dart';
 import 'package:sparkd/core/presentation/widgets/selectable_list.dart';
 import 'package:sparkd/core/presentation/widgets/tag_input.dart';
 import 'package:sparkd/core/presentation/widgets/video_upload.dart';
 import 'package:sparkd/core/utils/app_text_theme_extension.dart';
+import 'package:sparkd/core/utils/delivery_types.dart';
 import 'package:sparkd/core/utils/logger.dart';
 import 'package:sparkd/features/spark/data/datasources/static_skill_data_source.dart';
 
@@ -33,6 +36,10 @@ class _CreateNewGigScreenState extends State<CreateNewGigScreen> {
   String? _thumbnailImage;
   List<String> _portfolioSamples = [];
   String? _demonstrationVideo;
+
+  // New component state variables
+  List<String> _mandatoryRequirements = [];
+  DeliveryTypes? _selectedDeliveryType;
 
   @override
   void initState() {
@@ -219,6 +226,32 @@ class _CreateNewGigScreenState extends State<CreateNewGigScreen> {
                       _demonstrationVideo = url;
                     });
                     logger.d('Demonstration video: $_demonstrationVideo');
+                  },
+                ),
+
+                // Mandatory Requirements List
+                MandatoryRequirements(
+                  label: "Client Requirements",
+                  requirements: _mandatoryRequirements,
+                  maxRequirements: 8,
+                  hintText: "Company logo, Brand colors, Product photos, etc.",
+                  onChanged: (requirements) {
+                    setState(() {
+                      _mandatoryRequirements = requirements;
+                    });
+                    logger.d('Mandatory requirements: $_mandatoryRequirements');
+                  },
+                ),
+
+                // Delivery Type Selector
+                DeliveryTypeSelector(
+                  label: "Delivery Type",
+                  selectedType: _selectedDeliveryType,
+                  onChanged: (type) {
+                    setState(() {
+                      _selectedDeliveryType = type;
+                    });
+                    logger.d('Selected delivery type: $_selectedDeliveryType');
                   },
                 ),
 
