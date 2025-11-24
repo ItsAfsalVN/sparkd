@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sparkd/core/presentation/widgets/spark/gig_card.dart';
 import 'package:sparkd/core/utils/app_text_theme_extension.dart';
-import 'package:sparkd/features/spark/presentation/screens/create_new_gig_screen.dart';
+import 'package:sparkd/features/spark/presentation/screens/create_new_gig_provider.dart';
 
 class GigsScreen extends StatelessWidget {
   const GigsScreen({super.key});
@@ -23,7 +23,9 @@ class GigsScreen extends StatelessWidget {
         onPressed: () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => const CreateNewGigScreen()),
+            MaterialPageRoute(
+              builder: (context) => const CreateNewGigProvider(),
+            ),
           );
         },
         backgroundColor: colorScheme.primary,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:sparkd/core/presentation/widgets/custom_button.dart';
 import 'package:sparkd/core/presentation/widgets/custom_dropdown.dart';
@@ -13,8 +14,11 @@ import 'package:sparkd/core/presentation/widgets/tag_input.dart';
 import 'package:sparkd/core/presentation/widgets/video_upload.dart';
 import 'package:sparkd/core/utils/app_text_theme_extension.dart';
 import 'package:sparkd/core/utils/delivery_types.dart';
+import 'package:sparkd/core/utils/form_statuses.dart';
 import 'package:sparkd/core/utils/logger.dart';
 import 'package:sparkd/features/spark/data/datasources/static_skill_data_source.dart';
+import 'package:sparkd/features/spark/domain/entities/skill_entity.dart';
+import 'package:sparkd/features/spark/presentation/bloc/gig/gig_bloc.dart';
 
 class CreateNewGigScreen extends StatefulWidget {
   const CreateNewGigScreen({super.key});
@@ -40,6 +44,11 @@ class _CreateNewGigScreenState extends State<CreateNewGigScreen> {
   // New component state variables
   List<String> _mandatoryRequirements = [];
   DeliveryTypes? _selectedDeliveryType;
+
+  // Text form field variables
+  String _gigTitle = '';
+  String _gigDescription = '';
+  double _gigPrice = 0.0;
 
   @override
   void initState() {
@@ -68,199 +77,300 @@ class _CreateNewGigScreenState extends State<CreateNewGigScreen> {
   @override
   Widget build(BuildContext context) {
     final textStyles = Theme.of(context).textStyles;
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("Create New Gig", style: textStyles.heading3),
-        elevation: 0,
-        scrolledUnderElevation: 0.0,
-        surfaceTintColor: Colors.transparent,
-      ),
-      body: SingleChildScrollView(
-        child: SafeArea(
-          child: Padding(
-            padding: EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              spacing: 20,
-              children: [
-                CustomTextField(
-                  hintText: "Enter the gig title",
-                  labelText: "Gig Title",
-                ),
+    return BlocListener<GigBloc, GigState>(
+      listener: (context, state) {
+        if (state.status == FormStatus.success) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Gig created successfully!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          Navigator.of(context).pop();
+        } else if (state.status == FormStatus.failure) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Failed to create gig. Please try again.'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text("Create New Gig", style: textStyles.heading3),
+          elevation: 0,
+          scrolledUnderElevation: 0.0,
+          surfaceTintColor: Colors.transparent,
+        ),
+        body: SingleChildScrollView(
+          child: SafeArea(
+            child: Padding(
+              padding: EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                spacing: 20,
+                children: [
+                  CustomTextField(
+                    hintText: "Enter the gig title",
+                    labelText: "Gig Title",
+                    onChanged: (value) {
+                      setState(() {
+                        _gigTitle = value;
+                      });
+                    },
+                  ),
 
-                // Category Selection
-                SelectableList(
-                  label: "Select Category",
-                  children: _categories.map((category) {
-                    final categoryId = category['categoryId'] as String;
-                    final categoryName = category['categoryName'] as String;
-                    final isSelected = _selectedCategoryId == categoryId;
+                  // Category Selection
+                  SelectableList(
+                    label: "Select Category",
+                    children: _categories.map((category) {
+                      final categoryId = category['categoryId'] as String;
+                      final categoryName = category['categoryName'] as String;
+                      final isSelected = _selectedCategoryId == categoryId;
 
-                    return SelectableChip(
-                      label: categoryName,
-                      value: categoryId,
-                      isSelected: isSelected,
-                      onTap: () => _onCategorySelected(categoryId),
-                    );
-                  }).toList(),
-                ),
+                      return SelectableChip(
+                        label: categoryName,
+                        value: categoryId,
+                        isSelected: isSelected,
+                        onTap: () => _onCategorySelected(categoryId),
+                      );
+                    }).toList(),
+                  ),
 
-                // Tags Input
-                TagInput(
-                  label: "Tags",
-                  hintText: "Add tags to describe your gig...",
-                  maxTags: 8,
-                  maxTagLength: 15,
-                  onTagsChanged: (tags) {
-                    setState(() {
-                      _gigTags = tags;
-                    });
-                    logger.e('Current gig tags: $_gigTags');
-                  },
-                  tagValidator: (tag) {
-                    if (tag.contains(RegExp(r'[^\w\s]'))) {
-                      return "Tags can only contain letters, numbers, and spaces";
-                    }
-                    if (tag.length < 2) {
-                      return "Tags must be at least 2 characters long";
-                    }
-                    return null;
-                  },
-                ),
+                  // Tags Input
+                  TagInput(
+                    label: "Tags",
+                    hintText: "Add tags to describe your gig...",
+                    maxTags: 8,
+                    maxTagLength: 15,
+                    onTagsChanged: (tags) {
+                      setState(() {
+                        _gigTags = tags;
+                      });
+                      logger.e('Current gig tags: $_gigTags');
+                    },
+                    tagValidator: (tag) {
+                      if (tag.contains(RegExp(r'[^\w\s]'))) {
+                        return "Tags can only contain letters, numbers, and spaces";
+                      }
+                      if (tag.length < 2) {
+                        return "Tags must be at least 2 characters long";
+                      }
+                      return null;
+                    },
+                  ),
 
-                CustomTextField(
-                  hintText: "Enter the description",
-                  labelText: "Description",
-                  maxLines: 5,
-                ),
+                  CustomTextField(
+                    hintText: "Enter the description",
+                    labelText: "Description",
+                    maxLines: 5,
+                    onChanged: (value) {
+                      setState(() {
+                        _gigDescription = value;
+                      });
+                    },
+                  ),
 
-                CustomTextField(
-                  hintText: "Enter the Price",
-                  labelText: "Price",
-                  prefixIcon: Padding(
-                    padding: EdgeInsets.all(12),
-                    child: SvgPicture.asset(
-                      "assets/icons/spark/rupee.svg",
-                      colorFilter: ColorFilter.mode(
-                        Theme.of(
-                          context,
-                        ).colorScheme.onSurface.withValues(alpha: .5),
-                        BlendMode.srcIn,
+                  CustomTextField(
+                    hintText: "Enter the Price",
+                    labelText: "Price",
+                    prefixIcon: Padding(
+                      padding: EdgeInsets.all(12),
+                      child: SvgPicture.asset(
+                        "assets/icons/spark/rupee.svg",
+                        colorFilter: ColorFilter.mode(
+                          Theme.of(
+                            context,
+                          ).colorScheme.onSurface.withValues(alpha: .5),
+                          BlendMode.srcIn,
+                        ),
                       ),
                     ),
+                    keyboardType: TextInputType.number,
+                    onChanged: (value) {
+                      setState(() {
+                        _gigPrice = double.tryParse(value) ?? 0.0;
+                      });
+                    },
                   ),
-                  keyboardType: TextInputType.number,
-                ),
 
-                // Delivery Time Dropdown
-                DeliveryTimeDropdown(
-                  selectedDays: _deliveryTime,
-                  onChanged: (days) {
-                    setState(() {
-                      _deliveryTime = days;
-                    });
-                    logger.d('Selected delivery time: $_deliveryTime days');
-                  },
-                ),
+                  // Delivery Time Dropdown
+                  DeliveryTimeDropdown(
+                    selectedDays: _deliveryTime,
+                    onChanged: (days) {
+                      setState(() {
+                        _deliveryTime = days;
+                      });
+                      logger.d('Selected delivery time: $_deliveryTime days');
+                    },
+                  ),
 
-                // Revisions Dropdown
-                RevisionsDropdown(
-                  selectedRevisions: _revisions,
-                  onChanged: (revisions) {
-                    setState(() {
-                      _revisions = revisions;
-                    });
-                    logger.d('Selected revisions: $_revisions');
-                  },
-                ),
+                  // Revisions Dropdown
+                  RevisionsDropdown(
+                    selectedRevisions: _revisions,
+                    onChanged: (revisions) {
+                      setState(() {
+                        _revisions = revisions;
+                      });
+                      logger.d('Selected revisions: $_revisions');
+                    },
+                  ),
 
-                // Deliverables Checklist
-                DeliverablesChecklist(
-                  label: "What You'll Deliver",
-                  selectedDeliverables: _selectedDeliverables,
-                  maxSelections: 6,
-                  onChanged: (deliverables) {
-                    setState(() {
-                      _selectedDeliverables = deliverables;
-                    });
-                    logger.d('Selected deliverables: $_selectedDeliverables');
-                  },
-                ),
+                  // Deliverables Checklist
+                  DeliverablesChecklist(
+                    label: "What You'll Deliver",
+                    selectedDeliverables: _selectedDeliverables,
+                    maxSelections: 6,
+                    onChanged: (deliverables) {
+                      setState(() {
+                        _selectedDeliverables = deliverables;
+                      });
+                      logger.d('Selected deliverables: $_selectedDeliverables');
+                    },
+                  ),
 
-                // Primary Thumbnail Upload
-                ImageUpload(
-                  label: "Primary Thumbnail",
-                  hintText: "Upload main gig image",
-                  imageUrl: _thumbnailImage,
-                  isRequired: true,
-                  onChanged: (url) {
-                    setState(() {
-                      _thumbnailImage = url;
-                    });
-                    logger.d('Thumbnail image: $_thumbnailImage');
-                  },
-                ),
+                  // Primary Thumbnail Upload
+                  ImageUpload(
+                    label: "Primary Thumbnail",
+                    hintText: "Upload main gig image",
+                    imageUrl: _thumbnailImage,
+                    isRequired: true,
+                    onChanged: (url) {
+                      setState(() {
+                        _thumbnailImage = url;
+                      });
+                      logger.d('Thumbnail image: $_thumbnailImage');
+                    },
+                  ),
 
-                // Portfolio Samples Upload
-                MultiImageUpload(
-                  label: "Portfolio Samples",
-                  hintText: "Show your previous work",
-                  imageUrls: _portfolioSamples,
-                  maxImages: 5,
-                  onChanged: (urls) {
-                    setState(() {
-                      _portfolioSamples = urls;
-                    });
-                    logger.d('Portfolio samples: $_portfolioSamples');
-                  },
-                ),
+                  // Portfolio Samples Upload
+                  MultiImageUpload(
+                    label: "Portfolio Samples",
+                    hintText: "Show your previous work",
+                    imageUrls: _portfolioSamples,
+                    maxImages: 5,
+                    onChanged: (urls) {
+                      setState(() {
+                        _portfolioSamples = urls;
+                      });
+                      logger.d('Portfolio samples: $_portfolioSamples');
+                    },
+                  ),
 
-                // Service Demonstration Video
-                VideoUpload(
-                  label: "Service Demonstration Video",
-                  hintText: "Upload or link to a demo video",
-                  videoUrl: _demonstrationVideo,
-                  allowUrlInput: true,
-                  onChanged: (url) {
-                    setState(() {
-                      _demonstrationVideo = url;
-                    });
-                    logger.d('Demonstration video: $_demonstrationVideo');
-                  },
-                ),
+                  // Service Demonstration Video
+                  VideoUpload(
+                    label: "Service Demonstration Video",
+                    hintText: "Upload or link to a demo video",
+                    videoUrl: _demonstrationVideo,
+                    allowUrlInput: true,
+                    onChanged: (url) {
+                      setState(() {
+                        _demonstrationVideo = url;
+                      });
+                      logger.d('Demonstration video: $_demonstrationVideo');
+                    },
+                  ),
 
-                // Mandatory Requirements List
-                MandatoryRequirements(
-                  label: "Client Requirements",
-                  requirements: _mandatoryRequirements,
-                  maxRequirements: 8,
-                  hintText: "Company logo, Brand colors, Product photos, etc.",
-                  onChanged: (requirements) {
-                    setState(() {
-                      _mandatoryRequirements = requirements;
-                    });
-                    logger.d('Mandatory requirements: $_mandatoryRequirements');
-                  },
-                ),
+                  // Mandatory Requirements List
+                  MandatoryRequirements(
+                    label: "Client Requirements",
+                    requirements: _mandatoryRequirements,
+                    maxRequirements: 8,
+                    hintText:
+                        "Company logo, Brand colors, Product photos, etc.",
+                    onChanged: (requirements) {
+                      setState(() {
+                        _mandatoryRequirements = requirements;
+                      });
+                      logger.d(
+                        'Mandatory requirements: $_mandatoryRequirements',
+                      );
+                    },
+                  ),
 
-                // Delivery Type Selector
-                DeliveryTypeSelector(
-                  label: "Delivery Type",
-                  selectedType: _selectedDeliveryType,
-                  onChanged: (type) {
-                    setState(() {
-                      _selectedDeliveryType = type;
-                    });
-                    logger.d('Selected delivery type: $_selectedDeliveryType');
-                  },
-                ),
+                  // Delivery Type Selector
+                  DeliveryTypeSelector(
+                    label: "Delivery Type",
+                    selectedType: _selectedDeliveryType,
+                    onChanged: (type) {
+                      setState(() {
+                        _selectedDeliveryType = type;
+                      });
+                      logger.d(
+                        'Selected delivery type: $_selectedDeliveryType',
+                      );
+                    },
+                  ),
 
-                CustomButton(onPressed: () {}, title: "Create Gig"),
-              ],
+                  // Submit Button with BLoC integration
+                  BlocBuilder<GigBloc, GigState>(
+                    builder: (context, state) {
+                      return CustomButton(
+                        onPressed: state.status == FormStatus.loading
+                            ? null
+                            : () => _submitGig(context),
+                        title: state.status == FormStatus.loading
+                            ? "Creating..."
+                            : "Create Gig",
+                      );
+                    },
+                  ),
+                ],
+              ),
             ),
           ),
         ),
-      ),
-    );
+      ), // End of Scaffold child of BlocListener
+    ); // End of BlocListener
+  }
+
+  void _submitGig(BuildContext context) {
+    logger.i('Screen: Submitting gig with current state');
+
+    // Create gig entity from current form state
+    context.read<GigBloc>().add(GigTitleChanged(_gigTitle));
+    context.read<GigBloc>().add(GigDescriptionChanged(_gigDescription));
+    context.read<GigBloc>().add(GigPriceChanged(_gigPrice));
+
+    if (_selectedCategoryId != null) {
+      final selectedCategory = _categories.firstWhere(
+        (cat) => cat['categoryId'] == _selectedCategoryId,
+      );
+      context.read<GigBloc>().add(
+        GigCategoryChanged(
+          SkillEntity(
+            categoryID: selectedCategory['categoryId'] as String,
+            categoryName: selectedCategory['categoryName'] as String,
+            tools: [],
+          ),
+        ),
+      );
+    }
+
+    context.read<GigBloc>().add(GigTagsChanged(_gigTags));
+    if (_deliveryTime != null) {
+      context.read<GigBloc>().add(GigDeliveryTimeChanged(_deliveryTime!));
+    }
+    if (_revisions != null) {
+      context.read<GigBloc>().add(GigRevisionsChanged(_revisions!));
+    }
+    context.read<GigBloc>().add(GigDeliverablesChanged(_selectedDeliverables));
+    if (_thumbnailImage != null) {
+      context.read<GigBloc>().add(GigThumbnailChanged(_thumbnailImage!));
+    }
+    context.read<GigBloc>().add(GigGalleryImagesChanged(_portfolioSamples));
+    if (_demonstrationVideo != null) {
+      context.read<GigBloc>().add(GigDemoVideoChanged(_demonstrationVideo));
+    }
+    context.read<GigBloc>().add(GigRequirementsChanged(_mandatoryRequirements));
+    if (_selectedDeliveryType != null) {
+      context.read<GigBloc>().add(
+        GigDeliveryTypeChanged(_selectedDeliveryType!),
+      );
+    }
+
+    // Submit the gig
+    context.read<GigBloc>().add(const CreateGigSubmitted());
   }
 }
