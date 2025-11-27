@@ -82,24 +82,65 @@ class AuthRemoteDataSourceImplementation extends AuthRemoteDataSource {
     required String smsCode,
   }) async {
     try {
+      // Check if there's already a signed-in user (e.g., from Google Sign-In)
+      final existingUser = firebaseAuth.currentUser;
+      final wasAlreadySignedIn = existingUser != null;
+
+      logger.i(
+        "AuthRemoteDataSource: Verifying OTP. User already signed in: $wasAlreadySignedIn (UID: ${existingUser?.uid ?? 'null'})",
+      );
+
       PhoneAuthCredential credential = PhoneAuthProvider.credential(
         verificationId: verificationId,
         smsCode: smsCode,
       );
 
-      UserCredential tempUserCredential = await firebaseAuth
-          .signInWithCredential(credential);
+      if (wasAlreadySignedIn) {
+        // User already signed in (Google Sign-In flow)
+        // Link the phone credential directly to the existing user
+        try {
+          await existingUser.linkWithCredential(credential);
+          logger.i(
+            "AuthRemoteDataSource: Phone credential linked to existing user (UID: ${existingUser.uid})",
+          );
+        } on FirebaseAuthException catch (e) {
+          if (e.code == 'provider-already-linked') {
+            logger.i(
+              "AuthRemoteDataSource: Phone number already linked to this user. Continuing...",
+            );
+            // This is fine, phone is already linked
+          } else if (e.code == 'credential-already-in-use') {
+            logger.w(
+              "AuthRemoteDataSource: Phone number is already in use by another account.",
+            );
+            throw Exception(
+              'This phone number is already associated with another account.',
+            );
+          } else {
+            rethrow;
+          }
+        }
+      } else {
+        // No existing user (Email/Password flow)
+        // Sign in with phone credential temporarily to verify it
+        UserCredential tempUserCredential = await firebaseAuth
+            .signInWithCredential(credential);
 
-      logger.i(
-        "OTP Verified Successfully! Temp User UID: ${tempUserCredential.user?.uid}",
-      );
+        logger.i(
+          "OTP Verified Successfully! Temp User UID: ${tempUserCredential.user?.uid}",
+        );
 
-      await tempUserCredential.user?.delete();
-      logger.i(
-        "AuthRemoteDataSource: Deleted temporary phone user after verification.",
-      );
+        // Delete the temp user and sign out
+        await tempUserCredential.user?.delete();
+        logger.i(
+          "AuthRemoteDataSource: Deleted temporary phone user after verification.",
+        );
 
-      await firebaseAuth.signOut();
+        await firebaseAuth.signOut();
+        logger.i(
+          "AuthRemoteDataSource: Signed out after phone verification (email/password flow).",
+        );
+      }
     } on FirebaseAuthException catch (e) {
       logger.e(
         "OTP Verification Failed (FirebaseAuthException): ${e.code} - ${e.message}",
@@ -150,11 +191,35 @@ class AuthRemoteDataSourceImplementation extends AuthRemoteDataSource {
         );
       }
 
-      await firebaseAuth.currentUser!.linkWithCredential(credential);
-      logger.i(
-        "Phone credential linked successfully to user: ${firebaseAuth.currentUser!.uid}",
+      // Check if phone is already linked to this user
+      final user = firebaseAuth.currentUser!;
+      final isPhoneAlreadyLinked = user.providerData.any(
+        (info) => info.providerId == 'phone',
       );
+
+      if (isPhoneAlreadyLinked) {
+        logger.i(
+          "Phone credential already linked to user: ${user.uid}. Skipping link operation.",
+        );
+        return; // Phone already linked, no need to link again
+      }
+
+      await user.linkWithCredential(credential);
+      logger.i("Phone credential linked successfully to user: ${user.uid}");
     } on FirebaseAuthException catch (error) {
+      // Handle specific Firebase errors
+      if (error.code == 'provider-already-linked') {
+        logger.i("Phone credential already linked. Continuing...");
+        return; // Not an error, phone is already linked
+      } else if (error.code == 'credential-already-in-use') {
+        logger.e(
+          "Phone number is already used by another account: ${error.message}",
+        );
+        throw Exception(
+          'This phone number is already associated with another account.',
+        );
+      }
+
       logger.e(
         "Error linking phone credential: ${error.code} - ${error.message}",
       );
@@ -236,23 +301,76 @@ class AuthRemoteDataSourceImplementation extends AuthRemoteDataSource {
         idToken: googleAuth.idToken,
       );
 
-      // Sign in to Firebase with the Google credential
-      final userCredential = await firebaseAuth.signInWithCredential(
-        credential,
-      );
+      // Try to sign in to Firebase with the Google credential
+      try {
+        final userCredential = await firebaseAuth.signInWithCredential(
+          credential,
+        );
 
-      logger.i(
-        'Google Sign-In successful for user: ${userCredential.user?.email}',
-      );
+        logger.i(
+          'Google Sign-In successful for user: ${userCredential.user?.email}',
+        );
 
-      return userCredential;
-    } on FirebaseAuthException catch (error) {
-      logger.e('Firebase Auth error during Google Sign-In: ${error.message}');
-      throw Exception(
-        'Failed to sign in with Google: ${error.message ?? error.code}',
-      );
+        return userCredential;
+      } on FirebaseAuthException catch (credentialError) {
+        // Handle account-exists-with-different-credential error
+        if (credentialError.code ==
+            'account-exists-with-different-credential') {
+          logger.w(
+            'Account exists with different credential. Attempting to link accounts.',
+          );
+
+          // Get the current user (if signed in)
+          final currentUser = firebaseAuth.currentUser;
+
+          if (currentUser == null) {
+            // User is not signed in, they need to sign in with their password first
+            throw Exception(
+              'An account already exists with this email. Please sign in with your password first, then you can link your Google account.',
+            );
+          }
+
+          try {
+            // Link the Google credential to the existing account
+            final linkedCredential = await currentUser.linkWithCredential(
+              credential,
+            );
+
+            logger.i('Successfully linked Google account to existing account');
+
+            return linkedCredential;
+          } catch (linkError) {
+            logger.e('Error linking accounts: $linkError');
+            if (linkError is FirebaseAuthException) {
+              if (linkError.code == 'provider-already-linked') {
+                throw Exception(
+                  'This Google account is already linked to your account.',
+                );
+              } else if (linkError.code == 'credential-already-in-use') {
+                throw Exception(
+                  'This Google account is already used by another user.',
+                );
+              }
+            }
+            throw Exception(
+              'Unable to link accounts. Please sign in with your password first.',
+            );
+          }
+        }
+
+        // Re-throw other Firebase auth errors
+        logger.e(
+          'Firebase Auth error during Google Sign-In: ${credentialError.message}',
+        );
+        throw Exception(
+          'Failed to sign in with Google: ${credentialError.message ?? credentialError.code}',
+        );
+      }
     } catch (error) {
       logger.e('Error during Google Sign-In: $error');
+      if (error is Exception) {
+        rethrow;
+      }
       throw Exception('Error signing in with Google: $error');
     }
   }
