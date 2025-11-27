@@ -180,14 +180,19 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     final signUpData = _signUpDataRepository.getData();
     logger.i("AuthBloc: Starting final sign up for user: ${signUpData.email}");
+    logger.i(
+      "AuthBloc: SignUpData - email: ${signUpData.email}, password exists: ${signUpData.password != null}, userType: ${signUpData.userType}",
+    );
 
-    if (signUpData.email == null ||
-        signUpData.password == null ||
-        signUpData.verificationID == null ||
+    // Check if critical data is available
+    if (signUpData.verificationID == null ||
         signUpData.smsCode == null ||
         signUpData.phoneNumber == null ||
         signUpData.userType == null) {
       logger.e("AuthBloc: Missing critical data for final sign up. Aborting.");
+      logger.e(
+        "AuthBloc: verificationID: ${signUpData.verificationID}, smsCode: ${signUpData.smsCode}, phone: ${signUpData.phoneNumber}, userType: ${signUpData.userType}",
+      );
 
       _signUpDataRepository.clearData();
       await _localDataSource.clearSignUpStep();
@@ -196,18 +201,42 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     }
 
     try {
-      final userCredential = await _createUserWithEmailUseCase(
-        email: signUpData.email!,
-        password: signUpData.password!,
-      );
-      final newUser = userCredential.user;
-      if (newUser == null) {
-        throw Exception("Firebase user object is null after creation.");
-      }
+      User? currentUser = FirebaseAuth.instance.currentUser;
       logger.i(
-        "AuthBloc: Email/Pass user created successfully. UID: ${newUser.uid}",
+        "AuthBloc: Current Firebase user: ${currentUser?.uid ?? 'null'}, email: ${currentUser?.email ?? 'null'}",
       );
 
+      // Check if user is already signed in (e.g., via Google Sign-In)
+      if (currentUser == null) {
+        // User not signed in, create account with email/password
+        if (signUpData.email == null || signUpData.password == null) {
+          logger.e("AuthBloc: Email/password missing for account creation.");
+          logger.e(
+            "AuthBloc: This likely means Google Sign-In user was signed out. Email: ${signUpData.email}, Password exists: ${signUpData.password != null}",
+          );
+          throw Exception("Email and password are required for sign up.");
+        }
+
+        logger.i("AuthBloc: Creating new user with email/password...");
+        final userCredential = await _createUserWithEmailUseCase(
+          email: signUpData.email!,
+          password: signUpData.password!,
+        );
+        currentUser = userCredential.user;
+        if (currentUser == null) {
+          throw Exception("Firebase user object is null after creation.");
+        }
+        logger.i(
+          "AuthBloc: Email/Pass user created successfully. UID: ${currentUser.uid}",
+        );
+      } else {
+        logger.i(
+          "AuthBloc: User already signed in (likely via Google). UID: ${currentUser.uid}, Email: ${currentUser.email}",
+        );
+      }
+
+      // Link phone number to the account
+      logger.i("AuthBloc: Linking phone number to user account...");
       await _linkPhoneCredentialUseCase(
         verificationID: signUpData.verificationID!,
         smsCode: signUpData.smsCode!,
@@ -216,7 +245,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       logger.i("AuthBloc: Phone number linked successfully.");
 
       final UserProfile userProfile = UserProfile.fromSignUpData(
-        newUser.uid,
+        currentUser.uid,
         signUpData,
       );
 
