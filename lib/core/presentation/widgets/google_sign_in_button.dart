@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:sparkd/core/utils/app_colors.dart';
 import 'package:sparkd/core/utils/app_text_theme_extension.dart';
+import 'package:sparkd/features/auth/presentation/bloc/sign_in/sign_in_bloc.dart';
 
 class GoogleSignInButton extends StatelessWidget {
   const GoogleSignInButton({super.key});
@@ -10,7 +12,9 @@ class GoogleSignInButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final bool isLight = Theme.brightnessOf(context) == Brightness.light;
     return ElevatedButton(
-      onPressed: () {},
+      onPressed: () {
+        context.read<SignInBloc>().add(const SignInWithGoogleRequested());
+      },
       style: ElevatedButton.styleFrom(
         shadowColor: Theme.of(
           context,

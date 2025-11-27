@@ -3,20 +3,26 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:sparkd/core/utils/form_statuses.dart';
 import 'package:sparkd/core/utils/logger.dart';
 import 'package:sparkd/features/auth/domain/usecases/login_user.dart';
+import 'package:sparkd/features/auth/domain/usecases/sign_in_with_google.dart';
 
 part 'sign_in_event.dart';
 part 'sign_in_state.dart';
 
 class SignInBloc extends Bloc<SignInEvent, SignInState> {
   final LoginUserUseCase _loginUserUseCase;
+  final SignInWithGoogleUseCase _signInWithGoogleUseCase;
 
-  SignInBloc({required LoginUserUseCase loginUserUseCase})
-    : _loginUserUseCase = loginUserUseCase,
-      super(const SignInState()) {
+  SignInBloc({
+    required LoginUserUseCase loginUserUseCase,
+    required SignInWithGoogleUseCase signInWithGoogleUseCase,
+  }) : _loginUserUseCase = loginUserUseCase,
+       _signInWithGoogleUseCase = signInWithGoogleUseCase,
+       super(const SignInState()) {
     on<SignInEmailChanged>(_onEmailChanged);
     on<SignInPasswordChanged>(_onPasswordChanged);
     on<SignInSubmitted>(_onSubmitted);
     on<SignInStatusReset>(_onStatusReset);
+    on<SignInWithGoogleRequested>(_onGoogleSignInRequested);
   }
 
   void _onEmailChanged(SignInEmailChanged event, Emitter<SignInState> emit) {
@@ -91,6 +97,31 @@ class SignInBloc extends Bloc<SignInEvent, SignInState> {
         errorMessage: null,
       ),
     );
+  }
+
+  Future<void> _onGoogleSignInRequested(
+    SignInWithGoogleRequested event,
+    Emitter<SignInState> emit,
+  ) async {
+    try {
+      logger.i('Google Sign-In requested');
+      emit(state.copyWith(status: FormStatus.loading));
+
+      final userCredential = await _signInWithGoogleUseCase();
+
+      logger.i('Google Sign-In successful: ${userCredential.user?.email}');
+      emit(state.copyWith(status: FormStatus.success));
+    } catch (error) {
+      logger.e('Google Sign-In failed: $error');
+      emit(
+        state.copyWith(
+          status: FormStatus.failure,
+          errorMessage: error.toString().contains('canceled')
+              ? 'Sign-in was canceled'
+              : 'Failed to sign in with Google. Please try again.',
+        ),
+      );
+    }
   }
 
   FormStatus _validateForm({

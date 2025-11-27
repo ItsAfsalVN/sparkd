@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:sparkd/core/utils/logger.dart';
 import 'package:sparkd/features/auth/domain/entities/user_profile.dart';
 
@@ -27,6 +28,7 @@ abstract class AuthRemoteDataSource {
   });
 
   Future<void> forgotPassword({required String email});
+  Future<UserCredential> signInWithGoogle();
 }
 
 class AuthRemoteDataSourceImplementation extends AuthRemoteDataSource {
@@ -178,7 +180,7 @@ class AuthRemoteDataSourceImplementation extends AuthRemoteDataSource {
       throw Exception('Database error: Failed to save profile.');
     }
   }
-  
+
   @override
   Future<UserCredential> loginUser({
     required String email,
@@ -192,14 +194,12 @@ class AuthRemoteDataSourceImplementation extends AuthRemoteDataSource {
       );
       return userCredential;
     } on FirebaseAuthException catch (error) {
-      throw Exception(
-        'Failed to login: ${error.message ?? error.code}',
-      );
+      throw Exception('Failed to login: ${error.message ?? error.code}');
     } catch (error) {
       throw Exception('Error logging in user: $error');
     }
   }
-  
+
   @override
   Future<void> forgotPassword({required String email}) {
     try {
@@ -212,5 +212,48 @@ class AuthRemoteDataSourceImplementation extends AuthRemoteDataSource {
       throw Exception('Error sending password reset email: $error');
     }
   }
-  
+
+  @override
+  Future<UserCredential> signInWithGoogle() async {
+    try {
+      logger.i('Initiating Google Sign-In');
+
+      // Trigger the authentication flow
+      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+
+      if (googleUser == null) {
+        // User canceled the sign-in
+        throw Exception('Google Sign-In was canceled by user');
+      }
+
+      // Obtain the auth details from the request
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
+
+      // Create a new credential
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      // Sign in to Firebase with the Google credential
+      final userCredential = await firebaseAuth.signInWithCredential(
+        credential,
+      );
+
+      logger.i(
+        'Google Sign-In successful for user: ${userCredential.user?.email}',
+      );
+
+      return userCredential;
+    } on FirebaseAuthException catch (error) {
+      logger.e('Firebase Auth error during Google Sign-In: ${error.message}');
+      throw Exception(
+        'Failed to sign in with Google: ${error.message ?? error.code}',
+      );
+    } catch (error) {
+      logger.e('Error during Google Sign-In: $error');
+      throw Exception('Error signing in with Google: $error');
+    }
+  }
 }

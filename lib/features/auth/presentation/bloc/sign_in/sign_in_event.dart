@@ -32,7 +32,14 @@ class SignInSubmitted extends SignInEvent {
 
 class SignInStatusReset extends SignInEvent {
   const SignInStatusReset();
-  
+
+  @override
+  List<Object> get props => [];
+}
+
+class SignInWithGoogleRequested extends SignInEvent {
+  const SignInWithGoogleRequested();
+
   @override
   List<Object> get props => [];
 }
