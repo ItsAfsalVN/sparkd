@@ -30,4 +30,6 @@ abstract class AuthRepository {
   });
 
   Future<void> forgotPassword({required String email});
+
+  Future<UserCredential> signInWithGoogle();
 }

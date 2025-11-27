@@ -104,9 +104,12 @@ class AuthRepositoryImplementation implements AuthRepository {
       rethrow;
     }
   }
-  
+
   @override
-  Future<UserCredential> loginUser({required String email, required String password}) {
+  Future<UserCredential> loginUser({
+    required String email,
+    required String password,
+  }) {
     try {
       return remoteDataSource.loginUser(email: email, password: password);
     } catch (error) {
@@ -114,7 +117,7 @@ class AuthRepositoryImplementation implements AuthRepository {
       rethrow;
     }
   }
-  
+
   @override
   Future<void> forgotPassword({required String email}) {
     try {
@@ -124,6 +127,16 @@ class AuthRepositoryImplementation implements AuthRepository {
       rethrow;
     }
   }
-  
-  
+
+  @override
+  Future<UserCredential> signInWithGoogle() async {
+    try {
+      return await remoteDataSource.signInWithGoogle();
+    } catch (error) {
+      logger.e(
+        "AuthRepositoryImplementation Error signing in with Google: $error",
+      );
+      rethrow;
+    }
+  }
 }

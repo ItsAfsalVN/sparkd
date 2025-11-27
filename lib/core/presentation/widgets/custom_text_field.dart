@@ -53,7 +53,6 @@ class _CustomTextFieldState extends State<CustomTextField> {
     final colorScheme = Theme.of(context).colorScheme;
     final textStyles = Theme.of(context).textStyles;
     return Column(
-      spacing: 2,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
@@ -64,6 +63,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
             color: colorScheme.onSurface.withValues(alpha: 0.5),
           ),
         ),
+        const SizedBox(height: 2),
         TextFormField(
           onChanged: widget.onChanged,
           focusNode: widget.focusNode,
@@ -74,7 +74,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
           keyboardType: widget.keyboardType,
           validator: widget.validator,
           autofocus: widget.autoFocus ?? false,
-          maxLines: widget.maxLines,
+          maxLines: _isObscured ? 1 : widget.maxLines,
           decoration: InputDecoration(
             prefixIcon: widget.prefixIcon,
             suffixIcon: widget.obscureText

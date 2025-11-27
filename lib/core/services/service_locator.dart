@@ -8,6 +8,7 @@ import 'package:sparkd/features/auth/domain/usecases/create_user_with_email_and_
 import 'package:sparkd/features/auth/domain/usecases/forgot_password.dart';
 import 'package:sparkd/features/auth/domain/usecases/link_phone_credential.dart';
 import 'package:sparkd/features/auth/domain/usecases/save_user_profile.dart';
+import 'package:sparkd/features/auth/domain/usecases/sign_in_with_google.dart';
 import 'package:sparkd/features/spark/data/datasources/static_skill_data_source.dart';
 import 'package:sparkd/features/spark/data/datasources/gig_remote_data_source.dart';
 import 'package:sparkd/features/spark/data/repositories/gig_repository_impl.dart';
@@ -57,7 +58,9 @@ Future<void> init() async {
     ),
   );
 
-  sl.registerFactory(() => SignInBloc(loginUserUseCase: sl()));
+  sl.registerFactory(
+    () => SignInBloc(loginUserUseCase: sl(), signInWithGoogleUseCase: sl()),
+  );
 
   sl.registerFactory(() => ForgotPasswordBloc(forgotPasswordUseCase: sl()));
 
@@ -79,6 +82,7 @@ Future<void> init() async {
   sl.registerLazySingleton(() => SaveUserProfileUseCase(authRepository: sl()));
   sl.registerLazySingleton(() => LoginUserUseCase(authRepository: sl()));
   sl.registerLazySingleton(() => ForgotPasswordUseCase(authRepository: sl()));
+  sl.registerLazySingleton(() => SignInWithGoogleUseCase(repository: sl()));
 
   // Repositories
   sl.registerLazySingleton<AuthRepository>(
