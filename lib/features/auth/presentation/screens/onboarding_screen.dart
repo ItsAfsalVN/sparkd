@@ -77,7 +77,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             spacing: 20,
             children: [
               SizedBox(
-                height: 65,
+                height: 60,
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 20.0,
@@ -197,13 +197,14 @@ class OnboardingPage extends StatelessWidget {
           Image.asset(image, width: double.infinity, fit: BoxFit.contain),
 
           Column(
-            spacing: 20,
             crossAxisAlignment: CrossAxisAlignment.start,
+            spacing: 12,
             children: [
               Text(
                 title,
                 style: Theme.of(context).textStyles.heading1.copyWith(
                   color: Theme.of(context).colorScheme.primary,
+                  height: 1,
                 ),
               ),
               Text(
