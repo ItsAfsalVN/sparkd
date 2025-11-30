@@ -106,6 +106,18 @@ class AuthRepositoryImplementation implements AuthRepository {
   }
 
   @override
+  Future<UserProfile?> getUserProfile({required String uid}) async {
+    try {
+      return await remoteDataSource.getUserProfile(uid);
+    } catch (error) {
+      logger.e(
+        "AuthRepositoryImplementation Error fetching user profile : $error",
+      );
+      rethrow;
+    }
+  }
+
+  @override
   Future<UserCredential> loginUser({
     required String email,
     required String password,

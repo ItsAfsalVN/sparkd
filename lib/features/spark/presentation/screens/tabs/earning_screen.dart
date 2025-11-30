@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-class EarningScreen extends StatelessWidget {
-  const EarningScreen({super.key});
+class SparkEarningScreen extends StatelessWidget {
+  const SparkEarningScreen({super.key});
 
   @override
   Widget build(BuildContext context) {

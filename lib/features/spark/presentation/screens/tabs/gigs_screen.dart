@@ -8,14 +8,14 @@ import 'package:sparkd/core/services/service_locator.dart';
 import 'package:sparkd/features/spark/presentation/bloc/gig/gig_bloc.dart';
 import 'package:sparkd/features/spark/presentation/screens/create_new_gig_provider.dart';
 
-class GigsScreen extends StatefulWidget {
-  const GigsScreen({super.key});
+class SparkGigScreen extends StatefulWidget {
+  const SparkGigScreen({super.key});
 
   @override
-  State<GigsScreen> createState() => _GigsScreenState();
+  State<SparkGigScreen> createState() => _SparkGigScreenState();
 }
 
-class _GigsScreenState extends State<GigsScreen> {
+class _SparkGigScreenState extends State<SparkGigScreen> {
   @override
   Widget build(BuildContext context) {
     final textStyles = Theme.of(context).textStyles;

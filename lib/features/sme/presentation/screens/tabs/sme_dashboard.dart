@@ -1,20 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:sparkd/core/presentation/widgets/app_bottom_navigation_bar.dart';
 import 'package:sparkd/core/presentation/widgets/app_bottom_navigation_bar_item.dart';
-import 'package:sparkd/features/spark/presentation/screens/tabs/earning_screen.dart';
-import 'package:sparkd/features/spark/presentation/screens/tabs/gigs_screen.dart';
-import 'package:sparkd/features/spark/presentation/screens/tabs/home_screen.dart';
-import 'package:sparkd/features/spark/presentation/screens/tabs/orders_screen.dart';
-import 'package:sparkd/features/spark/presentation/screens/tabs/profile_screen.dart';
+import 'package:sparkd/features/sme/presentation/screens/tabs/discover_screen.dart';
+import 'package:sparkd/features/sme/presentation/screens/tabs/home_screen.dart';
+import 'package:sparkd/features/sme/presentation/screens/tabs/inbox_screen.dart';
+import 'package:sparkd/features/sme/presentation/screens/tabs/order_screen.dart';
+import 'package:sparkd/features/sme/presentation/screens/tabs/profile_screen.dart';
 
-class SparkDashboardScreen extends StatefulWidget {
-  const SparkDashboardScreen({super.key});
+class SmeDashboard extends StatefulWidget {
+  const SmeDashboard({super.key});
 
   @override
-  State<SparkDashboardScreen> createState() => _SparkDashboardScreenState();
+  State<SmeDashboard> createState() => _SmeDashboardState();
 }
 
-class _SparkDashboardScreenState extends State<SparkDashboardScreen> {
+class _SmeDashboardState extends State<SmeDashboard> {
   int _selectedIndex = 0;
   late final PageController _pageController;
 
@@ -22,27 +22,27 @@ class _SparkDashboardScreenState extends State<SparkDashboardScreen> {
     AppBottomNavigationBarItem(
       label: 'Home',
       iconPath: 'assets/icons/spark/home.svg',
-      screen: const HomeScreen(),
+      screen: const SmeHomeScreen(),
     ),
     AppBottomNavigationBarItem(
       label: 'Orders',
       iconPath: 'assets/icons/spark/orders.svg',
-      screen: const OrdersScreen(),
+      screen: const SmeOrdersScreen(),
     ),
     AppBottomNavigationBarItem(
-      label: 'Gigs',
+      label: 'Discover',
       iconPath: 'assets/icons/spark/megaphone.svg',
-      screen: const GigsScreen(),
+      screen: const SmeDiscoverScreen(),
     ),
     AppBottomNavigationBarItem(
-      label: 'Earnings',
+      label: 'Inbox',
       iconPath: 'assets/icons/spark/wallet.svg',
-      screen: const EarningScreen(),
+      screen: const SmeInboxScreen(),
     ),
     AppBottomNavigationBarItem(
       label: 'Profile',
       iconPath: 'assets/icons/spark/person.svg',
-      screen: const ProfileScreen(),
+      screen: const SmeProfileScreen(),
     ),
   ];
 

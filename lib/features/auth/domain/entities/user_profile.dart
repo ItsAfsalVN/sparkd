@@ -35,6 +35,29 @@ class UserProfile extends Equatable {
     );
   }
 
+  factory UserProfile.fromFirestore(Map<String, dynamic> data) {
+    UserType parseUserType(String? typeString) {
+      if (typeString == null) return UserType.spark; // Default fallback
+      try {
+        return UserType.values.firstWhere((e) => e.name == typeString);
+      } catch (e) {
+        return UserType.spark; // Default fallback
+      }
+    }
+
+    return UserProfile(
+      uid: data['uid'] as String,
+      fullName: data['fullName'] as String,
+      email: data['email'] as String,
+      phoneNumber: data['phoneNumber'] as String,
+      userType: parseUserType(data['userType'] as String?),
+      skills: (data['skills'] as List<dynamic>?)
+          ?.map((e) => SkillModel.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      businessData: data['businessData'] as Map<String, dynamic>?,
+    );
+  }
+
   Map<String, dynamic> toFirestore() {
     final Map<String, dynamic> data = {
       'uid': uid,
