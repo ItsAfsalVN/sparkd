@@ -12,8 +12,8 @@ import 'package:sparkd/features/sme/presentation/bloc/business_details_bloc.dart
 import 'package:sparkd/features/sme/presentation/screens/add_business_details_screen.dart';
 import 'package:sparkd/features/spark/presentation/bloc/skills_bloc.dart';
 import 'package:sparkd/features/spark/presentation/screens/add_skills_screen.dart';
-import 'package:sparkd/features/sme/presentation/screens/tabs/dashboard.dart';
-import 'package:sparkd/features/spark/presentation/screens/tabs/spark_dashboard_screen.dart';
+import 'package:sparkd/features/sme/presentation/screens/tabs/sme_dashboard.dart';
+import 'package:sparkd/features/spark/presentation/screens/tabs/spark_dashboard.dart';
 
 class DecisionScreen extends StatelessWidget {
   const DecisionScreen({super.key});
@@ -38,7 +38,7 @@ class DecisionScreen extends StatelessWidget {
             case UserType.sme:
               Navigator.pushReplacement(
                 context,
-                MaterialPageRoute(builder: (_) => const SmeDashboard()),
+                MaterialPageRoute(builder: (_) => SmeDashboard()),
               );
               break;
             case UserType.admin:

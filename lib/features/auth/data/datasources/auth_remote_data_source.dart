@@ -22,6 +22,7 @@ abstract class AuthRemoteDataSource {
     required String phoneNumber,
   });
   Future<void> saveUserProfile(UserProfile profile);
+  Future<UserProfile?> getUserProfile(String uid);
   Future<UserCredential> loginUser({
     required String email,
     required String password,
@@ -250,6 +251,26 @@ class AuthRemoteDataSourceImplementation extends AuthRemoteDataSource {
     } catch (e) {
       logger.e("Firestore: Failed to save user profile.", error: e);
       throw Exception('Database error: Failed to save profile.');
+    }
+  }
+
+  @override
+  Future<UserProfile?> getUserProfile(String uid) async {
+    try {
+      logger.d("Firestore: Fetching user profile for UID: $uid");
+      final doc = await firebaseFirestore.collection('users').doc(uid).get();
+
+      if (!doc.exists || doc.data() == null) {
+        logger.w("Firestore: No profile found for UID: $uid");
+        return null;
+      }
+
+      final data = doc.data()!;
+      logger.i("Firestore: User profile fetched successfully for UID: $uid");
+      return UserProfile.fromFirestore(data);
+    } catch (e) {
+      logger.e("Firestore: Failed to fetch user profile.", error: e);
+      throw Exception('Database error: Failed to fetch profile.');
     }
   }
 

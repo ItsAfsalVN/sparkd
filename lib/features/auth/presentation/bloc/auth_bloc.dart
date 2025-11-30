@@ -8,6 +8,7 @@ import 'package:sparkd/features/auth/domain/entities/user_profile.dart';
 import 'package:sparkd/features/auth/domain/repositories/sign_up_data_repository.dart';
 import 'package:sparkd/features/auth/domain/usecases/create_user_with_email_and_password.dart';
 import 'package:sparkd/features/auth/domain/usecases/get_is_first_run.dart';
+import 'package:sparkd/features/auth/domain/usecases/get_user_profile.dart';
 import 'package:sparkd/features/auth/domain/usecases/link_phone_credential.dart';
 import 'package:sparkd/features/auth/domain/usecases/save_user_profile.dart';
 import 'package:sparkd/features/auth/domain/usecases/set_onboarding_complete.dart';
@@ -25,6 +26,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final CreateUserWithEmailUseCase _createUserWithEmailUseCase;
   final LinkPhoneCredentialUseCase _linkPhoneCredentialUseCase;
   final SaveUserProfileUseCase _saveUserProfileUseCase;
+  final GetUserProfileUseCase _getUserProfileUseCase;
 
   AuthBloc({
     required GetIsFirstRun getIsFirstRun,
@@ -34,6 +36,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     required CreateUserWithEmailUseCase createUserWithEmailUseCase,
     required LinkPhoneCredentialUseCase linkPhoneCredentialUseCase,
     required SaveUserProfileUseCase saveUserProfileUseCase,
+    required GetUserProfileUseCase getUserProfileUseCase,
   }) : _getIsFirstRun = getIsFirstRun,
        _setOnboardingCompleted = setOnboardingCompleted,
        _localDataSource = localDataSource,
@@ -41,6 +44,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
        _createUserWithEmailUseCase = createUserWithEmailUseCase,
        _linkPhoneCredentialUseCase = linkPhoneCredentialUseCase,
        _saveUserProfileUseCase = saveUserProfileUseCase,
+       _getUserProfileUseCase = getUserProfileUseCase,
        super(AuthInitial()) {
     on<AuthCheckStatusRequested>(_onAuthCheckStatusRequested);
     on<AuthOnboardingCompleted>(_onAuthOnboardingCompleted);
@@ -96,18 +100,35 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
       final currentUser = FirebaseAuth.instance.currentUser;
       if (currentUser != null) {
-        // User is authenticated but we don't have userType from sign-up flow
-        // This should ideally fetch from Firestore, but for now log error
-        logger.e(
-          "AuthBloc: User authenticated but no sign-up flow data. Need to fetch userType from Firestore.",
+        // User is authenticated - fetch their profile from Firestore
+        logger.i(
+          "AuthBloc: Firebase user found (${currentUser.uid}). Fetching user profile...",
         );
+        try {
+          final userProfile = await _getUserProfileUseCase(currentUser.uid);
+          if (userProfile != null) {
+            logger.i(
+              "AuthBloc: User profile loaded. UserType: ${userProfile.userType}",
+            );
+            await _localDataSource.clearSignUpStep();
+            emit(AuthAuthenticated(userProfile.userType));
+            return;
+          } else {
+            logger.w(
+              "AuthBloc: No profile found in Firestore for UID: ${currentUser.uid}",
+            );
+          }
+        } catch (e) {
+          logger.e(
+            "AuthBloc: Error fetching user profile from Firestore",
+            error: e,
+          );
+        }
+        // If we couldn't get the profile, sign out and show unauthenticated
+        await FirebaseAuth.instance.signOut();
         await _localDataSource.clearSignUpStep();
-        // TODO: Fetch userType from Firestore user profile
-        // For now, emit unauthenticated to force re-login
         emit(AuthUnauthenticated());
-        logger.w(
-          "AuthBloc: Emitting Unauthenticated - userType must be determined from Firestore.",
-        );
+        logger.w("AuthBloc: Could not load user profile. User signed out.");
       } else {
         emit(AuthUnauthenticated());
         logger.i(

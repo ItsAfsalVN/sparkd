@@ -10,7 +10,7 @@ import 'package:sparkd/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:sparkd/features/auth/presentation/screens/decision_screen.dart';
 import 'package:sparkd/features/auth/presentation/screens/phone_input_screen.dart';
 import 'package:sparkd/features/spark/presentation/bloc/skills_bloc.dart';
-import 'package:sparkd/features/spark/presentation/screens/tabs/spark_dashboard_screen.dart';
+import 'package:sparkd/features/spark/presentation/screens/tabs/spark_dashboard.dart';
 import '../../../../core/services/service_locator.dart' as di;
 import 'package:sparkd/core/utils/form_statuses.dart';
 
