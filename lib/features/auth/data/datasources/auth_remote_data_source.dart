@@ -233,11 +233,20 @@ class AuthRemoteDataSourceImplementation extends AuthRemoteDataSource {
   @override
   Future<void> saveUserProfile(UserProfile profile) async {
     try {
+      final firestoreData = profile.toFirestore();
+      logger.d(
+        "Firestore: Saving user profile for UID: ${profile.uid}, "
+        "userType: ${profile.userType}, "
+        "has businessData: ${firestoreData.containsKey('businessData')}",
+      );
+
       await firebaseFirestore
           .collection('users')
           .doc(profile.uid)
-          .set(profile.toFirestore());
-      logger.i("Firestore: User profile saved for UID: ${profile.uid}");
+          .set(firestoreData);
+      logger.i(
+        "Firestore: User profile saved successfully for UID: ${profile.uid}",
+      );
     } catch (e) {
       logger.e("Firestore: Failed to save user profile.", error: e);
       throw Exception('Database error: Failed to save profile.');

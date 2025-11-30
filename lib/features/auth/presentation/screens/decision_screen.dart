@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:sparkd/core/services/service_locator.dart';
 import 'package:sparkd/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:sparkd/features/auth/presentation/screens/onboarding_screen.dart';
 import 'package:sparkd/features/auth/presentation/screens/role_selection_screen.dart';
@@ -7,8 +8,11 @@ import 'package:sparkd/features/auth/presentation/screens/role_selection_screen.
 import 'package:sparkd/features/auth/presentation/screens/phone_input_screen.dart';
 // Import logger if you use it
 import 'package:sparkd/core/utils/logger.dart';
+import 'package:sparkd/features/sme/presentation/bloc/business_details_bloc.dart';
 import 'package:sparkd/features/sme/presentation/screens/add_business_details_screen.dart';
+import 'package:sparkd/features/spark/presentation/bloc/skills_bloc.dart';
 import 'package:sparkd/features/spark/presentation/screens/add_skills_screen.dart';
+import 'package:sparkd/features/sme/presentation/screens/tabs/dashboard.dart';
 import 'package:sparkd/features/spark/presentation/screens/tabs/spark_dashboard_screen.dart';
 
 class DecisionScreen extends StatelessWidget {
@@ -32,7 +36,10 @@ class DecisionScreen extends StatelessWidget {
               );
               break;
             case UserType.sme:
-              // Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => SmeDashboard()));
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => const SmeDashboard()),
+              );
               break;
             case UserType.admin:
               // Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => AdminDashboard()));
@@ -62,13 +69,26 @@ class DecisionScreen extends StatelessWidget {
           logger.i("Navigating to AddBusinessDetailsScreen (Resuming sign-up)");
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (context) => AddBusinessDetailsScreen()),
+            MaterialPageRoute(
+              builder: (context) => BlocProvider(
+                create: (context) => BusinessDetailsBloc(
+                  signUpDataRepository: sl(),
+                  authBloc: sl(),
+                ),
+                child: const AddBusinessDetailsScreen(),
+              ),
+            ),
           );
         } else if (state is AuthAwaitingSkills) {
           logger.i("Navigating to AddSkillsScreen (Resuming sign-up)");
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (context) => AddSkillsScreen()),
+            MaterialPageRoute(
+              builder: (context) => BlocProvider(
+                create: (context) => sl<SkillsBloc>(),
+                child: const AddSkillsScreen(),
+              ),
+            ),
           );
         }
       },

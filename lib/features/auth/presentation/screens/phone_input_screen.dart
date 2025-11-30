@@ -10,6 +10,7 @@ import 'package:sparkd/features/auth/domain/repositories/sign_up_data_repository
 import 'package:sparkd/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:sparkd/features/auth/presentation/bloc/phone/phone_bloc.dart';
 import 'package:sparkd/features/auth/presentation/screens/input_otp_screen.dart';
+import 'package:sparkd/features/auth/presentation/screens/role_selection_screen.dart';
 import 'package:sparkd/features/auth/presentation/screens/sign_up_screen.dart';
 import 'package:sparkd/core/utils/form_statuses.dart';
 
@@ -45,6 +46,7 @@ class _PhoneInputScreenState extends State<PhoneInputScreen> {
     logger.i(
       "PhoneInputScreen: Pre-filled phone number from repository: ${_phoneBloc.state.phoneNumber}",
     );
+    logger.i("PhoneInputScreen: UserType from repository: $_userType");
   }
 
   @override
@@ -62,8 +64,23 @@ class _PhoneInputScreenState extends State<PhoneInputScreen> {
         : 'assets/images/logo_dark.png';
     final textStyle = Theme.of(context).textStyles;
 
-    // Ensure userType is safe before passing
-    final UserType safeUserType = _userType ?? UserType.spark;
+    // UserType must be set from sign-up flow - if null, something went wrong
+    if (_userType == null) {
+      logger.e(
+        "PhoneInputScreen: UserType is null! This should not happen. Navigating back to role selection.",
+      );
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (context) => const RoleSelectionScreen(),
+            ),
+          );
+        }
+      });
+    }
+    final UserType safeUserType =
+        _userType ?? UserType.spark; // Fallback for UI build
 
     return BlocProvider.value(
       value: _phoneBloc,
