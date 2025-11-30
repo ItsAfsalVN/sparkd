@@ -121,8 +121,6 @@ class AuthRemoteDataSourceImplementation extends AuthRemoteDataSource {
           }
         }
       } else {
-        // No existing user (Email/Password flow)
-        // Sign in with phone credential temporarily to verify it
         UserCredential tempUserCredential = await firebaseAuth
             .signInWithCredential(credential);
 

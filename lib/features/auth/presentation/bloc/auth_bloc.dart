@@ -80,20 +80,16 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
               "AuthBloc: Step is AWAITING_SKILLS but no Firebase user. Resetting.",
             );
             await _localDataSource.clearSignUpStep();
+            _signUpDataRepository.clearData();
             emit(AuthUnauthenticated());
           }
           return;
         } else if (currentStep == STEP_AWAITING_BUSINESS) {
-          if (FirebaseAuth.instance.currentUser != null) {
-            emit(AuthAwaitingBusinessDetails(currentData));
-            logger.i("AuthBloc: Resuming sign-up at business details input.");
-          } else {
-            logger.w(
-              "AuthBloc: Step is AWAITING_BUSINESS but no Firebase user. Resetting.",
-            );
-            await _localDataSource.clearSignUpStep();
-            emit(AuthUnauthenticated());
-          }
+          // For SME users, they can be at business details step without full Firebase auth
+          // The phone verification created a temporary user, but session might expire
+          // We should still let them continue and provide their business details
+          emit(AuthAwaitingBusinessDetails(currentData));
+          logger.i("AuthBloc: Resuming sign-up at business details input.");
           return;
         }
       }

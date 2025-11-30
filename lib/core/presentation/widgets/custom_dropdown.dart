@@ -8,6 +8,7 @@ class CustomDropdown<T> extends StatelessWidget {
   final List<DropdownItem<T>> items;
   final Function(T?) onChanged;
   final String? Function(T?)? validator;
+  final FocusNode? focusNode;
 
   const CustomDropdown({
     super.key,
@@ -17,6 +18,7 @@ class CustomDropdown<T> extends StatelessWidget {
     required this.items,
     required this.onChanged,
     this.validator,
+    this.focusNode,
   });
 
   @override
@@ -43,7 +45,7 @@ class CustomDropdown<T> extends StatelessWidget {
             color: colorScheme.surface,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: colorScheme.onSurface.withValues(alpha: 0.3),
+              color: colorScheme.onSurface.withValues(alpha: 0.2),
             ),
             boxShadow: [
               BoxShadow(
@@ -54,11 +56,12 @@ class CustomDropdown<T> extends StatelessWidget {
             ],
           ),
           child: DropdownButtonFormField<T>(
+            focusNode: focusNode,
             initialValue: value,
             hint: Text(
               hintText,
-              style: textStyles.paragraph.copyWith(
-                color: colorScheme.onSurface.withValues(alpha: 0.4),
+              style: textStyles.subtext.copyWith(
+                color: colorScheme.onSurface.withValues(alpha: 0.2),
                 fontSize: 14,
               ),
             ),
@@ -181,6 +184,53 @@ class RevisionsDropdown extends StatelessWidget {
       validator: (value) {
         if (value == null) {
           return "Please select number of revisions";
+        }
+        return null;
+      },
+    );
+  }
+}
+
+class BusinessCategoryDropdown extends StatelessWidget {
+  final Function(String?) onChanged;
+  final FocusNode? focusNode;
+
+  const BusinessCategoryDropdown({super.key, required this.onChanged, this.focusNode});
+
+  // Business categories
+  static const List<DropdownItem<String>> businessCategories = [
+    DropdownItem(value: 'food_restaurant', label: 'Food & Restaurant'),
+    DropdownItem(value: 'retail_fashion', label: 'Retail & Fashion'),
+    DropdownItem(value: 'health_wellness', label: 'Health & Wellness'),
+    DropdownItem(value: 'beauty_salon', label: 'Beauty & Salon'),
+    DropdownItem(value: 'education_training', label: 'Education & Training'),
+    DropdownItem(
+      value: 'professional_services',
+      label: 'Professional Services',
+    ),
+    DropdownItem(value: 'home_services', label: 'Home Services'),
+    DropdownItem(value: 'automotive', label: 'Automotive'),
+    DropdownItem(value: 'real_estate', label: 'Real Estate'),
+    DropdownItem(value: 'entertainment', label: 'Entertainment & Events'),
+    DropdownItem(value: 'technology', label: 'Technology'),
+    DropdownItem(value: 'hospitality', label: 'Hospitality & Tourism'),
+    DropdownItem(value: 'other', label: 'Other'),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomDropdown<String>(
+      focusNode: focusNode,
+      label: "Business Category",
+      hintText: "Select your business category",
+      value: null,
+      items: businessCategories,
+      onChanged: (value) {
+        onChanged(value);
+      },
+      validator: (value) {
+        if (value == null) {
+          return 'Please select a business category';
         }
         return null;
       },
