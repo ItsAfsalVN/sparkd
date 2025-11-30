@@ -47,6 +47,20 @@ class _SignUpScreenState extends State<SignUpScreen> {
     _signUpBloc = SignUpBloc(signUpDataRepository: di.sl());
     _signInBloc = di.sl<SignInBloc>();
 
+    // Save userType immediately when screen is created
+    final signUpDataRepo = di.sl<SignUpDataRepository>();
+    final currentData = signUpDataRepo.getData();
+    signUpDataRepo.updateData(currentData.copyWith(userType: widget.userType));
+    logger.i(
+      "SignUpScreen: Saved userType '${widget.userType}' to repository on screen initialization",
+    );
+
+    // Verify the save
+    final verifyData = signUpDataRepo.getData();
+    logger.i(
+      "SignUpScreen: VERIFICATION - UserType after initialization save: ${verifyData.userType}",
+    );
+
     final savedData = _signUpBloc.state;
 
     _fullNameController.text = savedData.fullName;
@@ -140,6 +154,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
               );
               logger.i(
                 "SignUpScreen: Saved userType '${widget.userType}' and email '$userEmail' after Google Sign-In",
+              );
+
+              // Verify the save
+              final verifyData = signUpDataRepo.getData();
+              logger.i(
+                "SignUpScreen: VERIFICATION - UserType after Google Sign-In save: ${verifyData.userType}",
               );
 
               BlocProvider.of<AuthBloc>(context).add(AuthDetailsSubmitted());

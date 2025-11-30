@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:sparkd/core/presentation/widgets/otp_input.dart';
+import 'package:sparkd/core/services/service_locator.dart';
 import 'package:sparkd/core/utils/app_text_theme_extension.dart';
 import 'package:sparkd/core/utils/logger.dart';
 import 'package:sparkd/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:sparkd/features/auth/presentation/bloc/phone/phone_bloc.dart';
 import 'package:sparkd/core/utils/snackbar_helper.dart';
+import 'package:sparkd/features/sme/presentation/bloc/business_details_bloc.dart';
 import 'package:sparkd/features/sme/presentation/screens/add_business_details_screen.dart';
+import 'package:sparkd/features/spark/presentation/bloc/skills_bloc.dart';
 import 'package:sparkd/features/spark/presentation/screens/add_skills_screen.dart';
 import 'package:sparkd/core/utils/form_statuses.dart';
 
@@ -95,13 +98,22 @@ class _InputOtpScreenState extends State<InputOtpScreen> {
                   if (userType == UserType.spark) {
                     Navigator.of(context).pushReplacement(
                       MaterialPageRoute(
-                        builder: (context) => const AddSkillsScreen(),
+                        builder: (context) => BlocProvider(
+                          create: (context) => sl<SkillsBloc>(),
+                          child: const AddSkillsScreen(),
+                        ),
                       ),
                     );
                   } else if (userType == UserType.sme) {
                     Navigator.of(context).pushReplacement(
                       MaterialPageRoute(
-                        builder: (context) => const AddBusinessDetailsScreen(),
+                        builder: (context) => BlocProvider(
+                          create: (context) => BusinessDetailsBloc(
+                            signUpDataRepository: sl(),
+                            authBloc: sl(),
+                          ),
+                          child: const AddBusinessDetailsScreen(),
+                        ),
                       ),
                     );
                   } else {

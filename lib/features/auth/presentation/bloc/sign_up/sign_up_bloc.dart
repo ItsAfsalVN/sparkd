@@ -166,6 +166,12 @@ class SignUpBloc extends Bloc<SignUpEvent, SignUpState> {
         "SignUpBloc: Saved userType '${event.userType}' to repository on submit.",
       );
 
+      // Verify the save
+      final verifyData = _signUpDataRepository.getData();
+      logger.i(
+        "SignUpBloc: VERIFICATION - UserType after save: ${verifyData.userType}",
+      );
+
       await Future.delayed(Duration.zero);
 
       if (!isClosed && state.status == FormStatus.valid) {

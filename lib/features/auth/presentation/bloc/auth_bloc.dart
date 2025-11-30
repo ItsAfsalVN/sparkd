@@ -96,11 +96,17 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
       final currentUser = FirebaseAuth.instance.currentUser;
       if (currentUser != null) {
-        UserType userType = UserType.spark;
+        // User is authenticated but we don't have userType from sign-up flow
+        // This should ideally fetch from Firestore, but for now log error
+        logger.e(
+          "AuthBloc: User authenticated but no sign-up flow data. Need to fetch userType from Firestore.",
+        );
         await _localDataSource.clearSignUpStep();
-        emit(AuthAuthenticated(userType));
-        logger.i(
-          "AuthBloc: User authenticated (sign-up complete or already logged in).",
+        // TODO: Fetch userType from Firestore user profile
+        // For now, emit unauthenticated to force re-login
+        emit(AuthUnauthenticated());
+        logger.w(
+          "AuthBloc: Emitting Unauthenticated - userType must be determined from Firestore.",
         );
       } else {
         emit(AuthUnauthenticated());
@@ -244,6 +250,18 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         currentUser.uid,
         signUpData,
       );
+
+      logger.i(
+        "AuthBloc: Created UserProfile - userType: ${userProfile.userType}, "
+        "skills: ${userProfile.skills?.length ?? 0}, "
+        "businessData: ${userProfile.businessData != null ? 'present' : 'null'}",
+      );
+
+      if (userProfile.businessData != null) {
+        logger.d(
+          "AuthBloc: Business data to save: ${userProfile.businessData}",
+        );
+      }
 
       await _saveUserProfileUseCase(userProfile);
       logger.i("AuthBloc: User profile successfully persisted to Firestore.");
