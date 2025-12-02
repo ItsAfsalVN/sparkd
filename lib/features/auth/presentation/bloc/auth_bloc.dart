@@ -9,7 +9,6 @@ import 'package:sparkd/features/auth/domain/repositories/sign_up_data_repository
 import 'package:sparkd/features/auth/domain/usecases/create_user_with_email_and_password.dart';
 import 'package:sparkd/features/auth/domain/usecases/get_is_first_run.dart';
 import 'package:sparkd/features/auth/domain/usecases/get_user_profile.dart';
-import 'package:sparkd/features/auth/domain/usecases/link_phone_credential.dart';
 import 'package:sparkd/features/auth/domain/usecases/save_user_profile.dart';
 import 'package:sparkd/features/auth/domain/usecases/set_onboarding_complete.dart';
 
@@ -24,7 +23,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final SignUpDataRepository _signUpDataRepository;
 
   final CreateUserWithEmailUseCase _createUserWithEmailUseCase;
-  final LinkPhoneCredentialUseCase _linkPhoneCredentialUseCase;
   final SaveUserProfileUseCase _saveUserProfileUseCase;
   final GetUserProfileUseCase _getUserProfileUseCase;
 
@@ -34,7 +32,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     required AuthLocalDataSource localDataSource,
     required SignUpDataRepository signUpDataRepository,
     required CreateUserWithEmailUseCase createUserWithEmailUseCase,
-    required LinkPhoneCredentialUseCase linkPhoneCredentialUseCase,
     required SaveUserProfileUseCase saveUserProfileUseCase,
     required GetUserProfileUseCase getUserProfileUseCase,
   }) : _getIsFirstRun = getIsFirstRun,
@@ -42,7 +39,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
        _localDataSource = localDataSource,
        _signUpDataRepository = signUpDataRepository,
        _createUserWithEmailUseCase = createUserWithEmailUseCase,
-       _linkPhoneCredentialUseCase = linkPhoneCredentialUseCase,
        _saveUserProfileUseCase = saveUserProfileUseCase,
        _getUserProfileUseCase = getUserProfileUseCase,
        super(AuthInitial()) {
@@ -155,8 +151,46 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     Emitter<AuthState> emit,
   ) async {
     try {
-      await _localDataSource.setCurrentSignUpStep(STEP_AWAITING_PHONE);
       final currentData = _signUpDataRepository.getData();
+      logger.i(
+        "AuthBloc: Details submitted. UserType: ${currentData.userType}",
+      );
+
+      // Create Firebase Auth user with email/password NOW (before OTP)
+      // This allows us to link phone credential immediately after OTP verification
+      if (currentData.email != null && currentData.password != null) {
+        final existingUser = FirebaseAuth.instance.currentUser;
+
+        // Only create if not already signed in (Google users are already signed in)
+        if (existingUser == null) {
+          logger.i(
+            "AuthBloc: Creating Firebase Auth user with email/password...",
+          );
+          try {
+            final userCredential = await _createUserWithEmailUseCase(
+              email: currentData.email!,
+              password: currentData.password!,
+            );
+            logger.i(
+              "AuthBloc: Email/Pass user created successfully. UID: ${userCredential.user?.uid}",
+            );
+          } catch (e) {
+            logger.e(
+              "AuthBloc: Error creating user with email/password",
+              error: e,
+            );
+            // If user already exists, try to sign in
+            // This can happen if the flow was interrupted before
+            logger.w("AuthBloc: User might already exist, continuing...");
+          }
+        } else {
+          logger.i(
+            "AuthBloc: User already signed in (Google). UID: ${existingUser.uid}",
+          );
+        }
+      }
+
+      await _localDataSource.setCurrentSignUpStep(STEP_AWAITING_PHONE);
       emit(AuthAwaitingPhoneNumber(currentData));
       logger.d(
         "AuthBloc: Details submitted, saved step STEP_AWAITING_PHONE, emitting AuthAwaitingPhoneNumber.",
@@ -173,7 +207,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     try {
       final signUpData = _signUpDataRepository.getData();
       final userType = signUpData.userType;
-      logger.d("AuthBloc: Phone verified. Checking UserType: $userType");
+      logger.d("AuthBloc: Phone verified. UserType: $userType");
+
+      // User account is already created (in AuthDetailsSubmitted)
+      // Phone credential is already linked (in verifyOtp)
+      // Just determine the next step
 
       String nextStep;
       if (userType == UserType.spark) {
@@ -182,7 +220,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         nextStep = STEP_AWAITING_BUSINESS;
       } else {
         logger.e(
-          "AuthBloc: Unexpected user type ($userType) during phone verification. Clearing step.",
+          "AuthBloc: Unexpected user type ($userType) during phone verification.",
         );
         await _localDataSource.clearSignUpStep();
         emit(AuthUnauthenticated());
@@ -190,10 +228,16 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       }
 
       await _localDataSource.setCurrentSignUpStep(nextStep);
-
-      logger.i("AuthBloc: Phone verified. Saved next step: $nextStep");
-    } catch (e) {
-      logger.e("AuthBloc: Error saving next step after phone verify", error: e);
+      logger.i("AuthBloc: Phone verified and linked. Next step: $nextStep");
+    } catch (e, s) {
+      logger.e(
+        "AuthBloc: Error during phone verification step",
+        error: e,
+        stackTrace: s,
+      );
+      await _localDataSource.clearSignUpStep();
+      _signUpDataRepository.clearData();
+      emit(AuthUnauthenticated());
     }
   }
 
@@ -202,21 +246,14 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     Emitter<AuthState> emit,
   ) async {
     final signUpData = _signUpDataRepository.getData();
-    logger.i("AuthBloc: Starting final sign up for user: ${signUpData.email}");
+    logger.i("AuthBloc: Finalizing sign up for user: ${signUpData.email}");
     logger.i(
-      "AuthBloc: SignUpData - email: ${signUpData.email}, password exists: ${signUpData.password != null}, userType: ${signUpData.userType}",
+      "AuthBloc: SignUpData - email: ${signUpData.email}, userType: ${signUpData.userType}",
     );
 
     // Check if critical data is available
-    if (signUpData.verificationID == null ||
-        signUpData.smsCode == null ||
-        signUpData.phoneNumber == null ||
-        signUpData.userType == null) {
-      logger.e("AuthBloc: Missing critical data for final sign up. Aborting.");
-      logger.e(
-        "AuthBloc: verificationID: ${signUpData.verificationID}, smsCode: ${signUpData.smsCode}, phone: ${signUpData.phoneNumber}, userType: ${signUpData.userType}",
-      );
-
+    if (signUpData.userType == null) {
+      logger.e("AuthBloc: Missing userType for final sign up. Aborting.");
       _signUpDataRepository.clearData();
       await _localDataSource.clearSignUpStep();
       emit(AuthUnauthenticated());
@@ -229,44 +266,15 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         "AuthBloc: Current Firebase user: ${currentUser?.uid ?? 'null'}, email: ${currentUser?.email ?? 'null'}",
       );
 
-      // Check if user is already signed in (e.g., via Google Sign-In)
       if (currentUser == null) {
-        // User not signed in, create account with email/password
-        if (signUpData.email == null || signUpData.password == null) {
-          logger.e("AuthBloc: Email/password missing for account creation.");
-          logger.e(
-            "AuthBloc: This likely means Google Sign-In user was signed out. Email: ${signUpData.email}, Password exists: ${signUpData.password != null}",
-          );
-          throw Exception("Email and password are required for sign up.");
-        }
-
-        logger.i("AuthBloc: Creating new user with email/password...");
-        final userCredential = await _createUserWithEmailUseCase(
-          email: signUpData.email!,
-          password: signUpData.password!,
+        logger.e(
+          "AuthBloc: No authenticated user found. This should not happen.",
         );
-        currentUser = userCredential.user;
-        if (currentUser == null) {
-          throw Exception("Firebase user object is null after creation.");
-        }
-        logger.i(
-          "AuthBloc: Email/Pass user created successfully. UID: ${currentUser.uid}",
-        );
-      } else {
-        logger.i(
-          "AuthBloc: User already signed in (likely via Google). UID: ${currentUser.uid}, Email: ${currentUser.email}",
-        );
+        throw Exception("No authenticated user found.");
       }
 
-      // Link phone number to the account
-      logger.i("AuthBloc: Linking phone number to user account...");
-      await _linkPhoneCredentialUseCase(
-        verificationID: signUpData.verificationID!,
-        smsCode: signUpData.smsCode!,
-        phoneNumber: signUpData.phoneNumber!,
-      );
-      logger.i("AuthBloc: Phone number linked successfully.");
-
+      // Phone is already linked at this point, just save the profile
+      logger.i("AuthBloc: Creating user profile for Firestore...");
       final UserProfile userProfile = UserProfile.fromSignUpData(
         currentUser.uid,
         signUpData,
@@ -299,10 +307,38 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         stackTrace: s,
       );
 
-      await _localDataSource.clearSignUpStep();
-      _signUpDataRepository.clearData();
+      final errorString = e.toString();
+      final isSessionExpired =
+          errorString.contains('session-expired') ||
+          errorString.contains('sms code has expired');
 
-      emit(AuthUnauthenticated());
+      if (isSessionExpired) {
+        logger.w(
+          "AuthBloc: OTP session expired. User needs to re-verify phone.",
+        );
+        // Don't clear data - keep user at phone verification step
+        await _localDataSource.setCurrentSignUpStep(STEP_AWAITING_PHONE);
+        emit(
+          AuthFinalizationError(
+            errorMessage:
+                'Your verification code has expired. Please verify your phone number again.',
+            signUpData: signUpData,
+            isSessionExpired: true,
+          ),
+        );
+      } else {
+        // Other errors - clear everything and restart
+        logger.e("AuthBloc: Unrecoverable error. Clearing sign-up data.");
+        await _localDataSource.clearSignUpStep();
+        _signUpDataRepository.clearData();
+        emit(
+          AuthFinalizationError(
+            errorMessage: 'Failed to complete sign-up. Please try again.',
+            signUpData: signUpData,
+            isSessionExpired: false,
+          ),
+        );
+      }
     }
   }
 }

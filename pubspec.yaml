@@ -34,6 +34,7 @@ dependencies:
   image_picker: ^1.1.2
   file_picker: ^8.1.2
   permission_handler: ^11.3.1
+  flutter_rating_bar: ^4.0.1
 
 # Dev dependencies
 dev_dependencies:
@@ -51,6 +52,7 @@ flutter:
     - .env
     - assets/icons/
     - assets/icons/spark/
+    - assets/icons/sme/
     - assets/fonts/
     - assets/images/
     - assets/images/onboarding/

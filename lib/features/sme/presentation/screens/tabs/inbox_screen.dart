@@ -8,6 +8,9 @@ class SmeInboxScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Inbox'),
+        automaticallyImplyLeading: false,
+        elevation: 0,
+        scrolledUnderElevation: 0.0,
       ),
       body: const Center(
         child: Text('This is the Inbox Screen'),

@@ -8,10 +8,11 @@ class SmeHomeScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Home Screen'),
+        automaticallyImplyLeading: false,
+        elevation: 0,
+        scrolledUnderElevation: 0.0,
       ),
-      body: const Center(
-        child: Text('Welcome to the Home Screen!'),
-      ),
+      body: const Center(child: Text('Welcome to the Home Screen!')),
     );
   }
 }
