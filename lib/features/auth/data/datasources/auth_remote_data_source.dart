@@ -83,7 +83,7 @@ class AuthRemoteDataSourceImplementation extends AuthRemoteDataSource {
     required String smsCode,
   }) async {
     try {
-      // Check if there's already a signed-in user (e.g., from Google Sign-In)
+      // Check if there's already a signed-in user
       final existingUser = firebaseAuth.currentUser;
       final wasAlreadySignedIn = existingUser != null;
 
@@ -97,9 +97,21 @@ class AuthRemoteDataSourceImplementation extends AuthRemoteDataSource {
       );
 
       if (wasAlreadySignedIn) {
-        // User already signed in (Google Sign-In flow)
+        // User already signed in (could be Google or email/password)
         // Link the phone credential directly to the existing user
         try {
+          // Check if phone is already linked
+          final isPhoneAlreadyLinked = existingUser.providerData.any(
+            (info) => info.providerId == 'phone',
+          );
+
+          if (isPhoneAlreadyLinked) {
+            logger.i(
+              "AuthRemoteDataSource: Phone already linked to user. Skipping link.",
+            );
+            return; // Already linked, OTP verification successful
+          }
+
           await existingUser.linkWithCredential(credential);
           logger.i(
             "AuthRemoteDataSource: Phone credential linked to existing user (UID: ${existingUser.uid})",
@@ -122,6 +134,8 @@ class AuthRemoteDataSourceImplementation extends AuthRemoteDataSource {
           }
         }
       } else {
+        // No user signed in - just verify the OTP is valid
+        // We'll sign in temporarily and immediately sign out
         UserCredential tempUserCredential = await firebaseAuth
             .signInWithCredential(credential);
 
@@ -136,9 +150,7 @@ class AuthRemoteDataSourceImplementation extends AuthRemoteDataSource {
         );
 
         await firebaseAuth.signOut();
-        logger.i(
-          "AuthRemoteDataSource: Signed out after phone verification (email/password flow).",
-        );
+        logger.i("AuthRemoteDataSource: Signed out after phone verification.");
       }
     } on FirebaseAuthException catch (e) {
       logger.e(

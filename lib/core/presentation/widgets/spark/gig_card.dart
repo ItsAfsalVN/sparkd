@@ -5,14 +5,14 @@ import 'package:sparkd/core/presentation/widgets/ui_card.dart';
 import 'package:sparkd/core/utils/app_text_theme_extension.dart';
 import 'package:sparkd/features/spark/presentation/screens/edit_gig_screen.dart';
 
-class GigCard extends StatelessWidget {
+class SparkGigCard extends StatelessWidget {
   final String? title;
   final String? description;
   final double? price;
   final String? thumbnailImage;
   final String? category;
 
-  const GigCard({
+  const SparkGigCard({
     super.key,
     this.title,
     this.description,
@@ -112,7 +112,7 @@ class GigCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       SvgPicture.asset(
-                        "assets/icons/spark/rupee.svg",
+                        "assets/icons/rupee.svg",
                         width: 24,
                         height: 24,
                         colorFilter: ColorFilter.mode(
@@ -121,7 +121,7 @@ class GigCard extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        "${price?.toStringAsFixed(0)}",
+                        "${price?.toStringAsFixed(0) ?? 0}",
                         style: textStyles.heading2.copyWith(
                           color: colorScheme.onSurface.withValues(alpha: .8),
                           height: 1,

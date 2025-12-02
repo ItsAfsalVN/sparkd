@@ -1,7 +1,9 @@
 import 'package:equatable/equatable.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:sparkd/core/utils/form_statuses.dart';
 import 'package:sparkd/core/utils/logger.dart';
+import 'package:sparkd/features/auth/domain/usecases/get_user_profile.dart';
 import 'package:sparkd/features/auth/domain/usecases/login_user.dart';
 import 'package:sparkd/features/auth/domain/usecases/sign_in_with_google.dart';
 
@@ -11,12 +13,15 @@ part 'sign_in_state.dart';
 class SignInBloc extends Bloc<SignInEvent, SignInState> {
   final LoginUserUseCase _loginUserUseCase;
   final SignInWithGoogleUseCase _signInWithGoogleUseCase;
+  final GetUserProfileUseCase _getUserProfileUseCase;
 
   SignInBloc({
     required LoginUserUseCase loginUserUseCase,
     required SignInWithGoogleUseCase signInWithGoogleUseCase,
+    required GetUserProfileUseCase getUserProfileUseCase,
   }) : _loginUserUseCase = loginUserUseCase,
        _signInWithGoogleUseCase = signInWithGoogleUseCase,
+       _getUserProfileUseCase = getUserProfileUseCase,
        super(const SignInState()) {
     on<SignInEmailChanged>(_onEmailChanged);
     on<SignInPasswordChanged>(_onPasswordChanged);
@@ -108,8 +113,40 @@ class SignInBloc extends Bloc<SignInEvent, SignInState> {
       emit(state.copyWith(status: FormStatus.loading));
 
       final userCredential = await _signInWithGoogleUseCase();
+      final user = userCredential.user;
 
-      logger.i('Google Sign-In successful: ${userCredential.user?.email}');
+      if (user == null) {
+        throw Exception('No user returned from Google Sign-In');
+      }
+
+      logger.i('Google Sign-In successful: ${user.email}');
+
+      // Check if user profile exists in Firestore
+      logger.i('Checking if user profile exists in Firestore...');
+      final userProfile = await _getUserProfileUseCase(user.uid);
+
+      if (userProfile == null) {
+        // No profile exists - user hasn't signed up yet
+        logger.w(
+          'No profile found for Google user ${user.email}. User needs to sign up first.',
+        );
+
+        // Sign out the user since they don't have an account
+        await FirebaseAuth.instance.signOut();
+
+        emit(
+          state.copyWith(
+            status: FormStatus.failure,
+            errorMessage:
+                'No account found with this Google account. Please sign up first.',
+          ),
+        );
+        return;
+      }
+
+      logger.i(
+        'User profile found. UserType: ${userProfile.userType}. Login successful.',
+      );
       emit(state.copyWith(status: FormStatus.success));
     } catch (error) {
       logger.e('Google Sign-In failed: $error');
@@ -118,6 +155,8 @@ class SignInBloc extends Bloc<SignInEvent, SignInState> {
           status: FormStatus.failure,
           errorMessage: error.toString().contains('canceled')
               ? 'Sign-in was canceled'
+              : error.toString().contains('No account found')
+              ? error.toString().replaceAll('Exception: ', '')
               : 'Failed to sign in with Google. Please try again.',
         ),
       );

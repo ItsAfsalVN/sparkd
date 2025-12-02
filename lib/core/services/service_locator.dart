@@ -8,7 +8,6 @@ import 'package:sparkd/core/services/storage_service.dart';
 import 'package:sparkd/features/auth/domain/usecases/create_user_with_email_and_password.dart';
 import 'package:sparkd/features/auth/domain/usecases/forgot_password.dart';
 import 'package:sparkd/features/auth/domain/usecases/get_user_profile.dart';
-import 'package:sparkd/features/auth/domain/usecases/link_phone_credential.dart';
 import 'package:sparkd/features/auth/domain/usecases/save_user_profile.dart';
 import 'package:sparkd/features/auth/domain/usecases/sign_in_with_google.dart';
 import 'package:sparkd/features/spark/data/datasources/static_skill_data_source.dart';
@@ -47,7 +46,6 @@ Future<void> init() async {
       localDataSource: sl(),
       signUpDataRepository: sl(),
       createUserWithEmailUseCase: sl(),
-      linkPhoneCredentialUseCase: sl(),
       saveUserProfileUseCase: sl(),
       getUserProfileUseCase: sl(),
     ),
@@ -62,7 +60,11 @@ Future<void> init() async {
   );
 
   sl.registerFactory(
-    () => SignInBloc(loginUserUseCase: sl(), signInWithGoogleUseCase: sl()),
+    () => SignInBloc(
+      loginUserUseCase: sl(),
+      signInWithGoogleUseCase: sl(),
+      getUserProfileUseCase: sl(),
+    ),
   );
 
   sl.registerFactory(() => ForgotPasswordBloc(forgotPasswordUseCase: sl()));
@@ -78,9 +80,6 @@ Future<void> init() async {
   sl.registerLazySingleton(() => VerifyOtpUseCase(sl()));
   sl.registerLazySingleton(
     () => CreateUserWithEmailUseCase(authRepository: sl()),
-  );
-  sl.registerLazySingleton(
-    () => LinkPhoneCredentialUseCase(authRepository: sl()),
   );
   sl.registerLazySingleton(() => SaveUserProfileUseCase(authRepository: sl()));
   sl.registerLazySingleton(() => GetUserProfileUseCase(authRepository: sl()));

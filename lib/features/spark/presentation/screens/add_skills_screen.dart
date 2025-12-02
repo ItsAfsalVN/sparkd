@@ -95,6 +95,28 @@ class _AddSkillsScreenState extends State<AddSkillsScreen> {
                   MaterialPageRoute(builder: (_) => SparkDashboardScreen()),
                   (route) => false,
                 );
+              } else if (state is AuthFinalizationError) {
+                logger.e(
+                  "AddSkillsScreen: Finalization error - ${state.errorMessage}",
+                );
+
+                if (state.isSessionExpired) {
+                  // Session expired - redirect to phone input to re-verify
+                  showSnackbar(context, state.errorMessage, SnackBarType.error);
+                  Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(builder: (_) => const PhoneInputScreen()),
+                    (route) => false,
+                  );
+                } else {
+                  // Other error - go back to decision screen
+                  showSnackbar(context, state.errorMessage, SnackBarType.error);
+                  Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(builder: (_) => const DecisionScreen()),
+                    (route) => false,
+                  );
+                }
               } else if (state is AuthUnauthenticated) {
                 logger.e("AddSkillsScreen: Sign-up failed, returning to start");
                 showSnackbar(

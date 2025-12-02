@@ -8,6 +8,9 @@ class SmeOrdersScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Orders'),
+        automaticallyImplyLeading: false,
+        elevation: 0,
+        scrolledUnderElevation: 0.0,
       ),
       body: const Center(
         child: Text('This is the Order Screen'),

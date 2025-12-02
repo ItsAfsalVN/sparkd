@@ -21,27 +21,27 @@ class _SmeDashboardState extends State<SmeDashboard> {
   final List<AppBottomNavigationBarItem> _items = [
     AppBottomNavigationBarItem(
       label: 'Home',
-      iconPath: 'assets/icons/spark/home.svg',
+      iconPath: 'assets/icons/sme/home.svg',
       screen: const SmeHomeScreen(),
     ),
     AppBottomNavigationBarItem(
       label: 'Orders',
-      iconPath: 'assets/icons/spark/orders.svg',
+      iconPath: 'assets/icons/sme/orders.svg',
       screen: const SmeOrdersScreen(),
     ),
     AppBottomNavigationBarItem(
       label: 'Discover',
-      iconPath: 'assets/icons/spark/megaphone.svg',
+      iconPath: 'assets/icons/sme/compass.svg',
       screen: const SmeDiscoverScreen(),
     ),
     AppBottomNavigationBarItem(
       label: 'Inbox',
-      iconPath: 'assets/icons/spark/wallet.svg',
+      iconPath: 'assets/icons/sme/inbox.svg',
       screen: const SmeInboxScreen(),
     ),
     AppBottomNavigationBarItem(
       label: 'Profile',
-      iconPath: 'assets/icons/spark/person.svg',
+      iconPath: 'assets/icons/sme/person.svg',
       screen: const SmeProfileScreen(),
     ),
   ];

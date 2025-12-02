@@ -8,10 +8,11 @@ class SmeProfileScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Profile'),
+        automaticallyImplyLeading: false,
+        elevation: 0,
+        scrolledUnderElevation: 0.0,
       ),
-      body: const Center(
-        child: Text('This is the Profile Screen'),
-      ),
+      body: const Center(child: Text('This is the Profile Screen')),
     );
   }
 }

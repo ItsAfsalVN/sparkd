@@ -6,6 +6,7 @@ import 'package:sparkd/core/presentation/widgets/custom_text_field.dart';
 import 'package:sparkd/core/utils/app_text_theme_extension.dart';
 import 'package:sparkd/core/utils/form_statuses.dart';
 import 'package:sparkd/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:sparkd/features/auth/presentation/screens/phone_input_screen.dart';
 import 'package:sparkd/features/sme/presentation/bloc/business_details_bloc.dart';
 import 'package:sparkd/features/sme/presentation/screens/tabs/sme_dashboard.dart';
 
@@ -78,9 +79,32 @@ class _AddBusinessDetailsScreenState extends State<AddBusinessDetailsScreen> {
       listener: (context, authState) {
         if (authState is AuthAuthenticated &&
             authState.userType == UserType.sme) {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (_) => SmeDashboard()),
-          );
+          Navigator.of(
+            context,
+          ).pushReplacement(MaterialPageRoute(builder: (_) => SmeDashboard()));
+        } else if (authState is AuthFinalizationError) {
+          if (authState.isSessionExpired) {
+            // Session expired - redirect to phone input to re-verify
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(authState.errorMessage),
+                backgroundColor: Theme.of(context).colorScheme.error,
+              ),
+            );
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (_) => const PhoneInputScreen()),
+              (route) => false,
+            );
+          } else {
+            // Other error - show message and stay on this screen or go back
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(authState.errorMessage),
+                backgroundColor: Theme.of(context).colorScheme.error,
+              ),
+            );
+          }
         }
       },
       child: BlocListener<BusinessDetailsBloc, BusinessDetailsState>(
@@ -106,21 +130,18 @@ class _AddBusinessDetailsScreenState extends State<AddBusinessDetailsScreen> {
               fit: BoxFit.contain,
             ),
           ),
-          body: BlocBuilder<BusinessDetailsBloc, BusinessDetailsState>(
-            builder: (context, state) {
-              final isLoading = state.formStatus == FormStatus.submitting;
-              final isValid = _isFormValid(state);
-
-              return SafeArea(
-                child: Column(
-                  children: [
-                    Expanded(
-                      child: SingleChildScrollView(
-                        padding: const EdgeInsets.all(20),
-                        child: Form(
-                          key: _formKey,
-                          autovalidateMode: AutovalidateMode.onUserInteraction,
-                          child: Column(
+          body: SafeArea(
+            child: Column(
+              children: [
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(20),
+                    child: Form(
+                      key: _formKey,
+                      autovalidateMode: AutovalidateMode.onUserInteraction,
+                      child: BlocBuilder<BusinessDetailsBloc, BusinessDetailsState>(
+                        builder: (context, state) {
+                          return Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             spacing: 24,
                             children: [
@@ -199,6 +220,7 @@ class _AddBusinessDetailsScreenState extends State<AddBusinessDetailsScreen> {
                                   );
                                 },
                                 onFieldSubmitted: (_) {
+                                  final isValid = _isFormValid(state);
                                   if (isValid) {
                                     _handleContinue();
                                   }
@@ -241,24 +263,38 @@ class _AddBusinessDetailsScreenState extends State<AddBusinessDetailsScreen> {
                                 ),
                               ),
                             ],
-                          ),
-                        ),
+                          );
+                        },
                       ),
                     ),
+                  ),
+                ),
 
-                    // Continue Button
-                    Padding(
+                // Continue Button
+                BlocBuilder<BusinessDetailsBloc, BusinessDetailsState>(
+                  buildWhen: (prev, curr) =>
+                      prev.formStatus != curr.formStatus ||
+                      prev.businessName != curr.businessName ||
+                      prev.category != curr.category ||
+                      prev.location != curr.location,
+                  builder: (context, state) {
+                    final isLoading = state.formStatus == FormStatus.submitting;
+                    final isValid = _isFormValid(state);
+
+                    return Padding(
                       padding: const EdgeInsets.all(20),
                       child: CustomButton(
-                        onPressed: isValid ? _handleContinue : null,
+                        onPressed: isValid && !isLoading
+                            ? _handleContinue
+                            : null,
                         title: isLoading ? "Submitting..." : "Continue",
                         isLoading: isLoading,
                       ),
-                    ),
-                  ],
+                    );
+                  },
                 ),
-              );
-            },
+              ],
+            ),
           ),
         ),
       ),

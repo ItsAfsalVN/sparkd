@@ -52,3 +52,18 @@ class AuthAwaitingBusinessDetails extends AuthState {
   @override
   List<Object> get props => [signUpData];
 }
+
+class AuthFinalizationError extends AuthState {
+  final String errorMessage;
+  final SignUpData signUpData;
+  final bool isSessionExpired;
+
+  const AuthFinalizationError({
+    required this.errorMessage,
+    required this.signUpData,
+    this.isSessionExpired = false,
+  });
+
+  @override
+  List<Object> get props => [errorMessage, signUpData, isSessionExpired];
+}
