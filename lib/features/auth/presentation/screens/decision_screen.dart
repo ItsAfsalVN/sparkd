@@ -8,7 +8,7 @@ import 'package:sparkd/features/auth/presentation/screens/role_selection_screen.
 import 'package:sparkd/features/auth/presentation/screens/phone_input_screen.dart';
 // Import logger if you use it
 import 'package:sparkd/core/utils/logger.dart';
-import 'package:sparkd/features/sme/presentation/bloc/business_details_bloc.dart';
+import 'package:sparkd/features/sme/presentation/bloc/business_details/business_details_bloc.dart';
 import 'package:sparkd/features/sme/presentation/screens/add_business_details_screen.dart';
 import 'package:sparkd/features/spark/presentation/bloc/skills_bloc.dart';
 import 'package:sparkd/features/spark/presentation/screens/add_skills_screen.dart';

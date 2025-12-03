@@ -10,13 +10,13 @@ import 'package:sparkd/features/auth/domain/usecases/forgot_password.dart';
 import 'package:sparkd/features/auth/domain/usecases/get_user_profile.dart';
 import 'package:sparkd/features/auth/domain/usecases/save_user_profile.dart';
 import 'package:sparkd/features/auth/domain/usecases/sign_in_with_google.dart';
+import 'package:sparkd/features/gigs/domain/repositories/gig_repository.dart';
+import 'package:sparkd/features/gigs/domain/usecases/create_new_gig.dart';
+import 'package:sparkd/features/gigs/domain/usecases/get_user_gigs.dart';
+import 'package:sparkd/features/gigs/presentation/bloc/create_gig/create_gig_bloc.dart';
 import 'package:sparkd/features/spark/data/datasources/static_skill_data_source.dart';
-import 'package:sparkd/features/spark/data/datasources/gig_remote_data_source.dart';
-import 'package:sparkd/features/spark/data/repositories/gig_repository_impl.dart';
-import 'package:sparkd/features/spark/domain/repositories/gig_repository.dart';
-import 'package:sparkd/features/spark/domain/usecases/create_new_gig.dart';
-import 'package:sparkd/features/spark/domain/usecases/get_user_gigs.dart';
-import 'package:sparkd/features/spark/presentation/bloc/gig/gig_bloc.dart';
+import 'package:sparkd/features/gigs/data/datasources/gig_remote_data_source.dart';
+import 'package:sparkd/features/gigs/data/repositories/gig_repository_impl.dart';
 import 'package:sparkd/features/spark/presentation/bloc/skills_bloc.dart';
 import 'package:sparkd/features/auth/data/datasources/auth_local_data_source.dart';
 import 'package:sparkd/features/auth/data/datasources/auth_remote_data_source.dart';
@@ -115,7 +115,7 @@ Future<void> init() async {
 
   // --- Gig Feature ---
   sl.registerFactory(
-    () => GigBloc(createNewGigUseCase: sl(), getUserGigsUseCase: sl()),
+    () => CreateGigBloc(createNewGigUseCase: sl(), getUserGigsUseCase: sl()),
   );
 
   sl.registerLazySingleton(() => CreateNewGigUseCase(repository: sl()));

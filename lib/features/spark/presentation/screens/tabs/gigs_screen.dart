@@ -5,7 +5,7 @@ import 'package:sparkd/core/presentation/widgets/spark/gig_card.dart';
 import 'package:sparkd/core/utils/app_text_theme_extension.dart';
 import 'package:sparkd/core/utils/form_statuses.dart';
 import 'package:sparkd/core/services/service_locator.dart';
-import 'package:sparkd/features/spark/presentation/bloc/gig/gig_bloc.dart';
+import 'package:sparkd/features/gigs/presentation/bloc/create_gig/create_gig_bloc.dart';
 import 'package:sparkd/features/spark/presentation/screens/create_new_gig_provider.dart';
 
 class SparkGigScreen extends StatefulWidget {
@@ -23,7 +23,7 @@ class _SparkGigScreenState extends State<SparkGigScreen> {
 
     return BlocProvider(
       create: (context) {
-        final bloc = sl<GigBloc>();
+        final bloc = sl<CreateGigBloc>();
         final currentUser = FirebaseAuth.instance.currentUser;
         if (currentUser != null) {
           bloc.add(LoadUserGigs(currentUser.uid));
@@ -51,7 +51,7 @@ class _SparkGigScreenState extends State<SparkGigScreen> {
             if (result == true) {
               final currentUser = FirebaseAuth.instance.currentUser;
               if (currentUser != null && context.mounted) {
-                context.read<GigBloc>().add(LoadUserGigs(currentUser.uid));
+                context.read<CreateGigBloc>().add(LoadUserGigs(currentUser.uid));
               }
             }
           },
@@ -60,7 +60,7 @@ class _SparkGigScreenState extends State<SparkGigScreen> {
           child: const Icon(Icons.add, size: 30),
         ),
 
-        body: BlocBuilder<GigBloc, GigState>(
+        body: BlocBuilder<CreateGigBloc, CreateGigState>(
           builder: (context, state) {
             if (state.status == FormStatus.loading) {
               return const Center(child: CircularProgressIndicator());
@@ -79,7 +79,7 @@ class _SparkGigScreenState extends State<SparkGigScreen> {
                       onPressed: () {
                         final currentUser = FirebaseAuth.instance.currentUser;
                         if (currentUser != null) {
-                          context.read<GigBloc>().add(
+                          context.read<CreateGigBloc>().add(
                             LoadUserGigs(currentUser.uid),
                           );
                         }
@@ -96,7 +96,7 @@ class _SparkGigScreenState extends State<SparkGigScreen> {
                 onRefresh: () async {
                   final currentUser = FirebaseAuth.instance.currentUser;
                   if (currentUser != null) {
-                    context.read<GigBloc>().add(LoadUserGigs(currentUser.uid));
+                    context.read<CreateGigBloc>().add(LoadUserGigs(currentUser.uid));
                   }
                 },
                 child: SingleChildScrollView(
@@ -151,7 +151,7 @@ class _SparkGigScreenState extends State<SparkGigScreen> {
               onRefresh: () async {
                 final currentUser = FirebaseAuth.instance.currentUser;
                 if (currentUser != null) {
-                  context.read<GigBloc>().add(LoadUserGigs(currentUser.uid));
+                  context.read<CreateGigBloc>().add(LoadUserGigs(currentUser.uid));
                 }
               },
               child: SingleChildScrollView(

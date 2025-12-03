@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:sparkd/core/utils/logger.dart';
-import 'package:sparkd/features/spark/data/models/gig_model.dart';
+import 'package:sparkd/features/gigs/data/models/gig_model.dart';
 
 abstract class GigRemoteDataSource {
   Future<GigModel> createGig(GigModel gig);
