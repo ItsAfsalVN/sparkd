@@ -361,7 +361,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                 spacing: 6,
                                 children: [
                                   const LabeledDivider(label: 'Or'),
-                                  GoogleSignInButton(),
+                                  GoogleSignInButton(isSignUp: true),
                                 ],
                               ),
                               SizedBox(

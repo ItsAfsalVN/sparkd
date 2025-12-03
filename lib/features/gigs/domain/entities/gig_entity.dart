@@ -20,6 +20,8 @@ class GigEntity extends Equatable {
   final DateTime? createdAt;
   final DateTime? updatedAt;
   final bool isActive;
+  final double rating;
+  final int totalReviews;
 
   const GigEntity({
     this.id,
@@ -40,6 +42,8 @@ class GigEntity extends Equatable {
     this.createdAt,
     this.updatedAt,
     this.isActive = true,
+    this.rating = 0.0,
+    this.totalReviews = 0,
   });
 
   @override
@@ -62,6 +66,8 @@ class GigEntity extends Equatable {
     createdAt,
     updatedAt,
     isActive,
+    rating,
+    totalReviews,
   ];
 
   GigEntity copyWith({
@@ -83,6 +89,8 @@ class GigEntity extends Equatable {
     DateTime? createdAt,
     DateTime? updatedAt,
     bool? isActive,
+    double? rating,
+    int? totalReviews,
   }) {
     return GigEntity(
       id: id ?? this.id,
@@ -103,6 +111,8 @@ class GigEntity extends Equatable {
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       isActive: isActive ?? this.isActive,
+      rating: rating ?? this.rating,
+      totalReviews: totalReviews ?? this.totalReviews,
     );
   }
 }

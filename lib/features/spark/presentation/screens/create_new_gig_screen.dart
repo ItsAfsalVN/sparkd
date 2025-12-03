@@ -175,9 +175,9 @@ class _CreateNewGigScreenState extends State<CreateNewGigScreen> {
                     hintText: "Enter the Price",
                     labelText: "Price",
                     prefixIcon: Padding(
-                      padding: EdgeInsets.all(12),
+                      padding: const EdgeInsets.all(20.0),
                       child: SvgPicture.asset(
-                        "assets/icons/spark/rupee.svg",
+                        "assets/icons/rupee.svg",
                         colorFilter: ColorFilter.mode(
                           Theme.of(
                             context,
@@ -186,6 +186,7 @@ class _CreateNewGigScreenState extends State<CreateNewGigScreen> {
                         ),
                       ),
                     ),
+
                     keyboardType: TextInputType.number,
                     onChanged: (value) {
                       setState(() {

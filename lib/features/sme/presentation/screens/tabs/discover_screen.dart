@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:sparkd/features/sme/presentation/widgets/custom_search_box.dart';
-import 'package:sparkd/features/gigs/presentation/widgets/sme_gig_card.dart';
+import 'package:sparkd/features/sme/presentation/widgets/sme_gig_card.dart';
 import 'package:sparkd/core/services/service_locator.dart';
 import 'package:sparkd/core/utils/app_text_theme_extension.dart';
 import 'package:sparkd/core/utils/form_statuses.dart';
@@ -17,19 +17,14 @@ class SmeDiscoverScreen extends StatelessWidget {
       create: (context) => sl<DiscoverGigBloc>()..add(DiscoverGigsRequested()),
       child: Scaffold(
         appBar: AppBar(
-          toolbarHeight: 120,
+          toolbarHeight: kToolbarHeight + 54,
           automaticallyImplyLeading: false,
           elevation: 0,
           scrolledUnderElevation: 0.0,
           flexibleSpace: Padding(
-            padding: const EdgeInsets.only(
-              top: 40,
-              bottom: 10,
-              left: 20,
-              right: 20,
-            ),
+            padding: const EdgeInsets.only(top: 40, left: 10, right: 10),
             child: Column(
-              spacing: 10,
+              spacing: 6,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text("Discover", style: textStyles.heading2),
@@ -40,7 +35,7 @@ class SmeDiscoverScreen extends StatelessWidget {
         ),
         body: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.all(20.0),
+            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
             child: BlocBuilder<DiscoverGigBloc, DiscoverGigState>(
               builder: (context, state) {
                 if (state.status == FormStatus.loading) {
@@ -71,7 +66,15 @@ class SmeDiscoverScreen extends StatelessWidget {
                     itemCount: state.gigs.length,
                     itemBuilder: (context, index) {
                       final gig = state.gigs[index];
-                      return SmeGigCard(title: gig.title, price: gig.price);
+                      return SmeGigCard(
+                        thumbnailImage: gig.thumbnailImage,
+                        title: gig.title,
+                        price: gig.price,
+                        deliveryTimeInDays: gig.deliveryTimeInDays,
+                        creatorId: gig.creatorId,
+                        rating: gig.rating,
+                        totalReviews: gig.totalReviews,
+                      );
                     },
                   );
                 }

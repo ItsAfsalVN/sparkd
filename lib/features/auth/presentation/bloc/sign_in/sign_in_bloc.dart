@@ -126,24 +126,50 @@ class SignInBloc extends Bloc<SignInEvent, SignInState> {
       final userProfile = await _getUserProfileUseCase(user.uid);
 
       if (userProfile == null) {
-        // No profile exists - user hasn't signed up yet
-        logger.w(
-          'No profile found for Google user ${user.email}. User needs to sign up first.',
-        );
+        // No profile exists
+        if (event.isSignUp) {
+          // Sign-up flow: Continue with sign-up process
+          logger.i(
+            'Google Sign-Up: No profile found for ${user.email}. Continuing with sign-up flow.',
+          );
+          emit(state.copyWith(status: FormStatus.success));
+          return;
+        } else {
+          // Sign-in flow: User needs to sign up first
+          logger.w(
+            'No profile found for Google user ${user.email}. User needs to sign up first.',
+          );
 
-        // Sign out the user since they don't have an account
+          // Sign out the user since they don't have an account
+          await FirebaseAuth.instance.signOut();
+
+          emit(
+            state.copyWith(
+              status: FormStatus.failure,
+              errorMessage:
+                  'No account found with this Google account. Please sign up first.',
+            ),
+          );
+          return;
+        }
+      }
+
+      // Profile exists
+      if (event.isSignUp) {
+        // Sign-up flow but user already exists
+        logger.w('Google Sign-Up: Account already exists for ${user.email}.');
         await FirebaseAuth.instance.signOut();
-
         emit(
           state.copyWith(
             status: FormStatus.failure,
             errorMessage:
-                'No account found with this Google account. Please sign up first.',
+                'An account with this Google account already exists. Please sign in instead.',
           ),
         );
         return;
       }
 
+      // Sign-in flow with existing profile
       logger.i(
         'User profile found. UserType: ${userProfile.userType}. Login successful.',
       );

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:sparkd/core/presentation/widgets/custom_button.dart';
+import 'package:sparkd/core/utils/user_helper.dart';
 import 'package:sparkd/features/gigs/presentation/widgets/rating_view.dart';
 import 'package:sparkd/core/presentation/widgets/ui_card.dart';
 import 'package:sparkd/core/utils/app_text_theme_extension.dart';
@@ -10,14 +11,18 @@ class SmeGigCard extends StatelessWidget {
   final String? title;
   final double? price;
   final int? deliveryTimeInDays;
-  final String? broughtBy;
+  final String? creatorId;
+  final double? rating;
+  final int? totalReviews;
   const SmeGigCard({
     super.key,
     this.thumbnailImage,
     this.title,
     this.price,
     this.deliveryTimeInDays,
-    this.broughtBy,
+    this.creatorId,
+    this.rating,
+    this.totalReviews,
   });
 
   @override
@@ -101,7 +106,7 @@ class SmeGigCard extends StatelessWidget {
                       fontWeight: FontWeight.w900,
                     ),
                   ),
-                  const RatingView(rating: 2.5),
+                  RatingView(rating: rating ?? 0.0),
                 ],
               ),
             ],
@@ -123,7 +128,9 @@ class SmeGigCard extends StatelessWidget {
                   ),
                   Text(
                     "${deliveryTimeInDays ?? 0} days",
-                    style: textStyles.heading4,
+                    style: textStyles.heading4.copyWith(
+                      color: colorScheme.onSurface.withValues(alpha: .6),
+                    ),
                   ),
                 ],
               ),
@@ -137,7 +144,33 @@ class SmeGigCard extends StatelessWidget {
                       fontWeight: FontWeight.w900,
                     ),
                   ),
-                  Text(broughtBy ?? "Unknown", style: textStyles.heading4),
+                  if (creatorId != null)
+                    FutureBuilder<String?>(
+                      future: UserHelper.getUserName(creatorId!),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                colorScheme.primary,
+                              ),
+                            ),
+                          );
+                        }
+                        return Text(
+                          snapshot.data ?? "Unknown",
+                          style: textStyles.heading4.copyWith(
+                            color: colorScheme.onSurface.withValues(alpha: .6),
+                          ),
+                        );
+                      },
+                    )
+                  else
+                    Text("Unknown", style: textStyles.heading4),
                 ],
               ),
             ],
