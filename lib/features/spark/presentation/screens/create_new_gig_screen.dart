@@ -20,6 +20,7 @@ import 'package:sparkd/core/utils/snackbar_helper.dart';
 import 'package:sparkd/features/gigs/presentation/bloc/create_gig/create_gig_bloc.dart';
 import 'package:sparkd/features/spark/data/datasources/static_skill_data_source.dart';
 import 'package:sparkd/features/spark/domain/entities/skill_entity.dart';
+import 'package:sparkd/features/gigs/domain/entities/requirement_entity.dart';
 
 class CreateNewGigScreen extends StatefulWidget {
   const CreateNewGigScreen({super.key});
@@ -43,7 +44,7 @@ class _CreateNewGigScreenState extends State<CreateNewGigScreen> {
   String? _demonstrationVideo;
 
   // New component state variables
-  List<String> _mandatoryRequirements = [];
+  List<RequirementEntity> _mandatoryRequirements = [];
   DeliveryTypes? _selectedDeliveryType;
 
   // Text form field variables

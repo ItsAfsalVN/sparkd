@@ -66,14 +66,9 @@ class SmeDiscoverScreen extends StatelessWidget {
                     itemCount: state.gigs.length,
                     itemBuilder: (context, index) {
                       final gig = state.gigs[index];
-                      return SmeGigCard(
-                        thumbnailImage: gig.thumbnailImage,
-                        title: gig.title,
-                        price: gig.price,
-                        deliveryTimeInDays: gig.deliveryTimeInDays,
-                        creatorId: gig.creatorId,
-                        rating: gig.rating,
-                        totalReviews: gig.totalReviews,
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 10.0),
+                        child: SmeGigCard(gig: gig),
                       );
                     },
                   );

@@ -4,6 +4,7 @@ import 'package:sparkd/core/utils/delivery_types.dart';
 import 'package:sparkd/core/utils/form_statuses.dart';
 import 'package:sparkd/core/utils/logger.dart';
 import 'package:sparkd/features/gigs/domain/entities/gig_entity.dart';
+import 'package:sparkd/features/gigs/domain/entities/requirement_entity.dart';
 import 'package:sparkd/features/spark/domain/entities/skill_entity.dart';
 import 'package:sparkd/features/gigs/domain/usecases/create_new_gig.dart';
 import 'package:sparkd/features/gigs/domain/usecases/get_user_gigs.dart';
@@ -15,8 +16,10 @@ class CreateGigBloc extends Bloc<CreateGigEvent, CreateGigState> {
   final CreateNewGigUseCase createNewGigUseCase;
   final GetUserGigsUseCase getUserGigsUseCase;
 
-  CreateGigBloc({required this.createNewGigUseCase, required this.getUserGigsUseCase})
-    : super(const CreateGigState()) {
+  CreateGigBloc({
+    required this.createNewGigUseCase,
+    required this.getUserGigsUseCase,
+  }) : super(const CreateGigState()) {
     on<GigTitleChanged>(_onTitleChanged);
     on<GigDescriptionChanged>(_onDescriptionChanged);
     on<GigCategoryChanged>(_onCategoryChanged);
@@ -49,7 +52,10 @@ class CreateGigBloc extends Bloc<CreateGigEvent, CreateGigState> {
     emit(state.copyWith(description: event.description));
   }
 
-  void _onCategoryChanged(GigCategoryChanged event, Emitter<CreateGigState> emit) {
+  void _onCategoryChanged(
+    GigCategoryChanged event,
+    Emitter<CreateGigState> emit,
+  ) {
     emit(state.copyWith(category: event.category));
   }
 
@@ -71,7 +77,10 @@ class CreateGigBloc extends Bloc<CreateGigEvent, CreateGigState> {
     emit(state.copyWith(deliveryTimeInDays: event.days));
   }
 
-  void _onRevisionsChanged(GigRevisionsChanged event, Emitter<CreateGigState> emit) {
+  void _onRevisionsChanged(
+    GigRevisionsChanged event,
+    Emitter<CreateGigState> emit,
+  ) {
     emit(state.copyWith(revisions: event.revisions));
   }
 
@@ -100,7 +109,10 @@ class CreateGigBloc extends Bloc<CreateGigEvent, CreateGigState> {
     emit(state.copyWith(postGigInstructions: event.instructions));
   }
 
-  void _onThumbnailChanged(GigThumbnailChanged event, Emitter<CreateGigState> emit) {
+  void _onThumbnailChanged(
+    GigThumbnailChanged event,
+    Emitter<CreateGigState> emit,
+  ) {
     emit(state.copyWith(thumbnailImage: event.path));
   }
 
@@ -111,7 +123,10 @@ class CreateGigBloc extends Bloc<CreateGigEvent, CreateGigState> {
     emit(state.copyWith(galleryImages: event.paths));
   }
 
-  void _onDemoVideoChanged(GigDemoVideoChanged event, Emitter<CreateGigState> emit) {
+  void _onDemoVideoChanged(
+    GigDemoVideoChanged event,
+    Emitter<CreateGigState> emit,
+  ) {
     emit(state.copyWith(demoVideo: event.videoPath));
   }
 
@@ -151,7 +166,10 @@ class CreateGigBloc extends Bloc<CreateGigEvent, CreateGigState> {
     }
   }
 
-  void _onStatusReset(CreateGigStatusReset event, Emitter<CreateGigState> emit) {
+  void _onStatusReset(
+    CreateGigStatusReset event,
+    Emitter<CreateGigState> emit,
+  ) {
     emit(
       state.copyWith(
         title: '',

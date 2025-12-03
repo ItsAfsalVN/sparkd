@@ -22,7 +22,7 @@ class UiCard extends StatelessWidget {
           ),
         ],
       ),
-      child: Padding(padding: EdgeInsets.all(12), child: child),
+      child: Padding(padding: EdgeInsets.all(12), child: child,),
     );
   }
 }
