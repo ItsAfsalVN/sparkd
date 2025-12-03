@@ -73,9 +73,13 @@ class _SparkGigScreenState extends State<SparkGigScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.error, size: 64, color: Colors.red),
-                    const SizedBox(height: 16),
-                    Text('Failed to load gigs', style: textStyles.heading3),
+                    Text(
+                      'Failed to load gigs',
+                      style: textStyles.subtext.copyWith(
+                        color: colorScheme.onSurface.withValues(alpha: 0.5),
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
                     const SizedBox(height: 8),
                     ElevatedButton(
                       onPressed: () {
@@ -164,7 +168,7 @@ class _SparkGigScreenState extends State<SparkGigScreen> {
                 physics: const AlwaysScrollableScrollPhysics(),
                 child: SafeArea(
                   child: Padding(
-                    padding: const EdgeInsets.all(20.0),
+                    padding: const EdgeInsets.all(10.0),
                     child: Column(
                       spacing: 12,
                       crossAxisAlignment: CrossAxisAlignment.start,
