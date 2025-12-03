@@ -17,9 +17,9 @@ import 'package:sparkd/core/utils/delivery_types.dart';
 import 'package:sparkd/core/utils/form_statuses.dart';
 import 'package:sparkd/core/utils/logger.dart';
 import 'package:sparkd/core/utils/snackbar_helper.dart';
+import 'package:sparkd/features/gigs/presentation/bloc/create_gig/create_gig_bloc.dart';
 import 'package:sparkd/features/spark/data/datasources/static_skill_data_source.dart';
 import 'package:sparkd/features/spark/domain/entities/skill_entity.dart';
-import 'package:sparkd/features/spark/presentation/bloc/gig/gig_bloc.dart';
 
 class CreateNewGigScreen extends StatefulWidget {
   const CreateNewGigScreen({super.key});
@@ -78,7 +78,7 @@ class _CreateNewGigScreenState extends State<CreateNewGigScreen> {
   @override
   Widget build(BuildContext context) {
     final textStyles = Theme.of(context).textStyles;
-    return BlocListener<GigBloc, GigState>(
+    return BlocListener<CreateGigBloc, CreateGigState>(
       listener: (context, state) {
         if (state.status == FormStatus.success) {
           showSnackbar(
@@ -303,7 +303,7 @@ class _CreateNewGigScreenState extends State<CreateNewGigScreen> {
                   ),
 
                   // Submit Button with BLoC integration
-                  BlocBuilder<GigBloc, GigState>(
+                  BlocBuilder<CreateGigBloc, CreateGigState>(
                     builder: (context, state) {
                       return CustomButton(
                         onPressed: state.status == FormStatus.loading
@@ -328,15 +328,15 @@ class _CreateNewGigScreenState extends State<CreateNewGigScreen> {
     logger.i('Screen: Submitting gig with current state');
 
     // Create gig entity from current form state
-    context.read<GigBloc>().add(GigTitleChanged(_gigTitle));
-    context.read<GigBloc>().add(GigDescriptionChanged(_gigDescription));
-    context.read<GigBloc>().add(GigPriceChanged(_gigPrice));
+    context.read<CreateGigBloc>().add(GigTitleChanged(_gigTitle));
+    context.read<CreateGigBloc>().add(GigDescriptionChanged(_gigDescription));
+    context.read<CreateGigBloc>().add(GigPriceChanged(_gigPrice));
 
     if (_selectedCategoryId != null) {
       final selectedCategory = _categories.firstWhere(
         (cat) => cat['categoryId'] == _selectedCategoryId,
       );
-      context.read<GigBloc>().add(
+      context.read<CreateGigBloc>().add(
         GigCategoryChanged(
           SkillEntity(
             categoryID: selectedCategory['categoryId'] as String,
@@ -347,29 +347,37 @@ class _CreateNewGigScreenState extends State<CreateNewGigScreen> {
       );
     }
 
-    context.read<GigBloc>().add(GigTagsChanged(_gigTags));
+    context.read<CreateGigBloc>().add(GigTagsChanged(_gigTags));
     if (_deliveryTime != null) {
-      context.read<GigBloc>().add(GigDeliveryTimeChanged(_deliveryTime!));
+      context.read<CreateGigBloc>().add(GigDeliveryTimeChanged(_deliveryTime!));
     }
     if (_revisions != null) {
-      context.read<GigBloc>().add(GigRevisionsChanged(_revisions!));
+      context.read<CreateGigBloc>().add(GigRevisionsChanged(_revisions!));
     }
-    context.read<GigBloc>().add(GigDeliverablesChanged(_selectedDeliverables));
+    context.read<CreateGigBloc>().add(
+      GigDeliverablesChanged(_selectedDeliverables),
+    );
     if (_thumbnailImage != null) {
-      context.read<GigBloc>().add(GigThumbnailChanged(_thumbnailImage!));
+      context.read<CreateGigBloc>().add(GigThumbnailChanged(_thumbnailImage!));
     }
-    context.read<GigBloc>().add(GigGalleryImagesChanged(_portfolioSamples));
+    context.read<CreateGigBloc>().add(
+      GigGalleryImagesChanged(_portfolioSamples),
+    );
     if (_demonstrationVideo != null) {
-      context.read<GigBloc>().add(GigDemoVideoChanged(_demonstrationVideo));
+      context.read<CreateGigBloc>().add(
+        GigDemoVideoChanged(_demonstrationVideo),
+      );
     }
-    context.read<GigBloc>().add(GigRequirementsChanged(_mandatoryRequirements));
+    context.read<CreateGigBloc>().add(
+      GigRequirementsChanged(_mandatoryRequirements),
+    );
     if (_selectedDeliveryType != null) {
-      context.read<GigBloc>().add(
+      context.read<CreateGigBloc>().add(
         GigDeliveryTypeChanged(_selectedDeliveryType!),
       );
     }
 
     // Submit the gig
-    context.read<GigBloc>().add(const CreateGigSubmitted());
+    context.read<CreateGigBloc>().add(const CreateGigSubmitted());
   }
 }

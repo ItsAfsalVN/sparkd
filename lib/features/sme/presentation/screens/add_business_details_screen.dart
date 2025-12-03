@@ -7,7 +7,7 @@ import 'package:sparkd/core/utils/app_text_theme_extension.dart';
 import 'package:sparkd/core/utils/form_statuses.dart';
 import 'package:sparkd/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:sparkd/features/auth/presentation/screens/phone_input_screen.dart';
-import 'package:sparkd/features/sme/presentation/bloc/business_details_bloc.dart';
+import 'package:sparkd/features/sme/presentation/bloc/business_details/business_details_bloc.dart';
 import 'package:sparkd/features/sme/presentation/screens/tabs/sme_dashboard.dart';
 
 class AddBusinessDetailsScreen extends StatefulWidget {

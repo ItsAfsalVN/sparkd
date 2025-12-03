@@ -1,6 +1,6 @@
-part of 'gig_bloc.dart';
+part of 'create_gig_bloc.dart';
 
-class GigState extends Equatable {
+class CreateGigState extends Equatable {
   final String title;
   final SkillEntity? category;
   final List<String> tags;
@@ -18,7 +18,7 @@ class GigState extends Equatable {
   final List<GigEntity> userGigs;
   final FormStatus? status;
 
-  const GigState({
+  const CreateGigState({
     this.title = '',
     this.category,
     this.tags = const [],
@@ -37,7 +37,7 @@ class GigState extends Equatable {
     this.status = FormStatus.initial,
   });
 
-  GigState copyWith({
+  CreateGigState copyWith({
     String? title,
     SkillEntity? category,
     List<String>? tags,
@@ -55,7 +55,7 @@ class GigState extends Equatable {
     List<GigEntity>? userGigs,
     FormStatus? status,
   }) {
-    return GigState(
+    return CreateGigState(
       title: title ?? this.title,
       category: category ?? this.category,
       tags: tags ?? this.tags,

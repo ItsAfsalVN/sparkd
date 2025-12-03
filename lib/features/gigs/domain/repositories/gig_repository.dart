@@ -1,4 +1,4 @@
-import 'package:sparkd/features/spark/domain/entities/gig_entity.dart';
+import 'package:sparkd/features/gigs/domain/entities/gig_entity.dart';
 
 abstract class GigRepository {
   Future<GigEntity> createGig(GigEntity gig);
