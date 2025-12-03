@@ -6,14 +6,17 @@ import 'package:sparkd/core/utils/app_text_theme_extension.dart';
 import 'package:sparkd/features/auth/presentation/bloc/sign_in/sign_in_bloc.dart';
 
 class GoogleSignInButton extends StatelessWidget {
-  const GoogleSignInButton({super.key});
+  final bool isSignUp;
+  const GoogleSignInButton({super.key, this.isSignUp = false});
 
   @override
   Widget build(BuildContext context) {
     final bool isLight = Theme.brightnessOf(context) == Brightness.light;
     return ElevatedButton(
       onPressed: () {
-        context.read<SignInBloc>().add(const SignInWithGoogleRequested());
+        context.read<SignInBloc>().add(
+          SignInWithGoogleRequested(isSignUp: isSignUp),
+        );
       },
       style: ElevatedButton.styleFrom(
         shadowColor: Theme.of(
@@ -41,7 +44,7 @@ class GoogleSignInButton extends StatelessWidget {
             ),
             Center(
               child: Text(
-                'Sign in with google',
+                isSignUp ? 'Sign up with Google' : 'Sign in with Google',
                 style: Theme.of(context).textStyles.subtext.copyWith(
                   color: isLight ? AppColors.white300 : AppColors.black400,
                 ),

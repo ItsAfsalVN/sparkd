@@ -21,6 +21,8 @@ class GigModel extends GigEntity {
     super.createdAt,
     super.updatedAt,
     super.isActive = true,
+    super.rating = 0.0,
+    super.totalReviews = 0,
   });
 
   factory GigModel.fromJson(Map<String, dynamic> json) {
@@ -47,6 +49,8 @@ class GigModel extends GigEntity {
           ? DateTime.parse(json['updatedAt'] as String)
           : null,
       isActive: json['isActive'] as bool? ?? true,
+      rating: (json['rating'] as num?)?.toDouble() ?? 0.0,
+      totalReviews: json['totalReviews'] as int? ?? 0,
     );
   }
 
@@ -70,6 +74,8 @@ class GigModel extends GigEntity {
       'createdAt': createdAt?.toIso8601String(),
       'updatedAt': updatedAt?.toIso8601String(),
       'isActive': isActive,
+      'rating': rating,
+      'totalReviews': totalReviews,
     };
   }
 
@@ -93,6 +99,8 @@ class GigModel extends GigEntity {
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
       isActive: entity.isActive,
+      rating: entity.rating,
+      totalReviews: entity.totalReviews,
     );
   }
 
@@ -116,6 +124,8 @@ class GigModel extends GigEntity {
       createdAt: createdAt,
       updatedAt: updatedAt,
       isActive: isActive,
+      rating: rating,
+      totalReviews: totalReviews,
     );
   }
 
@@ -162,6 +172,8 @@ class GigModel extends GigEntity {
     DateTime? createdAt,
     DateTime? updatedAt,
     bool? isActive,
+    double? rating,
+    int? totalReviews,
   }) {
     return GigModel(
       id: id ?? this.id,
@@ -182,6 +194,8 @@ class GigModel extends GigEntity {
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       isActive: isActive ?? this.isActive,
+      rating: rating ?? this.rating,
+      totalReviews: totalReviews ?? this.totalReviews,
     );
   }
 }

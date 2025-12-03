@@ -38,8 +38,9 @@ class SignInStatusReset extends SignInEvent {
 }
 
 class SignInWithGoogleRequested extends SignInEvent {
-  const SignInWithGoogleRequested();
+  final bool isSignUp;
+  const SignInWithGoogleRequested({this.isSignUp = false});
 
   @override
-  List<Object> get props => [];
+  List<Object> get props => [isSignUp];
 }

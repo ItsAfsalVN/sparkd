@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:sparkd/features/gigs/presentation/widgets/spark_gig_card.dart';
+import 'package:sparkd/features/spark/presentation/widgets/spark_gig_card.dart';
 import 'package:sparkd/core/utils/app_text_theme_extension.dart';
 import 'package:sparkd/core/utils/form_statuses.dart';
 import 'package:sparkd/core/services/service_locator.dart';
