@@ -9,6 +9,7 @@ import 'package:sparkd/features/auth/domain/repositories/sign_up_data_repository
 import 'package:sparkd/features/auth/domain/usecases/create_user_with_email_and_password.dart';
 import 'package:sparkd/features/auth/domain/usecases/get_is_first_run.dart';
 import 'package:sparkd/features/auth/domain/usecases/get_user_profile.dart';
+import 'package:sparkd/features/auth/domain/usecases/logout.dart';
 import 'package:sparkd/features/auth/domain/usecases/save_user_profile.dart';
 import 'package:sparkd/features/auth/domain/usecases/set_onboarding_complete.dart';
 
@@ -25,6 +26,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final CreateUserWithEmailUseCase _createUserWithEmailUseCase;
   final SaveUserProfileUseCase _saveUserProfileUseCase;
   final GetUserProfileUseCase _getUserProfileUseCase;
+  final LogoutUseCase _logoutUseCase;
 
   AuthBloc({
     required GetIsFirstRun getIsFirstRun,
@@ -34,6 +36,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     required CreateUserWithEmailUseCase createUserWithEmailUseCase,
     required SaveUserProfileUseCase saveUserProfileUseCase,
     required GetUserProfileUseCase getUserProfileUseCase,
+    required LogoutUseCase logoutUseCase,
   }) : _getIsFirstRun = getIsFirstRun,
        _setOnboardingCompleted = setOnboardingCompleted,
        _localDataSource = localDataSource,
@@ -41,12 +44,14 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
        _createUserWithEmailUseCase = createUserWithEmailUseCase,
        _saveUserProfileUseCase = saveUserProfileUseCase,
        _getUserProfileUseCase = getUserProfileUseCase,
+       _logoutUseCase = logoutUseCase,
        super(AuthInitial()) {
     on<AuthCheckStatusRequested>(_onAuthCheckStatusRequested);
     on<AuthOnboardingCompleted>(_onAuthOnboardingCompleted);
     on<AuthDetailsSubmitted>(_onAuthDetailsSubmitted);
     on<AuthPhoneNumberVerified>(_onAuthPhoneNumberVerified);
     on<AuthFinalizeSignUp>(_onAuthFinalizeSignUp);
+    on<AuthLogoutRequested>(_onAuthLogoutRequested);
   }
 
   Future<void> _onAuthCheckStatusRequested(
@@ -339,6 +344,22 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           ),
         );
       }
+    }
+  }
+
+  Future<void> _onAuthLogoutRequested(
+    AuthLogoutRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    try {
+      logger.i("AuthBloc: Logout requested");
+      await _logoutUseCase();
+      logger.i("AuthBloc: User logged out successfully");
+      emit(AuthUnauthenticated());
+    } catch (e, s) {
+      logger.e("AuthBloc: Error during logout", error: e, stackTrace: s);
+      // Even if logout fails, navigate to unauthenticated state
+      emit(AuthUnauthenticated());
     }
   }
 }

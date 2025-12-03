@@ -30,6 +30,7 @@ abstract class AuthRemoteDataSource {
 
   Future<void> forgotPassword({required String email});
   Future<UserCredential> signInWithGoogle();
+  Future<void> logout();
 }
 
 class AuthRemoteDataSourceImplementation extends AuthRemoteDataSource {
@@ -412,6 +413,19 @@ class AuthRemoteDataSourceImplementation extends AuthRemoteDataSource {
         rethrow;
       }
       throw Exception('Error signing in with Google: $error');
+    }
+  }
+
+  @override
+  Future<void> logout() async {
+    try {
+      logger.i('Logging out user');
+      await firebaseAuth.signOut();
+      await GoogleSignIn().signOut();
+      logger.i('User logged out successfully');
+    } catch (error) {
+      logger.e('Error during logout: $error');
+      throw Exception('Error logging out: $error');
     }
   }
 }

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:sparkd/features/auth/presentation/bloc/auth_bloc.dart';
 
 class SmeProfileScreen extends StatelessWidget {
   const SmeProfileScreen({super.key});
@@ -12,7 +14,21 @@ class SmeProfileScreen extends StatelessWidget {
         elevation: 0,
         scrolledUnderElevation: 0.0,
       ),
-      body: const Center(child: Text('This is the Profile Screen')),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text('This is the Profile Screen'),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () {
+                context.read<AuthBloc>().add(AuthLogoutRequested());
+              },
+              child: const Text('Logout'),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

@@ -4,14 +4,14 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:sparkd/core/presentation/widgets/custom_button.dart';
 import 'package:sparkd/core/presentation/widgets/custom_dropdown.dart';
 import 'package:sparkd/core/presentation/widgets/custom_text_field.dart';
-import 'package:sparkd/core/presentation/widgets/deliverables_checklist.dart';
-import 'package:sparkd/core/presentation/widgets/delivery_type_selector.dart';
-import 'package:sparkd/core/presentation/widgets/image_upload.dart';
-import 'package:sparkd/core/presentation/widgets/mandatory_requirements.dart';
-import 'package:sparkd/core/presentation/widgets/multi_image_upload.dart';
-import 'package:sparkd/core/presentation/widgets/selectable_list.dart';
-import 'package:sparkd/core/presentation/widgets/tag_input.dart';
-import 'package:sparkd/core/presentation/widgets/video_upload.dart';
+import 'package:sparkd/features/gigs/presentation/widgets/deliverables_checklist.dart';
+import 'package:sparkd/features/gigs/presentation/widgets/delivery_type_selector.dart';
+import 'package:sparkd/features/gigs/presentation/widgets/image_upload.dart';
+import 'package:sparkd/features/gigs/presentation/widgets/mandatory_requirements.dart';
+import 'package:sparkd/features/gigs/presentation/widgets/multi_image_upload.dart';
+import 'package:sparkd/features/spark/presentation/widgets/selectable_list.dart';
+import 'package:sparkd/features/gigs/presentation/widgets/tag_input.dart';
+import 'package:sparkd/features/gigs/presentation/widgets/video_upload.dart';
 import 'package:sparkd/core/utils/app_text_theme_extension.dart';
 import 'package:sparkd/core/utils/delivery_types.dart';
 import 'package:sparkd/core/utils/form_statuses.dart';
@@ -147,7 +147,7 @@ class _CreateNewGigScreenState extends State<CreateNewGigScreen> {
                       setState(() {
                         _gigTags = tags;
                       });
-                      logger.e('Current gig tags: $_gigTags');
+                      logger.i('Current gig tags: $_gigTags');
                     },
                     tagValidator: (tag) {
                       if (tag.contains(RegExp(r'[^\w\s]'))) {

@@ -151,4 +151,16 @@ class AuthRepositoryImplementation implements AuthRepository {
       rethrow;
     }
   }
+
+  @override
+  Future<void> logout() async {
+    try {
+      await remoteDataSource.logout();
+      await localDataSource.clearSignUpStep();
+      logger.i("AuthRepositoryImplementation: User logged out successfully");
+    } catch (error) {
+      logger.e("AuthRepositoryImplementation Error during logout: $error");
+      rethrow;
+    }
+  }
 }

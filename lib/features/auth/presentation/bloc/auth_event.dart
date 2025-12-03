@@ -7,7 +7,7 @@ abstract class AuthEvent extends Equatable {
   List<Object> get props => [];
 }
 
-class AuthCheckStatusRequested extends AuthEvent{}
+class AuthCheckStatusRequested extends AuthEvent {}
 
 class AuthOnboardingCompleted extends AuthEvent {}
 
@@ -20,3 +20,5 @@ class AuthFinalizeSignUp extends AuthEvent {
   @override
   List<Object> get props => [];
 }
+
+class AuthLogoutRequested extends AuthEvent {}
