@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:sparkd/core/presentation/widgets/custom_button.dart';
-import 'package:sparkd/core/presentation/widgets/selectable_list.dart';
+import 'package:sparkd/features/spark/presentation/widgets/selectable_list.dart';
 import 'package:sparkd/core/utils/app_color_theme_extension.dart';
 import 'package:sparkd/core/utils/app_text_theme_extension.dart';
 import 'package:sparkd/core/utils/logger.dart';

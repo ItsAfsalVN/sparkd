@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:sparkd/core/presentation/widgets/spark/gig_card.dart';
+import 'package:sparkd/features/gigs/presentation/widgets/spark_gig_card.dart';
 import 'package:sparkd/core/utils/app_text_theme_extension.dart';
 import 'package:sparkd/core/utils/form_statuses.dart';
 import 'package:sparkd/core/services/service_locator.dart';
@@ -51,7 +51,9 @@ class _SparkGigScreenState extends State<SparkGigScreen> {
             if (result == true) {
               final currentUser = FirebaseAuth.instance.currentUser;
               if (currentUser != null && context.mounted) {
-                context.read<CreateGigBloc>().add(LoadUserGigs(currentUser.uid));
+                context.read<CreateGigBloc>().add(
+                  LoadUserGigs(currentUser.uid),
+                );
               }
             }
           },
@@ -96,7 +98,9 @@ class _SparkGigScreenState extends State<SparkGigScreen> {
                 onRefresh: () async {
                   final currentUser = FirebaseAuth.instance.currentUser;
                   if (currentUser != null) {
-                    context.read<CreateGigBloc>().add(LoadUserGigs(currentUser.uid));
+                    context.read<CreateGigBloc>().add(
+                      LoadUserGigs(currentUser.uid),
+                    );
                   }
                 },
                 child: SingleChildScrollView(
@@ -151,7 +155,9 @@ class _SparkGigScreenState extends State<SparkGigScreen> {
               onRefresh: () async {
                 final currentUser = FirebaseAuth.instance.currentUser;
                 if (currentUser != null) {
-                  context.read<CreateGigBloc>().add(LoadUserGigs(currentUser.uid));
+                  context.read<CreateGigBloc>().add(
+                    LoadUserGigs(currentUser.uid),
+                  );
                 }
               },
               child: SingleChildScrollView(

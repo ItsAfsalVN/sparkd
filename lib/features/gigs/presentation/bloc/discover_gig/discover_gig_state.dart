@@ -4,11 +4,13 @@ class DiscoverGigState extends Equatable {
   final FormStatus status;
   final String? errorMessage;
   final List<GigEntity> gigs;
+  final String? query;
 
   const DiscoverGigState({
     this.status = FormStatus.initial,
     this.errorMessage,
     this.gigs = const [],
+    this.query,
   });
 
   DiscoverGigState copyWith({

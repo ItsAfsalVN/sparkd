@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:sparkd/core/presentation/widgets/custom_button.dart';
-import 'package:sparkd/core/presentation/widgets/rating_view.dart';
+import 'package:sparkd/features/gigs/presentation/widgets/rating_view.dart';
 import 'package:sparkd/core/presentation/widgets/ui_card.dart';
 import 'package:sparkd/core/utils/app_text_theme_extension.dart';
 
