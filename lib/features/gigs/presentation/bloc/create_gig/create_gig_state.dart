@@ -12,7 +12,7 @@ class CreateGigState extends Equatable {
   final String? thumbnailImage;
   final List<String> galleryImages;
   final String? demoVideo;
-  final List<String> requirements;
+  final List<RequirementEntity> requirements;
   final DeliveryTypes? deliveryType;
   final List<String> postGigInstructions;
   final List<GigEntity> userGigs;
@@ -49,7 +49,7 @@ class CreateGigState extends Equatable {
     String? thumbnailImage,
     List<String>? galleryImages,
     String? demoVideo,
-    List<String>? requirements,
+    List<RequirementEntity>? requirements,
     DeliveryTypes? deliveryType,
     List<String>? postGigInstructions,
     List<GigEntity>? userGigs,

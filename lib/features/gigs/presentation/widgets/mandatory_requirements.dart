@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:sparkd/core/utils/app_text_theme_extension.dart';
 import 'package:sparkd/core/utils/snackbar_helper.dart';
+import 'package:sparkd/features/gigs/domain/entities/requirement_entity.dart';
 
 class MandatoryRequirements extends StatefulWidget {
   final String? label;
-  final List<String> requirements;
-  final Function(List<String>) onChanged;
+  final List<RequirementEntity> requirements;
+  final Function(List<RequirementEntity>) onChanged;
   final bool isRequired;
   final int maxRequirements;
   final String hintText;
@@ -25,8 +26,9 @@ class MandatoryRequirements extends StatefulWidget {
 }
 
 class _MandatoryRequirementsState extends State<MandatoryRequirements> {
-  late List<String> _requirements;
+  late List<RequirementEntity> _requirements;
   final TextEditingController _textController = TextEditingController();
+  RequirementType _selectedType = RequirementType.text;
 
   @override
   void initState() {
@@ -41,21 +43,23 @@ class _MandatoryRequirementsState extends State<MandatoryRequirements> {
   }
 
   void _addRequirement() {
-    final String requirement = _textController.text.trim();
-    if (requirement.isEmpty) return;
+    final String description = _textController.text.trim();
+    if (description.isEmpty) return;
 
     if (_requirements.length >= widget.maxRequirements) {
       _showMaxRequirementsSnackBar();
       return;
     }
 
-    if (_requirements.contains(requirement)) {
+    if (_requirements.any((r) => r.description == description)) {
       _showDuplicateSnackBar();
       return;
     }
 
     setState(() {
-      _requirements.add(requirement);
+      _requirements.add(
+        RequirementEntity(description: description, type: _selectedType),
+      );
       _textController.clear();
     });
 
@@ -70,11 +74,19 @@ class _MandatoryRequirementsState extends State<MandatoryRequirements> {
   }
 
   void _showMaxRequirementsSnackBar() {
-    showSnackbar(context, "Maximum ${widget.maxRequirements} requirements allowed", SnackBarType.info);
+    showSnackbar(
+      context,
+      "Maximum \${widget.maxRequirements} requirements allowed",
+      SnackBarType.info,
+    );
   }
 
   void _showDuplicateSnackBar() {
-    showSnackbar(context, "This requirement already exists", SnackBarType.error);
+    showSnackbar(
+      context,
+      "This requirement already exists",
+      SnackBarType.error,
+    );
   }
 
   @override
@@ -86,7 +98,6 @@ class _MandatoryRequirementsState extends State<MandatoryRequirements> {
       crossAxisAlignment: CrossAxisAlignment.start,
       spacing: 12,
       children: [
-        // Label with required indicator
         if (widget.label != null)
           Row(
             children: [
@@ -104,8 +115,63 @@ class _MandatoryRequirementsState extends State<MandatoryRequirements> {
                 ),
             ],
           ),
-
-        // Input field
+        Row(
+          children: [
+            Text(
+              "Type:",
+              style: textStyles.paragraph.copyWith(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: colorScheme.onSurface.withValues(alpha: 0.7),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Row(
+                children: [
+                  Expanded(
+                    child: RadioListTile<RequirementType>(
+                      dense: true,
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(
+                        "Text",
+                        style: textStyles.paragraph.copyWith(fontSize: 14),
+                      ),
+                      value: RequirementType.text,
+                      groupValue: _selectedType,
+                      onChanged: (value) {
+                        if (value != null) {
+                          setState(() {
+                            _selectedType = value;
+                          });
+                        }
+                      },
+                    ),
+                  ),
+                  Expanded(
+                    child: RadioListTile<RequirementType>(
+                      dense: true,
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(
+                        "File",
+                        style: textStyles.paragraph.copyWith(fontSize: 14),
+                      ),
+                      value: RequirementType.file,
+                      groupValue: _selectedType,
+                      onChanged: (value) {
+                        if (value != null) {
+                          setState(() {
+                            _selectedType = value;
+                          });
+                        }
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
         Row(
           children: [
             Expanded(
@@ -155,17 +221,14 @@ class _MandatoryRequirementsState extends State<MandatoryRequirements> {
             ),
           ],
         ),
-        // Description
         Text(
-          "List all client assets and materials required to start work on this gig. Be specific about formats, sizes, and deadlines.",
+          "Specify if clients need to provide text information or upload files.",
           style: textStyles.paragraph.copyWith(
             fontSize: 14,
             fontWeight: FontWeight.w200,
             color: colorScheme.onSurface.withValues(alpha: 0.4),
           ),
         ),
-
-        // Requirements list
         if (_requirements.isNotEmpty) ...[
           Container(
             width: double.infinity,
@@ -201,18 +264,36 @@ class _MandatoryRequirementsState extends State<MandatoryRequirements> {
                   child: Row(
                     children: [
                       Icon(
-                        Icons.assignment_outlined,
+                        requirement.type == RequirementType.text
+                            ? Icons.text_fields
+                            : Icons.attach_file,
                         size: 16,
                         color: colorScheme.primary,
                       ),
                       const SizedBox(width: 8),
                       Expanded(
-                        child: Text(
-                          requirement,
-                          style: textStyles.paragraph.copyWith(
-                            fontSize: 14,
-                            color: colorScheme.onSurface,
-                          ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              requirement.description,
+                              style: textStyles.paragraph.copyWith(
+                                fontSize: 14,
+                                color: colorScheme.onSurface,
+                              ),
+                            ),
+                            Text(
+                              requirement.type == RequirementType.text
+                                  ? "Text input"
+                                  : "File upload",
+                              style: textStyles.paragraph.copyWith(
+                                fontSize: 11,
+                                color: colorScheme.onSurface.withValues(
+                                  alpha: 0.5,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                       GestureDetector(
@@ -237,8 +318,6 @@ class _MandatoryRequirementsState extends State<MandatoryRequirements> {
             ),
           ),
         ],
-
-        // Empty state
         if (_requirements.isEmpty)
           Container(
             width: double.infinity,
@@ -261,7 +340,6 @@ class _MandatoryRequirementsState extends State<MandatoryRequirements> {
                   color: colorScheme.onSurface.withValues(alpha: 0.4),
                 ),
                 const SizedBox(height: 8),
-
                 if (widget.isRequired)
                   Text(
                     "At least one requirement is mandatory",
@@ -273,13 +351,11 @@ class _MandatoryRequirementsState extends State<MandatoryRequirements> {
               ],
             ),
           ),
-
-        // Counter
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              "${_requirements.length} of ${widget.maxRequirements} requirements",
+              "\${_requirements.length} of \${widget.maxRequirements} requirements",
               style: textStyles.paragraph.copyWith(
                 fontSize: 12,
                 color: colorScheme.onSurface.withValues(alpha: 0.6),

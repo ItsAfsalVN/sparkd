@@ -71,7 +71,7 @@ class GigDeliverablesChanged extends CreateGigEvent {
 }
 
 class GigRequirementsChanged extends CreateGigEvent {
-  final List<String> requirements;
+  final List<RequirementEntity> requirements;
   const GigRequirementsChanged(this.requirements);
   @override
   List<Object> get props => [requirements];

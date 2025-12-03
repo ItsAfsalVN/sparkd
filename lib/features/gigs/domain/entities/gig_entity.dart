@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:sparkd/core/utils/delivery_types.dart';
+import 'package:sparkd/features/gigs/domain/entities/requirement_entity.dart';
 
 class GigEntity extends Equatable {
   final String? id;
@@ -11,7 +12,7 @@ class GigEntity extends Equatable {
   final int deliveryTimeInDays;
   final int maxRevisions;
   final List<String> deliverables;
-  final List<String> requirements;
+  final List<RequirementEntity> requirements;
   final DeliveryTypes deliveryType;
   final String? thumbnailImage;
   final List<String> portfolioImages;
@@ -80,7 +81,7 @@ class GigEntity extends Equatable {
     int? deliveryTimeInDays,
     int? maxRevisions,
     List<String>? deliverables,
-    List<String>? requirements,
+    List<RequirementEntity>? requirements,
     DeliveryTypes? deliveryType,
     String? thumbnailImage,
     List<String>? portfolioImages,

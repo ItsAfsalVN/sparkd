@@ -1,5 +1,6 @@
 import 'package:sparkd/core/utils/delivery_types.dart';
 import 'package:sparkd/features/gigs/domain/entities/gig_entity.dart';
+import 'package:sparkd/features/gigs/domain/entities/requirement_entity.dart';
 
 class GigModel extends GigEntity {
   const GigModel({
@@ -36,7 +37,11 @@ class GigModel extends GigEntity {
       deliveryTimeInDays: json['deliveryTimeInDays'] as int,
       maxRevisions: json['maxRevisions'] as int,
       deliverables: List<String>.from(json['deliverables'] ?? []),
-      requirements: List<String>.from(json['requirements'] ?? []),
+      requirements:
+          (json['requirements'] as List<dynamic>?)
+              ?.map((e) => RequirementEntity.fromMap(e as Map<String, dynamic>))
+              .toList() ??
+          [],
       deliveryType: _parseDeliveryType(json['deliveryType']),
       thumbnailImage: json['thumbnailImage'] as String?,
       portfolioImages: List<String>.from(json['portfolioImages'] ?? []),
@@ -65,7 +70,7 @@ class GigModel extends GigEntity {
       'deliveryTimeInDays': deliveryTimeInDays,
       'maxRevisions': maxRevisions,
       'deliverables': deliverables,
-      'requirements': requirements,
+      'requirements': requirements.map((e) => e.toMap()).toList(),
       'deliveryType': _deliveryTypeToString(deliveryType),
       'thumbnailImage': thumbnailImage,
       'portfolioImages': portfolioImages,
@@ -163,7 +168,7 @@ class GigModel extends GigEntity {
     int? deliveryTimeInDays,
     int? maxRevisions,
     List<String>? deliverables,
-    List<String>? requirements,
+    List<RequirementEntity>? requirements,
     DeliveryTypes? deliveryType,
     String? thumbnailImage,
     List<String>? portfolioImages,

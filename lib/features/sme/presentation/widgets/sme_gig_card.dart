@@ -2,28 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:sparkd/core/presentation/widgets/custom_button.dart';
 import 'package:sparkd/core/utils/user_helper.dart';
+import 'package:sparkd/features/gigs/domain/entities/gig_entity.dart';
 import 'package:sparkd/features/gigs/presentation/widgets/rating_view.dart';
 import 'package:sparkd/core/presentation/widgets/ui_card.dart';
 import 'package:sparkd/core/utils/app_text_theme_extension.dart';
+import 'package:sparkd/features/sme/presentation/screens/sme_gig_details_screen.dart';
 
 class SmeGigCard extends StatelessWidget {
-  final String? thumbnailImage;
-  final String? title;
-  final double? price;
-  final int? deliveryTimeInDays;
-  final String? creatorId;
-  final double? rating;
-  final int? totalReviews;
-  const SmeGigCard({
-    super.key,
-    this.thumbnailImage,
-    this.title,
-    this.price,
-    this.deliveryTimeInDays,
-    this.creatorId,
-    this.rating,
-    this.totalReviews,
-  });
+  final GigEntity gig;
+  const SmeGigCard({super.key, required this.gig});
 
   @override
   Widget build(BuildContext context) {
@@ -37,9 +24,9 @@ class SmeGigCard extends StatelessWidget {
           // Image Section
           ClipRRect(
             borderRadius: BorderRadius.circular(12),
-            child: thumbnailImage != null
+            child: gig.thumbnailImage != null
                 ? Image.network(
-                    thumbnailImage!,
+                    gig.thumbnailImage!,
                     fit: BoxFit.cover,
                     height: 160,
                     width: double.infinity,
@@ -62,7 +49,7 @@ class SmeGigCard extends StatelessWidget {
 
           // Title
           Text(
-            title ?? "Instagram Reels Video Editing (3-Pack)",
+            gig.title,
             style: textStyles.heading4,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
@@ -86,7 +73,7 @@ class SmeGigCard extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    "${price?.toStringAsFixed(0) ?? 2000}",
+                    gig.price.toStringAsFixed(0),
                     style: textStyles.heading2.copyWith(
                       color: colorScheme.onSurface.withValues(alpha: .8),
                       height: 1,
@@ -106,13 +93,13 @@ class SmeGigCard extends StatelessWidget {
                       fontWeight: FontWeight.w900,
                     ),
                   ),
-                  RatingView(rating: rating ?? 0.0),
+                  RatingView(rating: gig.rating),
                 ],
               ),
             ],
           ),
 
-          // Delivery Time and Brought by
+          // Delivery Time and Created by
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -127,7 +114,7 @@ class SmeGigCard extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    "${deliveryTimeInDays ?? 0} days",
+                    "${gig.deliveryTimeInDays} days",
                     style: textStyles.heading4.copyWith(
                       color: colorScheme.onSurface.withValues(alpha: .6),
                     ),
@@ -144,9 +131,9 @@ class SmeGigCard extends StatelessWidget {
                       fontWeight: FontWeight.w900,
                     ),
                   ),
-                  if (creatorId != null)
+                  if (gig.creatorId != null)
                     FutureBuilder<String?>(
-                      future: UserHelper.getUserName(creatorId!),
+                      future: UserHelper.getUserName(gig.creatorId!),
                       builder: (context, snapshot) {
                         if (snapshot.connectionState ==
                             ConnectionState.waiting) {
@@ -177,7 +164,13 @@ class SmeGigCard extends StatelessWidget {
           ),
           // Button
           CustomButton(
-            onPressed: () {},
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => SmeGigDetailsScreen(gig: gig),
+                ),
+              );
+            },
             title: "Buy",
             borderRadius: BorderRadius.circular(12),
           ),
