@@ -106,7 +106,7 @@ class _CreateNewGigScreenState extends State<CreateNewGigScreen> {
         body: SingleChildScrollView(
           child: SafeArea(
             child: Padding(
-              padding: EdgeInsets.all(20),
+              padding: EdgeInsets.all(10),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 spacing: 20,

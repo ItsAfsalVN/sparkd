@@ -355,7 +355,7 @@ class _MandatoryRequirementsState extends State<MandatoryRequirements> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              "\${_requirements.length} of \${widget.maxRequirements} requirements",
+              "${_requirements.length} of ${widget.maxRequirements} requirements",
               style: textStyles.paragraph.copyWith(
                 fontSize: 12,
                 color: colorScheme.onSurface.withValues(alpha: 0.6),
