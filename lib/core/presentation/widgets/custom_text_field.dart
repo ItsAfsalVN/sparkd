@@ -3,6 +3,7 @@ import 'package:sparkd/core/utils/app_colors.dart';
 import 'package:sparkd/core/utils/app_text_theme_extension.dart';
 
 class CustomTextField extends StatefulWidget {
+  final bool? showLabel;
   final TextEditingController? controller;
   final String hintText;
   final String labelText;
@@ -18,6 +19,7 @@ class CustomTextField extends StatefulWidget {
   final bool? autoFocus;
 
   const CustomTextField({
+    this.showLabel,
     super.key,
     this.controller,
     required this.hintText,
@@ -54,16 +56,15 @@ class _CustomTextFieldState extends State<CustomTextField> {
     final textStyles = Theme.of(context).textStyles;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
+      spacing: 2,
       children: [
-        Text(
-          widget.labelText,
-          style: textStyles.subtext.copyWith(
-            fontWeight: FontWeight.w900,
-            fontSize: 14,
-            color: colorScheme.onSurface.withValues(alpha: 0.5),
+        if (widget.showLabel ?? true)
+          Text(
+            widget.labelText,
+            style: textStyles.heading5.copyWith(
+              color: colorScheme.onSurface.withValues(alpha: 0.5),
+            ),
           ),
-        ),
-        const SizedBox(height: 2),
         TextFormField(
           onChanged: widget.onChanged,
           focusNode: widget.focusNode,

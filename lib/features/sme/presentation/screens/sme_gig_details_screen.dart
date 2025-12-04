@@ -6,6 +6,7 @@ import 'package:sparkd/core/utils/user_helper.dart';
 import 'package:sparkd/features/gigs/domain/entities/gig_entity.dart';
 import 'package:sparkd/features/gigs/domain/entities/requirement_entity.dart';
 import 'package:sparkd/features/gigs/presentation/widgets/rating_view.dart';
+import 'package:sparkd/features/sme/presentation/screens/sme_specify_requirements.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 import 'package:video_player/video_player.dart';
 import 'package:chewie/chewie.dart';
@@ -372,7 +373,7 @@ class _SmeGigDetailsScreenState extends State<SmeGigDetailsScreen> {
                               shape: BoxShape.circle,
                               color: _currentPage == index
                                   ? Colors.white
-                                  : Colors.white.withOpacity(0.4),
+                                  : Colors.white.withValues(alpha: 0.4),
                             ),
                           ),
                         ),
@@ -385,7 +386,7 @@ class _SmeGigDetailsScreenState extends State<SmeGigDetailsScreen> {
               onPressed: () => Navigator.of(context).pop(),
               icon: const Icon(Icons.arrow_back_rounded),
               style: IconButton.styleFrom(
-                backgroundColor: Colors.black.withOpacity(0.5),
+                backgroundColor: Colors.black.withValues(alpha: .5),
                 foregroundColor: Colors.white,
               ),
             ),
@@ -659,7 +660,15 @@ class _SmeGigDetailsScreenState extends State<SmeGigDetailsScreen> {
         child: Padding(
           padding: const EdgeInsets.all(10.0),
           child: CustomButton(
-            onPressed: () {},
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => SmeSpecifyRequirements(
+                    requirements: [...widget.gig.requirements],
+                  ),
+                ),
+              );
+            },
             title: "Continue to Requirements",
           ),
         ),
@@ -724,7 +733,7 @@ class _CustomVideoControlsState extends State<_CustomVideoControls> {
                   },
                   child: Container(
                     decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.5),
+                      color: Colors.black.withValues(alpha: .5),
                       shape: BoxShape.circle,
                     ),
                     padding: const EdgeInsets.all(20),
@@ -754,7 +763,7 @@ class _CustomVideoControlsState extends State<_CustomVideoControls> {
                       begin: Alignment.bottomCenter,
                       end: Alignment.topCenter,
                       colors: [
-                        Colors.black.withOpacity(0.7),
+                        Colors.black.withValues(alpha: 0.7),
                         Colors.transparent,
                       ],
                     ),
@@ -765,7 +774,7 @@ class _CustomVideoControlsState extends State<_CustomVideoControls> {
                     colors: VideoProgressColors(
                       playedColor: Theme.of(context).primaryColor,
                       bufferedColor: Colors.grey,
-                      backgroundColor: Colors.white.withOpacity(0.3),
+                      backgroundColor: Colors.white.withValues(alpha: 0.3),
                     ),
                     padding: const EdgeInsets.symmetric(vertical: 8),
                   ),

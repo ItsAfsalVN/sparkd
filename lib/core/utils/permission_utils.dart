@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:sparkd/core/utils/snackbar_helper.dart';
 import '../services/permission_service.dart';
 import '../presentation/screens/permissions_screen.dart';
 
@@ -25,8 +26,10 @@ mixin PermissionMixin {
   Future<bool> ensureCameraPermission(BuildContext context) async {
     final granted = await permissionService.requestCameraPermission();
     if (!granted && context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Camera permission is required')),
+      showSnackbar(
+        context,
+        'Camera permission is required',
+        SnackBarType.error,
       );
     }
     return granted;
@@ -36,8 +39,10 @@ mixin PermissionMixin {
   Future<bool> ensureStoragePermission(BuildContext context) async {
     final granted = await permissionService.requestStoragePermission();
     if (!granted && context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Storage permission is required')),
+      showSnackbar(
+        context,
+        'Storage permission is required',
+        SnackBarType.error,
       );
     }
     return granted;
@@ -47,8 +52,10 @@ mixin PermissionMixin {
   Future<bool> ensureNotificationPermission(BuildContext context) async {
     final granted = await permissionService.requestNotificationPermission();
     if (!granted && context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Notification permission is recommended')),
+      showSnackbar(
+        context,
+        'Notification permission is recommended',
+        SnackBarType.info,
       );
     }
     return granted;
@@ -62,8 +69,10 @@ mixin PermissionMixin {
     );
 
     if (!allGranted && context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Media permissions are required')),
+      showSnackbar(
+        context,
+        'Media permissions are required',
+        SnackBarType.error,
       );
     }
     return allGranted;

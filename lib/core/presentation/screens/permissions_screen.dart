@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:sparkd/core/utils/snackbar_helper.dart';
 import '../../services/permission_service.dart';
 
 /// Screen to request all necessary permissions on first launch
@@ -77,12 +78,10 @@ class _PermissionsScreenState extends State<PermissionsScreen> {
         widget.onComplete();
       } else {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text(
-                'Please grant camera and storage permissions to continue',
-              ),
-            ),
+          showSnackbar(
+            context,
+            'Please grant camera and storage permissions to continue',
+            SnackBarType.error,
           );
         }
       }
