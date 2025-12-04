@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:sparkd/core/utils/snackbar_helper.dart';
 import '../services/permission_service.dart';
 import '../presentation/screens/permissions_screen.dart';
 
@@ -72,10 +73,10 @@ Future<void> requestPermissionBeforeFeature(BuildContext context) async {
   } else {
     // Permission denied, show message
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Camera permission is required for this feature'),
-        ),
+      showSnackbar(
+        context,
+        'Camera permission is required for this feature',
+        SnackBarType.error,
       );
     }
   }
@@ -186,10 +187,10 @@ Future<void> enableNotifications(BuildContext context) async {
     print('Notifications enabled!');
   } else {
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Enable notifications in settings to receive updates'),
-        ),
+      showSnackbar(
+        context,
+        'Enable notifications in settings to receive updates',
+        SnackBarType.error,
       );
     }
   }

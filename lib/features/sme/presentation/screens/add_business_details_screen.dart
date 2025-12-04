@@ -5,6 +5,7 @@ import 'package:sparkd/core/presentation/widgets/custom_dropdown.dart';
 import 'package:sparkd/core/presentation/widgets/custom_text_field.dart';
 import 'package:sparkd/core/utils/app_text_theme_extension.dart';
 import 'package:sparkd/core/utils/form_statuses.dart';
+import 'package:sparkd/core/utils/snackbar_helper.dart';
 import 'package:sparkd/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:sparkd/features/auth/presentation/screens/phone_input_screen.dart';
 import 'package:sparkd/features/sme/presentation/bloc/business_details/business_details_bloc.dart';
@@ -85,12 +86,7 @@ class _AddBusinessDetailsScreenState extends State<AddBusinessDetailsScreen> {
         } else if (authState is AuthFinalizationError) {
           if (authState.isSessionExpired) {
             // Session expired - redirect to phone input to re-verify
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(authState.errorMessage),
-                backgroundColor: Theme.of(context).colorScheme.error,
-              ),
-            );
+            showSnackbar(context, authState.errorMessage, SnackBarType.error);
             Navigator.pushAndRemoveUntil(
               context,
               MaterialPageRoute(builder: (_) => const PhoneInputScreen()),
@@ -98,23 +94,17 @@ class _AddBusinessDetailsScreenState extends State<AddBusinessDetailsScreen> {
             );
           } else {
             // Other error - show message and stay on this screen or go back
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(authState.errorMessage),
-                backgroundColor: Theme.of(context).colorScheme.error,
-              ),
-            );
+            showSnackbar(context, authState.errorMessage, SnackBarType.error);
           }
         }
       },
       child: BlocListener<BusinessDetailsBloc, BusinessDetailsState>(
         listener: (context, state) {
           if (state.formStatus == FormStatus.failure) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.errorMessage ?? 'An error occurred'),
-                backgroundColor: Theme.of(context).colorScheme.error,
-              ),
+            showSnackbar(
+              context,
+              state.errorMessage ?? 'An error occurred',
+              SnackBarType.error,
             );
           }
         },

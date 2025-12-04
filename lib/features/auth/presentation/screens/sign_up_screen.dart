@@ -413,7 +413,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   // Loading overlay for Google Sign-In
                   if (signInState.status == FormStatus.loading)
                     Container(
-                      color: Colors.black.withOpacity(0.5),
+                      color: Colors.black.withValues(alpha: .5),
                       child: Center(
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
