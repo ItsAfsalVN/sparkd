@@ -40,16 +40,16 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     required GetUserProfileUseCase getUserProfileUseCase,
     required LogoutUseCase logoutUseCase,
     required NotificationService notificationService,
-  })  : _getIsFirstRun = getIsFirstRun,
-        _setOnboardingCompleted = setOnboardingCompleted,
-        _localDataSource = localDataSource,
-        _signUpDataRepository = signUpDataRepository,
-        _createUserWithEmailUseCase = createUserWithEmailUseCase,
-        _saveUserProfileUseCase = saveUserProfileUseCase,
-        _getUserProfileUseCase = getUserProfileUseCase,
-        _logoutUseCase = logoutUseCase,
-        _notificationService = notificationService,
-        super(AuthInitial()) {
+  }) : _getIsFirstRun = getIsFirstRun,
+       _setOnboardingCompleted = setOnboardingCompleted,
+       _localDataSource = localDataSource,
+       _signUpDataRepository = signUpDataRepository,
+       _createUserWithEmailUseCase = createUserWithEmailUseCase,
+       _saveUserProfileUseCase = saveUserProfileUseCase,
+       _getUserProfileUseCase = getUserProfileUseCase,
+       _logoutUseCase = logoutUseCase,
+       _notificationService = notificationService,
+       super(AuthInitial()) {
     on<AuthCheckStatusRequested>(_onAuthCheckStatusRequested);
     on<AuthOnboardingCompleted>(_onAuthOnboardingCompleted);
     on<AuthDetailsSubmitted>(_onAuthDetailsSubmitted);
@@ -116,15 +116,17 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
               "AuthBloc: User profile loaded. UserType: ${userProfile.userType}",
             );
             await _localDataSource.clearSignUpStep();
-            
+
             // Save FCM token for notifications
             try {
               await _notificationService.saveTokenToUser(currentUser.uid);
-              logger.i("AuthBloc: FCM token saved for user: ${currentUser.uid}");
+              logger.i(
+                "AuthBloc: FCM token saved for user: ${currentUser.uid}",
+              );
             } catch (e) {
               logger.e("AuthBloc: Failed to save FCM token: $e");
             }
-            
+
             emit(AuthAuthenticated(userProfile.userType));
             return;
           } else {
