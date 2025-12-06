@@ -31,17 +31,13 @@ class _SmeSpecifyRequirementsState extends State<SmeSpecifyRequirements> {
   final logger = Logger();
   final _storageService = sl<StorageService>();
 
-  // Store text responses and file URLs
+  // Store text responses and selected files
   final Map<String, String> _textResponses = {};
-  final Map<String, String?> _fileUrls = {};
-  final Map<String, bool> _uploadingFiles = {};
+  final Map<String, File?> _selectedFiles = {};
+  bool _isUploading = false;
 
-  Future<void> _pickAndUploadFile(RequirementEntity requirement) async {
+  Future<void> _pickFile(RequirementEntity requirement) async {
     try {
-      setState(() {
-        _uploadingFiles[requirement.description] = true;
-      });
-
       final result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png', 'zip'],
@@ -49,50 +45,33 @@ class _SmeSpecifyRequirementsState extends State<SmeSpecifyRequirements> {
 
       if (result != null && result.files.single.path != null) {
         final file = File(result.files.single.path!);
-        final fileName = result.files.single.name;
-
-        // Upload to Firebase Storage
-        final storagePath =
-            'orders/requirements/${DateTime.now().millisecondsSinceEpoch}_$fileName';
-        final downloadUrl = await _storageService.uploadImage(
-          file,
-          storagePath,
-        );
 
         setState(() {
-          _fileUrls[requirement.description] = downloadUrl;
-          _uploadingFiles[requirement.description] = false;
+          _selectedFiles[requirement.description] = file;
         });
 
-        logger.i('File uploaded successfully: $downloadUrl');
+        logger.i('File selected: ${result.files.single.name}');
 
         if (mounted) {
           showSnackbar(
             context,
-            'File uploaded successfully',
+            'File selected: ${result.files.single.name}',
             SnackBarType.success,
           );
         }
-      } else {
-        setState(() {
-          _uploadingFiles[requirement.description] = false;
-        });
       }
     } catch (e) {
-      logger.e('Error uploading file: $e');
-      setState(() {
-        _uploadingFiles[requirement.description] = false;
-      });
+      logger.e('Error selecting file: $e');
 
       if (mounted) {
-        showSnackbar(context, 'Failed to upload file: $e', SnackBarType.error);
+        showSnackbar(context, 'Failed to select file: $e', SnackBarType.error);
       }
     }
   }
 
   void _removeFile(RequirementEntity requirement) {
     setState(() {
-      _fileUrls[requirement.description] = null;
+      _selectedFiles[requirement.description] = null;
     });
   }
 
@@ -152,9 +131,8 @@ class _SmeSpecifyRequirementsState extends State<SmeSpecifyRequirements> {
               child: ListView(
                 children: [
                   ...widget.gig.requirements.map((requirement) {
-                    final isUploading =
-                        _uploadingFiles[requirement.description] ?? false;
-                    final fileUrl = _fileUrls[requirement.description];
+                    final selectedFile =
+                        _selectedFiles[requirement.description];
 
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 16),
@@ -184,7 +162,7 @@ class _SmeSpecifyRequirementsState extends State<SmeSpecifyRequirements> {
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                if (fileUrl != null)
+                                if (selectedFile != null)
                                   Container(
                                     padding: const EdgeInsets.all(12),
                                     decoration: BoxDecoration(
@@ -199,17 +177,20 @@ class _SmeSpecifyRequirementsState extends State<SmeSpecifyRequirements> {
                                     child: Row(
                                       children: [
                                         Icon(
-                                          Icons.check_circle,
+                                          Icons.attach_file,
                                           color: colorScheme.primary,
                                           size: 24,
                                         ),
+                                        const SizedBox(width: 8),
                                         Expanded(
                                           child: Text(
-                                            'File uploaded successfully',
+                                            selectedFile.path.split('/').last,
                                             style: textStyles.subtext.copyWith(
                                               color: colorScheme.onPrimary,
                                               fontWeight: FontWeight.w600,
                                             ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
                                           ),
                                         ),
                                         IconButton(
@@ -226,9 +207,9 @@ class _SmeSpecifyRequirementsState extends State<SmeSpecifyRequirements> {
                                   )
                                 else
                                   InkWell(
-                                    onTap: isUploading
+                                    onTap: _isUploading
                                         ? null
-                                        : () => _pickAndUploadFile(requirement),
+                                        : () => _pickFile(requirement),
                                     borderRadius: BorderRadius.circular(12),
                                     child: Container(
                                       height: 120,
@@ -242,7 +223,7 @@ class _SmeSpecifyRequirementsState extends State<SmeSpecifyRequirements> {
                                           ),
                                         ),
                                       ),
-                                      child: isUploading
+                                      child: _isUploading
                                           ? Column(
                                               mainAxisAlignment:
                                                   MainAxisAlignment.center,
@@ -272,7 +253,7 @@ class _SmeSpecifyRequirementsState extends State<SmeSpecifyRequirements> {
                                                             .withValues(
                                                               alpha: 0.4,
                                                             ),
-                                                        fontSize: 14,
+                                                        fontSize: 14.0,
                                                       ),
                                                 ),
                                               ],
@@ -283,7 +264,7 @@ class _SmeSpecifyRequirementsState extends State<SmeSpecifyRequirements> {
                                 Text(
                                   'Accepted formats: PDF, DOC, DOCX, JPG, PNG, ZIP',
                                   style: textStyles.subtext.copyWith(
-                                    fontSize: 12,
+                                    fontSize: 12.0,
                                     color: colorScheme.onSurface.withValues(
                                       alpha: 0.6,
                                     ),
@@ -298,7 +279,10 @@ class _SmeSpecifyRequirementsState extends State<SmeSpecifyRequirements> {
                               labelText: requirement.description,
                               maxLines: 3,
                               onChanged: (value) {
-                                _textResponses[requirement.description] = value;
+                                setState(() {
+                                  _textResponses[requirement.description] =
+                                      value;
+                                });
                               },
                             ),
                         ],
@@ -310,12 +294,14 @@ class _SmeSpecifyRequirementsState extends State<SmeSpecifyRequirements> {
             ),
             BlocBuilder<OrderBloc, OrderState>(
               builder: (context, state) {
-                final isLoading = state is OrderCreating;
+                final isLoading = state is OrderCreating || _isUploading;
                 return CustomButton(
                   onPressed: _canProceed() && !isLoading
                       ? () => _handleSendOrderRequest(context)
                       : null,
-                  title: isLoading
+                  title: _isUploading
+                      ? "Uploading Files..."
+                      : isLoading
                       ? "Sending Request..."
                       : "Send Order Request",
                 );
@@ -330,7 +316,7 @@ class _SmeSpecifyRequirementsState extends State<SmeSpecifyRequirements> {
   bool _canProceed() {
     for (final requirement in widget.gig.requirements) {
       if (requirement.type == RequirementType.file) {
-        if (_fileUrls[requirement.description] == null) {
+        if (_selectedFiles[requirement.description] == null) {
           return false;
         }
       } else {
@@ -342,9 +328,9 @@ class _SmeSpecifyRequirementsState extends State<SmeSpecifyRequirements> {
     return true;
   }
 
-  void _handleSendOrderRequest(BuildContext context) {
+  Future<void> _handleSendOrderRequest(BuildContext context) async {
     logger.i('Text responses: $_textResponses');
-    logger.i('File URLs: $_fileUrls');
+    logger.i('Selected files: $_selectedFiles');
 
     final currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser == null) {
@@ -352,30 +338,66 @@ class _SmeSpecifyRequirementsState extends State<SmeSpecifyRequirements> {
       return;
     }
 
-    // Merge text responses and file URLs into single map
-    final Map<String, dynamic> requirementResponses = {};
-    _textResponses.forEach((key, value) {
-      requirementResponses[key] = {'type': 'text', 'value': value};
+    setState(() {
+      _isUploading = true;
     });
-    _fileUrls.forEach((key, value) {
-      if (value != null) {
-        requirementResponses[key] = {'type': 'file', 'url': value};
+
+    try {
+      // Upload all files first
+      final Map<String, String> uploadedUrls = {};
+      for (final entry in _selectedFiles.entries) {
+        if (entry.value != null) {
+          final file = entry.value!;
+          final fileName = file.path.split('/').last;
+          final storagePath =
+              'orders/requirements/${DateTime.now().millisecondsSinceEpoch}_$fileName';
+
+          logger.i('Uploading file: $fileName to $storagePath');
+          final downloadUrl = await _storageService.uploadImage(
+            file,
+            storagePath,
+          );
+          uploadedUrls[entry.key] = downloadUrl;
+          logger.i('File uploaded successfully: $downloadUrl');
+        }
       }
-    });
 
-    final order = OrderEntity(
-      gigID: widget.gig.id!,
-      smeID: currentUser.uid,
-      sparkID: widget.gig.creatorId!,
-      gigTitle: widget.gig.title,
-      gigPrice: widget.gig.price,
-      gigThumbnail: widget.gig.thumbnailImage ?? '',
-      requirements: widget.gig.requirements,
-      requirementResponses: requirementResponses,
-      status: OrderStatus.pendingSparkAcceptance,
-      createdAt: DateTime.now(),
-    );
+      // Merge text responses and file URLs into single map
+      final Map<String, dynamic> requirementResponses = {};
+      _textResponses.forEach((key, value) {
+        requirementResponses[key] = {'type': 'text', 'value': value};
+      });
+      uploadedUrls.forEach((key, url) {
+        requirementResponses[key] = {'type': 'file', 'url': url};
+      });
 
-    context.read<OrderBloc>().add(CreateOrderRequestEvent(order: order));
+      final order = OrderEntity(
+        gigID: widget.gig.id!,
+        smeID: currentUser.uid,
+        sparkID: widget.gig.creatorId!,
+        gigTitle: widget.gig.title,
+        gigPrice: widget.gig.price,
+        gigThumbnail: widget.gig.thumbnailImage ?? '',
+        requirements: widget.gig.requirements,
+        requirementResponses: requirementResponses,
+        status: OrderStatus.pendingSparkAcceptance,
+        createdAt: DateTime.now(),
+      );
+
+      if (mounted) {
+        context.read<OrderBloc>().add(CreateOrderRequestEvent(order: order));
+      }
+    } catch (e) {
+      logger.e('Error uploading files: $e');
+      if (mounted) {
+        showSnackbar(context, 'Failed to upload files: $e', SnackBarType.error);
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isUploading = false;
+        });
+      }
+    }
   }
 }

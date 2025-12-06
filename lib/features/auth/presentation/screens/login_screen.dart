@@ -9,6 +9,7 @@ import 'package:sparkd/core/utils/form_statuses.dart';
 import 'package:sparkd/core/utils/logger.dart';
 import 'package:sparkd/core/utils/snackbar_helper.dart';
 import 'package:sparkd/core/services/service_locator.dart' as di;
+import 'package:sparkd/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:sparkd/features/auth/presentation/bloc/sign_in/sign_in_bloc.dart';
 import 'package:sparkd/features/auth/presentation/screens/decision_screen.dart';
 import 'package:sparkd/features/auth/presentation/screens/forgot_password_screen.dart';
@@ -140,7 +141,8 @@ class _LoginScreenState extends State<LoginScreen> {
       child: BlocListener<SignInBloc, SignInState>(
         listener: (context, state) {
           if (state.status == FormStatus.success) {
-            // Login successful, navigate to decision screen to check profile completion
+            // Login successful, trigger auth check and navigate to decision screen
+            context.read<AuthBloc>().add(AuthCheckStatusRequested());
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(builder: (context) => const DecisionScreen()),

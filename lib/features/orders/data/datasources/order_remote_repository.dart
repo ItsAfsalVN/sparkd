@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:logger/logger.dart';
 import 'package:sparkd/features/orders/data/models/order_model.dart';
 import 'package:sparkd/features/orders/domain/entities/order_entity.dart';
 
@@ -12,6 +13,7 @@ abstract class OrderRemoteRepository {
 
 class OrderRemoteRepositoryImplementation implements OrderRemoteRepository {
   final FirebaseFirestore _firestore;
+  final Logger _logger = Logger();
 
   OrderRemoteRepositoryImplementation({required FirebaseFirestore firestore})
     : _firestore = firestore;
@@ -19,12 +21,16 @@ class OrderRemoteRepositoryImplementation implements OrderRemoteRepository {
   @override
   Future<String> createOrderRequest(OrderEntity order) async {
     try {
+      _logger.i('Creating order request for gig: ${order.gigID}');
+      _logger.d('Order data: ${order.toMap()}');
       final orderModel = OrderModel(order: order);
       final docRef = await _firestore
           .collection("orders")
           .add(orderModel.toJson());
+      _logger.i('Order created with ID: ${docRef.id}');
       return docRef.id;
     } catch (e) {
+      _logger.e('Failed to create order request: $e');
       throw Exception('Failed to create order request: $e');
     }
   }
@@ -58,6 +64,7 @@ class OrderRemoteRepositoryImplementation implements OrderRemoteRepository {
 
   @override
   Stream<List<OrderEntity>> getSparkOrders(String sparkId) {
+    _logger.i('Setting up stream for Spark orders: $sparkId');
     try {
       return _firestore
           .collection("orders")
@@ -65,13 +72,18 @@ class OrderRemoteRepositoryImplementation implements OrderRemoteRepository {
           .orderBy("createdAt", descending: true)
           .snapshots()
           .map((snapshot) {
+            _logger.i(
+              'Received snapshot with ${snapshot.docs.length} documents',
+            );
             return snapshot.docs.map((doc) {
               final data = doc.data();
               data['id'] = doc.id;
+              _logger.d('Order data: $data');
               return OrderModel.fromJson(data).order;
             }).toList();
           });
     } catch (e) {
+      _logger.e('Error in getSparkOrders: $e');
       throw Exception('Failed to get spark orders: $e');
     }
   }
