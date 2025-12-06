@@ -51,8 +51,9 @@ class _TagInputState extends State<TagInput> {
     if (trimmedTag.isEmpty) return;
     if (_tags.contains(trimmedTag)) return;
     if (widget.maxTags != null && _tags.length >= widget.maxTags!) return;
-    if (widget.maxTagLength != null && trimmedTag.length > widget.maxTagLength!)
+    if (widget.maxTagLength != null && trimmedTag.length > widget.maxTagLength!) {
       return;
+    }
 
     // Custom validation
     if (widget.tagValidator != null) {

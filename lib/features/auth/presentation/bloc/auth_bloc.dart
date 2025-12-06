@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:sparkd/core/services/notification_service.dart';
 import 'package:sparkd/core/utils/logger.dart';
 import 'package:sparkd/features/auth/data/datasources/auth_local_data_source.dart';
 import 'package:sparkd/features/auth/domain/entities/sign_up_data.dart';
@@ -18,6 +19,7 @@ part 'auth_event.dart';
 
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final GetIsFirstRun _getIsFirstRun;
+  final NotificationService _notificationService;
   final SetOnboardingComplete _setOnboardingCompleted;
 
   final AuthLocalDataSource _localDataSource;
@@ -37,15 +39,17 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     required SaveUserProfileUseCase saveUserProfileUseCase,
     required GetUserProfileUseCase getUserProfileUseCase,
     required LogoutUseCase logoutUseCase,
-  }) : _getIsFirstRun = getIsFirstRun,
-       _setOnboardingCompleted = setOnboardingCompleted,
-       _localDataSource = localDataSource,
-       _signUpDataRepository = signUpDataRepository,
-       _createUserWithEmailUseCase = createUserWithEmailUseCase,
-       _saveUserProfileUseCase = saveUserProfileUseCase,
-       _getUserProfileUseCase = getUserProfileUseCase,
-       _logoutUseCase = logoutUseCase,
-       super(AuthInitial()) {
+    required NotificationService notificationService,
+  })  : _getIsFirstRun = getIsFirstRun,
+        _setOnboardingCompleted = setOnboardingCompleted,
+        _localDataSource = localDataSource,
+        _signUpDataRepository = signUpDataRepository,
+        _createUserWithEmailUseCase = createUserWithEmailUseCase,
+        _saveUserProfileUseCase = saveUserProfileUseCase,
+        _getUserProfileUseCase = getUserProfileUseCase,
+        _logoutUseCase = logoutUseCase,
+        _notificationService = notificationService,
+        super(AuthInitial()) {
     on<AuthCheckStatusRequested>(_onAuthCheckStatusRequested);
     on<AuthOnboardingCompleted>(_onAuthOnboardingCompleted);
     on<AuthDetailsSubmitted>(_onAuthDetailsSubmitted);
@@ -112,6 +116,15 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
               "AuthBloc: User profile loaded. UserType: ${userProfile.userType}",
             );
             await _localDataSource.clearSignUpStep();
+            
+            // Save FCM token for notifications
+            try {
+              await _notificationService.saveTokenToUser(currentUser.uid);
+              logger.i("AuthBloc: FCM token saved for user: ${currentUser.uid}");
+            } catch (e) {
+              logger.e("AuthBloc: Failed to save FCM token: $e");
+            }
+            
             emit(AuthAuthenticated(userProfile.userType));
             return;
           } else {
