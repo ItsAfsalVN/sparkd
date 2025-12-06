@@ -2,6 +2,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:sparkd/core/services/notification_service.dart';
 import 'package:sparkd/core/utils/app_color_theme_extension.dart';
 import 'package:sparkd/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:sparkd/features/auth/presentation/screens/decision_screen.dart';
@@ -94,6 +95,23 @@ class _AppState extends State<App> {
 
     // 4. Initialize your service locator (dependency injection)
     await di.init();
+
+    // 5. Initialize notification service
+    final notificationService = di.sl<NotificationService>();
+    await notificationService.initialize();
+
+    // 6. Listen to foreground messages
+    notificationService.listenToForegroundMessages((message) {
+      // Handle foreground notifications
+      // You can show a custom in-app notification here
+      print('Foreground notification: ${message.notification?.title}');
+    });
+
+    // 7. Handle notification taps when app is in background
+    notificationService.handleBackgroundNotificationTap((message) {
+      // Navigate to relevant screen based on notification data
+      print('App opened from notification: ${message.data}');
+    });
   }
 
   @override

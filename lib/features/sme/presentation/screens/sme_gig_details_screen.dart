@@ -21,7 +21,8 @@ class SmeGigDetailsScreen extends StatefulWidget {
   State<SmeGigDetailsScreen> createState() => _SmeGigDetailsScreenState();
 }
 
-class _SmeGigDetailsScreenState extends State<SmeGigDetailsScreen> {
+class _SmeGigDetailsScreenState extends State<SmeGigDetailsScreen>
+    with WidgetsBindingObserver {
   late PageController _pageController;
   int _currentPage = 0;
   late List<Widget> _mediaItems;
@@ -35,6 +36,7 @@ class _SmeGigDetailsScreenState extends State<SmeGigDetailsScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _pageController = PageController();
     _initializeYoutubeController();
     _buildMediaItems();
@@ -42,11 +44,26 @@ class _SmeGigDetailsScreenState extends State<SmeGigDetailsScreen> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _pageController.dispose();
     _youtubeController?.dispose();
     _videoPlayerController?.dispose();
     _chewieController?.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Pause videos when app goes to background or screen is inactive
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive) {
+      _pauseAllVideos();
+    }
+  }
+
+  void _pauseAllVideos() {
+    _youtubeController?.pause();
+    _videoPlayerController?.pause();
   }
 
   void _initializeYoutubeController() {
@@ -661,11 +678,12 @@ class _SmeGigDetailsScreenState extends State<SmeGigDetailsScreen> {
           padding: const EdgeInsets.all(10.0),
           child: CustomButton(
             onPressed: () {
+              // Pause all videos before navigating
+              _pauseAllVideos();
+
               Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (context) => SmeSpecifyRequirements(
-                    requirements: [...widget.gig.requirements],
-                  ),
+                  builder: (context) => SmeSpecifyRequirements(gig: widget.gig),
                 ),
               );
             },

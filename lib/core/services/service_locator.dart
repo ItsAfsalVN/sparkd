@@ -1,8 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sparkd/core/services/notification_service.dart';
 import 'package:sparkd/core/services/permission_service.dart';
 import 'package:sparkd/core/services/storage_service.dart';
 import 'package:sparkd/features/auth/domain/usecases/create_user_with_email_and_password.dart';
@@ -17,6 +19,11 @@ import 'package:sparkd/features/gigs/domain/usecases/get_gigs.dart';
 import 'package:sparkd/features/gigs/domain/usecases/get_user_gigs.dart';
 import 'package:sparkd/features/gigs/presentation/bloc/create_gig/create_gig_bloc.dart';
 import 'package:sparkd/features/gigs/presentation/bloc/discover_gig/discover_gig_bloc.dart';
+import 'package:sparkd/features/orders/data/datasources/order_remote_repository.dart';
+import 'package:sparkd/features/orders/data/repositories/order_repository_implementation.dart';
+import 'package:sparkd/features/orders/domain/repository/order_repository.dart';
+import 'package:sparkd/features/orders/domain/usecases/create_order_request.dart';
+import 'package:sparkd/features/orders/presentation/bloc/order_bloc.dart';
 import 'package:sparkd/features/spark/data/datasources/static_skill_data_source.dart';
 import 'package:sparkd/features/gigs/data/datasources/gig_remote_data_source.dart';
 import 'package:sparkd/features/gigs/data/repositories/gig_repository_impl.dart';
@@ -52,6 +59,7 @@ Future<void> init() async {
       saveUserProfileUseCase: sl(),
       getUserProfileUseCase: sl(),
       logoutUseCase: sl(),
+      notificationService: sl(),
     ),
   );
 
@@ -140,14 +148,35 @@ Future<void> init() async {
     () => GigRemoteDataSourceImpl(firestore: sl(), auth: sl()),
   );
 
+  // --- Order Feature ---
+  sl.registerFactory(
+    () => OrderBloc(createOrderRequestUseCase: sl(), notificationService: sl()),
+  );
+
+  sl.registerLazySingleton(
+    () => CreateOrderRequestUseCase(orderRepository: sl()),
+  );
+
+  sl.registerLazySingleton<OrderRepository>(
+    () => OrderRepositoryImplementation(remoteRepository: sl()),
+  );
+
+  sl.registerLazySingleton<OrderRemoteRepository>(
+    () => OrderRemoteRepositoryImplementation(firestore: sl()),
+  );
+
   // --- External ---
   final sharedPreferences = await SharedPreferences.getInstance();
   sl.registerLazySingleton(() => sharedPreferences);
   sl.registerLazySingleton(() => FirebaseAuth.instance);
   sl.registerLazySingleton(() => FirebaseFirestore.instance);
+  sl.registerLazySingleton(() => FirebaseMessaging.instance);
   sl.registerLazySingleton(() => const FlutterSecureStorage());
 
   // --- Core Services ---
   sl.registerLazySingleton<StorageService>(() => FirebaseStorageService());
   sl.registerLazySingleton(() => PermissionService());
+  sl.registerLazySingleton(
+    () => NotificationService(messaging: sl(), firestore: sl()),
+  );
 }

@@ -47,3 +47,8 @@ app.*.map.json
 
 # Environmental variables
 .env
+
+# Firebase Functions
+/functions/node_modules/
+/functions/.runtimeconfig.json
+/functions/package-lock.json
