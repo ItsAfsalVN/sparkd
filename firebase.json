@@ -1,4 +1,9 @@
 {
+  "functions": {
+    "source": "functions",
+    "predeploy": [],
+    "runtime": "nodejs20"
+  },
   "flutter": {
     "platforms": {
       "android": {
