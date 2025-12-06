@@ -23,7 +23,10 @@ import 'package:sparkd/features/orders/data/datasources/order_remote_repository.
 import 'package:sparkd/features/orders/data/repositories/order_repository_implementation.dart';
 import 'package:sparkd/features/orders/domain/repository/order_repository.dart';
 import 'package:sparkd/features/orders/domain/usecases/create_order_request.dart';
+import 'package:sparkd/features/orders/domain/usecases/get_spark_orders.dart';
+import 'package:sparkd/features/orders/domain/usecases/update_order_status.dart';
 import 'package:sparkd/features/orders/presentation/bloc/order_bloc.dart';
+import 'package:sparkd/features/orders/presentation/bloc/spark_orders_bloc.dart';
 import 'package:sparkd/features/spark/data/datasources/static_skill_data_source.dart';
 import 'package:sparkd/features/gigs/data/datasources/gig_remote_data_source.dart';
 import 'package:sparkd/features/gigs/data/repositories/gig_repository_impl.dart';
@@ -153,9 +156,21 @@ Future<void> init() async {
     () => OrderBloc(createOrderRequestUseCase: sl(), notificationService: sl()),
   );
 
+  sl.registerFactory(
+    () => SparkOrdersBloc(
+      getSparkOrdersUseCase: sl(),
+      updateOrderStatusUseCase: sl(),
+      notificationService: sl(),
+    ),
+  );
+
   sl.registerLazySingleton(
     () => CreateOrderRequestUseCase(orderRepository: sl()),
   );
+
+  sl.registerLazySingleton(() => GetSparkOrdersUseCase(repository: sl()));
+
+  sl.registerLazySingleton(() => UpdateOrderStatusUseCase(repository: sl()));
 
   sl.registerLazySingleton<OrderRepository>(
     () => OrderRepositoryImplementation(remoteRepository: sl()),

@@ -1,0 +1,39 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Users collection
+    match /users/{userId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Gigs collection
+    match /gigs/{gigId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null;
+      allow update, delete: if request.auth != null && 
+                             request.auth.uid == resource.data.creatorId;
+    }
+
+    // Orders collection
+    match /orders/{orderId} {
+      allow read: if request.auth != null && 
+                   (request.auth.uid == resource.data.smeID || 
+                    request.auth.uid == resource.data.sparkID);
+      allow create: if request.auth != null && 
+                     request.auth.uid == request.resource.data.smeID;
+      allow update: if request.auth != null && 
+                     (request.auth.uid == resource.data.smeID || 
+                      request.auth.uid == resource.data.sparkID);
+      allow delete: if request.auth != null && 
+                     request.auth.uid == resource.data.smeID;
+    }
+
+    // Notifications collection
+    match /notifications/{notificationId} {
+      allow read: if request.auth != null && 
+                   request.auth.uid == resource.data.userId;
+      allow write: if request.auth != null;
+    }
+  }
+}
