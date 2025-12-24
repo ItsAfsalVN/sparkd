@@ -50,7 +50,7 @@ class SmeGigCard extends StatelessWidget {
           // Title
           Text(
             gig.title,
-            style: textStyles.heading4,
+            style: textStyles.heading3,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),

@@ -11,18 +11,24 @@ class ImageUpload extends StatefulWidget {
   final String? label;
   final String hintText;
   final String? imageUrl;
-  final Function(String?) onChanged;
+  final File? imageFile;
+  final Function(String?)? onChanged;
+  final Function(File?)? onFileChanged;
   final bool isRequired;
   final double? aspectRatio;
+  final bool uploadImmediately;
 
   const ImageUpload({
     super.key,
     this.label,
     this.hintText = "Upload an image",
     this.imageUrl,
-    required this.onChanged,
+    this.imageFile,
+    this.onChanged,
+    this.onFileChanged,
     this.isRequired = false,
     this.aspectRatio,
+    this.uploadImmediately = true,
   });
 
   @override
@@ -57,25 +63,38 @@ class _ImageUploadState extends State<ImageUpload> {
       );
 
       if (image != null) {
-        // Upload to Firebase Storage
-        final storageService = sl<StorageService>();
         final imageFile = File(image.path);
-        final fileName = '${DateTime.now().millisecondsSinceEpoch}.jpg';
-        final storagePath = 'gigs/images/$fileName';
 
-        final downloadUrl = await storageService.uploadImage(
-          imageFile,
-          storagePath,
-        );
-        widget.onChanged(downloadUrl);
+        if (widget.uploadImmediately) {
+          // Upload to Firebase Storage immediately
+          final storageService = sl<StorageService>();
+          final fileName = '${DateTime.now().millisecondsSinceEpoch}.jpg';
+          final storagePath = 'gigs/images/$fileName';
 
-        if (mounted) {
-          showSnackbar(context, "Image uploaded successfully!", SnackBarType.success);
+          final downloadUrl = await storageService.uploadImage(
+            imageFile,
+            storagePath,
+          );
+          widget.onChanged?.call(downloadUrl);
+
+          if (mounted) {
+            showSnackbar(
+              context,
+              "Image uploaded successfully!",
+              SnackBarType.success,
+            );
+          }
+        } else {
+          // Just store the file locally
+          widget.onFileChanged?.call(imageFile);
+          if (mounted) {
+            showSnackbar(context, "Image selected!", SnackBarType.success);
+          }
         }
       }
     } catch (e) {
-        if (mounted) {
-          showSnackbar(context, "Error picking image $e", SnackBarType.error);
+      if (mounted) {
+        showSnackbar(context, "Error picking image: $e", SnackBarType.error);
       }
     } finally {
       if (mounted) {
@@ -113,14 +132,20 @@ class _ImageUploadState extends State<ImageUpload> {
   }
 
   void _removeImage() {
-    widget.onChanged(null);
+    if (widget.uploadImmediately) {
+      widget.onChanged?.call(null);
+    } else {
+      widget.onFileChanged?.call(null);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final textStyles = Theme.of(context).textStyles;
-    final hasImage = widget.imageUrl != null && widget.imageUrl!.isNotEmpty;
+    final hasImage =
+        (widget.imageUrl != null && widget.imageUrl!.isNotEmpty) ||
+        widget.imageFile != null;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -291,6 +316,18 @@ class _ImageUploadState extends State<ImageUpload> {
   }
 
   Widget _buildImageWidget() {
+    // Show file if available
+    if (widget.imageFile != null) {
+      return Image.file(
+        widget.imageFile!,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          return const Icon(Icons.broken_image, size: 50, color: Colors.grey);
+        },
+      );
+    }
+
+    // Otherwise show URL
     if (widget.imageUrl == null || widget.imageUrl!.isEmpty) {
       return const Icon(Icons.image, size: 50, color: Colors.grey);
     }

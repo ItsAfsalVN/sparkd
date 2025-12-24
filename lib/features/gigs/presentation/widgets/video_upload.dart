@@ -76,7 +76,11 @@ class _VideoUploadState extends State<VideoUpload>
 
         if (fileSize > maxSize) {
           if (mounted) {
-            showSnackbar(context, "Video file is too large. Please select a file under 50MB.", SnackBarType.error);
+            showSnackbar(
+              context,
+              "Video file is too large. Please select a file under 50MB.",
+              SnackBarType.error,
+            );
           }
           return;
         }
@@ -94,7 +98,11 @@ class _VideoUploadState extends State<VideoUpload>
         _urlController.text = downloadUrl;
 
         if (mounted) {
-          showSnackbar(context, "Video uploaded successfully!", SnackBarType.success);
+          showSnackbar(
+            context,
+            "Video uploaded successfully!",
+            SnackBarType.success,
+          );
         }
       }
     } catch (e) {
@@ -330,8 +338,8 @@ class _VideoUploadState extends State<VideoUpload>
             children: [
               Icon(
                 Icons.play_circle_outline,
-                size: 64,
-                color: colorScheme.primary,
+                size: 48,
+                color: colorScheme.onSurface.withValues(alpha: .5),
               ),
               const SizedBox(height: 8),
               Text(
