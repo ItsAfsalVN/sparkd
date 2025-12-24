@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sparkd/core/utils/app_colors.dart';
 import 'package:sparkd/core/utils/app_text_theme_extension.dart';
 import 'package:sparkd/core/utils/snackbar_helper.dart';
 import 'package:sparkd/features/gigs/domain/entities/requirement_entity.dart';
@@ -117,71 +118,50 @@ class _MandatoryRequirementsState extends State<MandatoryRequirements> {
           ),
         Row(
           children: [
-            Text(
-              "Type:",
-              style: textStyles.paragraph.copyWith(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: colorScheme.onSurface.withValues(alpha: 0.7),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Row(
-                children: [
-                  Expanded(
-                    child: RadioListTile<RequirementType>(
-                      dense: true,
-                      contentPadding: EdgeInsets.zero,
-                      title: Text(
-                        "Text",
-                        style: textStyles.paragraph.copyWith(fontSize: 14),
-                      ),
-                      value: RequirementType.text,
-                      groupValue: _selectedType,
-                      onChanged: (value) {
-                        if (value != null) {
-                          setState(() {
-                            _selectedType = value;
-                          });
-                        }
-                      },
-                    ),
-                  ),
-                  Expanded(
-                    child: RadioListTile<RequirementType>(
-                      dense: true,
-                      contentPadding: EdgeInsets.zero,
-                      title: Text(
-                        "File",
-                        style: textStyles.paragraph.copyWith(fontSize: 14),
-                      ),
-                      value: RequirementType.file,
-                      groupValue: _selectedType,
-                      onChanged: (value) {
-                        if (value != null) {
-                          setState(() {
-                            _selectedType = value;
-                          });
-                        }
-                      },
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-        Row(
-          children: [
             Expanded(
               child: TextField(
                 controller: _textController,
                 decoration: InputDecoration(
+                  filled: true,
+                  fillColor: colorScheme.surface,
                   hintText: widget.hintText,
                   hintStyle: textStyles.paragraph.copyWith(
                     fontSize: 12,
                     color: colorScheme.onSurface.withValues(alpha: 0.6),
+                  ),
+                  prefixIcon: Padding(
+                    padding: const EdgeInsets.only(left: 8, right: 8),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: colorScheme.surfaceContainerHighest,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      padding: const EdgeInsets.all(2),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _buildTypeChip(
+                            "Text",
+                            RequirementType.text,
+                            Icons.text_fields,
+                            colorScheme,
+                            textStyles,
+                          ),
+                          const SizedBox(width: 2),
+                          _buildTypeChip(
+                            "File",
+                            RequirementType.file,
+                            Icons.attach_file,
+                            colorScheme,
+                            textStyles,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  prefixIconConstraints: const BoxConstraints(
+                    minWidth: 0,
+                    minHeight: 0,
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
@@ -373,6 +353,53 @@ class _MandatoryRequirementsState extends State<MandatoryRequirements> {
           ],
         ),
       ],
+    );
+  }
+
+  Widget _buildTypeChip(
+    String label,
+    RequirementType type,
+    IconData icon,
+    ColorScheme colorScheme,
+    AppTextThemeExtension textStyles,
+  ) {
+    final isSelected = _selectedType == type;
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _selectedType = type;
+        });
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected ? colorScheme.primary : AppColors.white100,
+          borderRadius: BorderRadius.circular(4),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 14,
+              color: isSelected
+                  ? colorScheme.onPrimary
+                  : colorScheme.onSurface.withValues(alpha: 0.7),
+            ),
+            const SizedBox(width: 4),
+            Text(
+              label,
+              style: textStyles.paragraph.copyWith(
+                fontSize: 12.0,
+                color: isSelected
+                    ? colorScheme.onPrimary
+                    : colorScheme.onSurface.withValues(alpha: 0.7),
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

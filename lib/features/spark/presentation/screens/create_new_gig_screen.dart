@@ -1,6 +1,9 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:sparkd/core/services/service_locator.dart';
+import 'package:sparkd/core/services/storage_service.dart';
 import 'package:sparkd/core/presentation/widgets/custom_button.dart';
 import 'package:sparkd/core/presentation/widgets/custom_dropdown.dart';
 import 'package:sparkd/core/presentation/widgets/custom_text_field.dart';
@@ -38,10 +41,11 @@ class _CreateNewGigScreenState extends State<CreateNewGigScreen> {
   int? _revisions;
   List<String> _selectedDeliverables = [];
 
-  // Upload state variables
-  String? _thumbnailImage;
-  List<String> _portfolioSamples = [];
+  // Upload state variables - store files until submit
+  File? _thumbnailImageFile;
+  List<File> _portfolioFiles = [];
   String? _demonstrationVideo;
+  bool _isUploadingMedia = false;
 
   // New component state variables
   List<RequirementEntity> _mandatoryRequirements = [];
@@ -234,37 +238,39 @@ class _CreateNewGigScreenState extends State<CreateNewGigScreen> {
                   // Primary Thumbnail Upload
                   ImageUpload(
                     label: "Primary Thumbnail",
-                    hintText: "Upload main gig image",
-                    imageUrl: _thumbnailImage,
+                    hintText: "Select main gig image",
+                    imageFile: _thumbnailImageFile,
                     isRequired: true,
-                    onChanged: (url) {
+                    uploadImmediately: false,
+                    onFileChanged: (file) {
                       setState(() {
-                        _thumbnailImage = url;
+                        _thumbnailImageFile = file;
                       });
-                      logger.d('Thumbnail image: $_thumbnailImage');
+                      logger.d('Thumbnail selected: ${file?.path}');
                     },
                   ),
 
                   // Portfolio Samples Upload
                   MultiImageUpload(
                     label: "Portfolio Samples",
-                    hintText: "Show your previous work",
-                    imageUrls: _portfolioSamples,
+                    hintText: "Select previous work samples",
+                    imageFiles: _portfolioFiles,
                     maxImages: 5,
-                    onChanged: (urls) {
+                    uploadImmediately: false,
+                    onFilesChanged: (files) {
                       setState(() {
-                        _portfolioSamples = urls;
+                        _portfolioFiles = files;
                       });
-                      logger.d('Portfolio samples: $_portfolioSamples');
+                      logger.d('Portfolio files selected: ${files.length}');
                     },
                   ),
 
                   // Service Demonstration Video
                   VideoUpload(
                     label: "Service Demonstration Video",
-                    hintText: "Upload or link to a demo video",
+                    hintText: "Upload a demo video",
                     videoUrl: _demonstrationVideo,
-                    allowUrlInput: true,
+                    allowUrlInput: false,
                     onChanged: (url) {
                       setState(() {
                         _demonstrationVideo = url;
@@ -307,11 +313,14 @@ class _CreateNewGigScreenState extends State<CreateNewGigScreen> {
                   // Submit Button with BLoC integration
                   BlocBuilder<CreateGigBloc, CreateGigState>(
                     builder: (context, state) {
+                      final isLoading =
+                          state.status == FormStatus.loading ||
+                          _isUploadingMedia;
                       return CustomButton(
-                        onPressed: state.status == FormStatus.loading
-                            ? null
-                            : () => _submitGig(context),
-                        title: state.status == FormStatus.loading
+                        onPressed: isLoading ? null : () => _submitGig(context),
+                        title: _isUploadingMedia
+                            ? "Uploading Media..."
+                            : state.status == FormStatus.loading
                             ? "Creating..."
                             : "Create Gig",
                       );
@@ -326,60 +335,108 @@ class _CreateNewGigScreenState extends State<CreateNewGigScreen> {
     ); // End of BlocListener
   }
 
-  void _submitGig(BuildContext context) {
+  Future<void> _submitGig(BuildContext context) async {
     logger.i('Screen: Submitting gig with current state');
 
-    // Create gig entity from current form state
-    context.read<CreateGigBloc>().add(GigTitleChanged(_gigTitle));
-    context.read<CreateGigBloc>().add(GigDescriptionChanged(_gigDescription));
-    context.read<CreateGigBloc>().add(GigPriceChanged(_gigPrice));
+    setState(() {
+      _isUploadingMedia = true;
+    });
 
-    if (_selectedCategoryId != null) {
-      final selectedCategory = _categories.firstWhere(
-        (cat) => cat['categoryId'] == _selectedCategoryId,
-      );
-      context.read<CreateGigBloc>().add(
-        GigCategoryChanged(
-          SkillEntity(
-            categoryID: selectedCategory['categoryId'] as String,
-            categoryName: selectedCategory['categoryName'] as String,
-            tools: [],
+    try {
+      final storageService = sl<StorageService>();
+      String? thumbnailUrl;
+      List<String> portfolioUrls = [];
+
+      // Upload thumbnail if selected
+      if (_thumbnailImageFile != null) {
+        logger.i('Uploading thumbnail image...');
+        final fileName = '${DateTime.now().millisecondsSinceEpoch}_thumb.jpg';
+        thumbnailUrl = await storageService.uploadImage(
+          _thumbnailImageFile!,
+          'gigs/images/$fileName',
+        );
+        logger.i('Thumbnail uploaded: $thumbnailUrl');
+      }
+
+      // Upload portfolio images if selected
+      if (_portfolioFiles.isNotEmpty) {
+        logger.i('Uploading ${_portfolioFiles.length} portfolio images...');
+        for (int i = 0; i < _portfolioFiles.length; i++) {
+          final fileName =
+              '${DateTime.now().millisecondsSinceEpoch}_portfolio_$i.jpg';
+          final url = await storageService.uploadImage(
+            _portfolioFiles[i],
+            'gigs/portfolio/$fileName',
+          );
+          portfolioUrls.add(url);
+        }
+        logger.i('Portfolio images uploaded: ${portfolioUrls.length}');
+      }
+
+      setState(() {
+        _isUploadingMedia = false;
+      });
+
+      // Create gig entity from current form state
+      context.read<CreateGigBloc>().add(GigTitleChanged(_gigTitle));
+      context.read<CreateGigBloc>().add(GigDescriptionChanged(_gigDescription));
+      context.read<CreateGigBloc>().add(GigPriceChanged(_gigPrice));
+
+      if (_selectedCategoryId != null) {
+        final selectedCategory = _categories.firstWhere(
+          (cat) => cat['categoryId'] == _selectedCategoryId,
+        );
+        context.read<CreateGigBloc>().add(
+          GigCategoryChanged(
+            SkillEntity(
+              categoryID: selectedCategory['categoryId'] as String,
+              categoryName: selectedCategory['categoryName'] as String,
+              tools: [],
+            ),
           ),
-        ),
-      );
-    }
+        );
+      }
 
-    context.read<CreateGigBloc>().add(GigTagsChanged(_gigTags));
-    if (_deliveryTime != null) {
-      context.read<CreateGigBloc>().add(GigDeliveryTimeChanged(_deliveryTime!));
-    }
-    if (_revisions != null) {
-      context.read<CreateGigBloc>().add(GigRevisionsChanged(_revisions!));
-    }
-    context.read<CreateGigBloc>().add(
-      GigDeliverablesChanged(_selectedDeliverables),
-    );
-    if (_thumbnailImage != null) {
-      context.read<CreateGigBloc>().add(GigThumbnailChanged(_thumbnailImage!));
-    }
-    context.read<CreateGigBloc>().add(
-      GigGalleryImagesChanged(_portfolioSamples),
-    );
-    if (_demonstrationVideo != null) {
+      context.read<CreateGigBloc>().add(GigTagsChanged(_gigTags));
+      if (_deliveryTime != null) {
+        context.read<CreateGigBloc>().add(
+          GigDeliveryTimeChanged(_deliveryTime!),
+        );
+      }
+      if (_revisions != null) {
+        context.read<CreateGigBloc>().add(GigRevisionsChanged(_revisions!));
+      }
       context.read<CreateGigBloc>().add(
-        GigDemoVideoChanged(_demonstrationVideo),
+        GigDeliverablesChanged(_selectedDeliverables),
       );
-    }
-    context.read<CreateGigBloc>().add(
-      GigRequirementsChanged(_mandatoryRequirements),
-    );
-    if (_selectedDeliveryType != null) {
+      if (thumbnailUrl != null) {
+        context.read<CreateGigBloc>().add(GigThumbnailChanged(thumbnailUrl));
+      }
+      context.read<CreateGigBloc>().add(GigGalleryImagesChanged(portfolioUrls));
+      if (_demonstrationVideo != null) {
+        context.read<CreateGigBloc>().add(
+          GigDemoVideoChanged(_demonstrationVideo),
+        );
+      }
       context.read<CreateGigBloc>().add(
-        GigDeliveryTypeChanged(_selectedDeliveryType!),
+        GigRequirementsChanged(_mandatoryRequirements),
       );
-    }
+      if (_selectedDeliveryType != null) {
+        context.read<CreateGigBloc>().add(
+          GigDeliveryTypeChanged(_selectedDeliveryType!),
+        );
+      }
 
-    // Submit the gig
-    context.read<CreateGigBloc>().add(const CreateGigSubmitted());
+      // Submit the gig
+      context.read<CreateGigBloc>().add(const CreateGigSubmitted());
+    } catch (e) {
+      logger.e('Error uploading media: $e');
+      setState(() {
+        _isUploadingMedia = false;
+      });
+      if (mounted) {
+        showSnackbar(context, 'Failed to upload media: $e', SnackBarType.error);
+      }
+    }
   }
 }

@@ -153,7 +153,7 @@ class DeliveryTypeSelector extends StatelessWidget {
                           Text(
                             _getDeliveryTypeDescription(type),
                             style: textStyles.paragraph.copyWith(
-                              fontSize: 14,
+                              fontSize: 12,
                               color: colorScheme.onSurface.withValues(
                                 alpha: 0.7,
                               ),

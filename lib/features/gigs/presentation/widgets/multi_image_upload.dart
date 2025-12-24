@@ -11,18 +11,24 @@ class MultiImageUpload extends StatefulWidget {
   final String? label;
   final String hintText;
   final List<String> imageUrls;
-  final Function(List<String>) onChanged;
+  final List<File> imageFiles;
+  final Function(List<String>)? onChanged;
+  final Function(List<File>)? onFilesChanged;
   final int maxImages;
   final bool isRequired;
+  final bool uploadImmediately;
 
   const MultiImageUpload({
     super.key,
     this.label,
     this.hintText = "Upload images",
     this.imageUrls = const [],
-    required this.onChanged,
+    this.imageFiles = const [],
+    this.onChanged,
+    this.onFilesChanged,
     this.maxImages = 5,
     this.isRequired = false,
+    this.uploadImmediately = true,
   });
 
   @override
@@ -30,18 +36,23 @@ class MultiImageUpload extends StatefulWidget {
 }
 
 class _MultiImageUploadState extends State<MultiImageUpload> {
-  late List<String> _images;
+  late List<String> _imageUrls;
+  late List<File> _imageFiles;
   bool _isUploading = false;
   final ImagePicker _picker = ImagePicker();
 
   @override
   void initState() {
     super.initState();
-    _images = List.from(widget.imageUrls);
+    _imageUrls = List.from(widget.imageUrls);
+    _imageFiles = List.from(widget.imageFiles);
   }
 
   Future<void> _addImage() async {
-    if (_images.length >= widget.maxImages) {
+    final currentCount = widget.uploadImmediately
+        ? _imageUrls.length
+        : _imageFiles.length;
+    if (currentCount >= widget.maxImages) {
       _showMaxImagesSnackBar();
       return;
     }
@@ -69,30 +80,47 @@ class _MultiImageUploadState extends State<MultiImageUpload> {
       );
 
       if (image != null) {
-        // Upload to Firebase Storage
-        final storageService = sl<StorageService>();
         final imageFile = File(image.path);
-        final fileName = '${DateTime.now().millisecondsSinceEpoch}.jpg';
-        final storagePath = 'gigs/portfolio/$fileName';
 
-        final downloadUrl = await storageService.uploadImage(
-          imageFile,
-          storagePath,
-        );
+        if (widget.uploadImmediately) {
+          // Upload to Firebase Storage
+          final storageService = sl<StorageService>();
+          final fileName = '${DateTime.now().millisecondsSinceEpoch}.jpg';
+          final storagePath = 'gigs/portfolio/$fileName';
 
-        setState(() {
-          _images.add(downloadUrl);
-        });
+          final downloadUrl = await storageService.uploadImage(
+            imageFile,
+            storagePath,
+          );
 
-        widget.onChanged(_images);
+          setState(() {
+            _imageUrls.add(downloadUrl);
+          });
 
-        if (mounted) {
-          
-          showSnackbar(context, "Image uploaded successfully!", SnackBarType.success);
+          widget.onChanged?.call(_imageUrls);
+
+          if (mounted) {
+            showSnackbar(
+              context,
+              "Image uploaded successfully!",
+              SnackBarType.success,
+            );
+          }
+        } else {
+          // Just store the file locally
+          setState(() {
+            _imageFiles.add(imageFile);
+          });
+
+          widget.onFilesChanged?.call(_imageFiles);
+
+          if (mounted) {
+            showSnackbar(context, "Image selected!", SnackBarType.success);
+          }
         }
       }
     } catch (e) {
-      if (mounted) {        
+      if (mounted) {
         showSnackbar(context, "Error picking image: $e", SnackBarType.error);
       }
     } finally {
@@ -132,14 +160,23 @@ class _MultiImageUploadState extends State<MultiImageUpload> {
 
   void _removeImage(int index) {
     setState(() {
-      _images.removeAt(index);
+      if (widget.uploadImmediately) {
+        _imageUrls.removeAt(index);
+        widget.onChanged?.call(_imageUrls);
+      } else {
+        _imageFiles.removeAt(index);
+        widget.onFilesChanged?.call(_imageFiles);
+      }
     });
-    widget.onChanged(_images);
   }
 
   void _showMaxImagesSnackBar() {
     if (mounted) {
-      showSnackbar(context, "You can upload a maximum of ${widget.maxImages} images", SnackBarType.info);
+      showSnackbar(
+        context,
+        "You can upload a maximum of ${widget.maxImages} images",
+        SnackBarType.info,
+      );
     }
   }
 
@@ -147,6 +184,7 @@ class _MultiImageUploadState extends State<MultiImageUpload> {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final textStyles = Theme.of(context).textStyles;
+    final displayItems = widget.uploadImmediately ? _imageUrls : _imageFiles;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -176,16 +214,16 @@ class _MultiImageUploadState extends State<MultiImageUpload> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: _images.isNotEmpty
+                color: displayItems.isNotEmpty
                     ? colorScheme.primaryContainer
                     : colorScheme.surfaceContainerHighest,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
-                '${_images.length}/${widget.maxImages}',
+                '${displayItems.length}/${widget.maxImages}',
                 style: textStyles.paragraph.copyWith(
                   fontSize: 12,
-                  color: _images.isNotEmpty
+                  color: displayItems.isNotEmpty
                       ? colorScheme.onPrimaryContainer
                       : colorScheme.onSurface.withValues(alpha: 0.6),
                   fontWeight: FontWeight.w600,
@@ -196,7 +234,7 @@ class _MultiImageUploadState extends State<MultiImageUpload> {
         ),
 
         // Images grid
-        if (_images.isNotEmpty || _isUploading)
+        if (displayItems.isNotEmpty || _isUploading)
           Container(
             decoration: BoxDecoration(
               color: colorScheme.surface,
@@ -212,10 +250,9 @@ class _MultiImageUploadState extends State<MultiImageUpload> {
               runSpacing: 8,
               children: [
                 // Existing images
-                ..._images.asMap().entries.map((entry) {
+                ...displayItems.asMap().entries.map((entry) {
                   final index = entry.key;
-                  final imageUrl = entry.value;
-                  return _buildImageTile(index, imageUrl, colorScheme);
+                  return _buildImageTile(index, colorScheme);
                 }),
 
                 // Upload progress indicator
@@ -255,7 +292,7 @@ class _MultiImageUploadState extends State<MultiImageUpload> {
                   ),
 
                 // Add button
-                if (_images.length < widget.maxImages && !_isUploading)
+                if (displayItems.length < widget.maxImages && !_isUploading)
                   GestureDetector(
                     onTap: _addImage,
                     child: Container(
@@ -292,7 +329,7 @@ class _MultiImageUploadState extends State<MultiImageUpload> {
           ),
 
         // Upload area for empty state
-        if (_images.isEmpty && !_isUploading)
+        if (displayItems.isEmpty && !_isUploading)
           GestureDetector(
             onTap: _addImage,
             child: Container(
@@ -330,7 +367,7 @@ class _MultiImageUploadState extends State<MultiImageUpload> {
     );
   }
 
-  Widget _buildImageTile(int index, String imageUrl, ColorScheme colorScheme) {
+  Widget _buildImageTile(int index, ColorScheme colorScheme) {
     return Stack(
       children: [
         Container(
@@ -346,7 +383,7 @@ class _MultiImageUploadState extends State<MultiImageUpload> {
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(8),
-            child: _buildImageWidget(imageUrl),
+            child: _buildImageWidget(index),
           ),
         ),
         Positioned(
@@ -368,22 +405,38 @@ class _MultiImageUploadState extends State<MultiImageUpload> {
     );
   }
 
-  Widget _buildImageWidget(String imageUrl) {
-    if (imageUrl.startsWith('http')) {
-      return Image.network(
-        imageUrl,
-        fit: BoxFit.cover,
-        width: double.infinity,
-        height: double.infinity,
-        errorBuilder: (context, error, stackTrace) {
-          return const Center(
-            child: Icon(Icons.broken_image, size: 30, color: Colors.grey),
-          );
-        },
-      );
+  Widget _buildImageWidget(int index) {
+    if (widget.uploadImmediately) {
+      final imageUrl = _imageUrls[index];
+      if (imageUrl.startsWith('http')) {
+        return Image.network(
+          imageUrl,
+          fit: BoxFit.cover,
+          width: double.infinity,
+          height: double.infinity,
+          errorBuilder: (context, error, stackTrace) {
+            return const Center(
+              child: Icon(Icons.broken_image, size: 30, color: Colors.grey),
+            );
+          },
+        );
+      } else {
+        return Image.file(
+          File(imageUrl),
+          fit: BoxFit.cover,
+          width: double.infinity,
+          height: double.infinity,
+          errorBuilder: (context, error, stackTrace) {
+            return const Center(
+              child: Icon(Icons.broken_image, size: 30, color: Colors.grey),
+            );
+          },
+        );
+      }
     } else {
+      final imageFile = _imageFiles[index];
       return Image.file(
-        File(imageUrl),
+        imageFile,
         fit: BoxFit.cover,
         width: double.infinity,
         height: double.infinity,
