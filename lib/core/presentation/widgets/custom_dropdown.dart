@@ -195,7 +195,11 @@ class BusinessCategoryDropdown extends StatelessWidget {
   final Function(String?) onChanged;
   final FocusNode? focusNode;
 
-  const BusinessCategoryDropdown({super.key, required this.onChanged, this.focusNode});
+  const BusinessCategoryDropdown({
+    super.key,
+    required this.onChanged,
+    this.focusNode,
+  });
 
   // Business categories
   static const List<DropdownItem<String>> businessCategories = [
