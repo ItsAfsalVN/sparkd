@@ -1,3 +1,4 @@
+import 'package:sparkd/core/utils/logger.dart';
 import 'package:sparkd/features/auth/domain/entities/user_profile.dart';
 import 'package:sparkd/features/auth/domain/repositories/auth_repository.dart';
 
@@ -7,6 +8,22 @@ class GetUserProfileUseCase {
   GetUserProfileUseCase({required this.authRepository});
 
   Future<UserProfile?> call(String uid) async {
-    return await authRepository.getUserProfile(uid: uid);
+    try {
+      final profile = await authRepository
+          .getUserProfile(uid: uid)
+          .timeout(
+            const Duration(seconds: 8),
+            onTimeout: () {
+              logger.e(
+                'Timeout: getUserProfile exceeded 8 seconds for UID: $uid',
+              );
+              throw Exception('Timeout fetching user profile');
+            },
+          );
+      return profile;
+    } catch (e) {
+      logger.e('GetUserProfileUseCase: Error - $e');
+      rethrow;
+    }
   }
 }

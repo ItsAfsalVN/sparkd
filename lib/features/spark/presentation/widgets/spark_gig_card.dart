@@ -1,25 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:sparkd/core/presentation/widgets/custom_button.dart';
 import 'package:sparkd/core/presentation/widgets/ui_card.dart';
 import 'package:sparkd/core/utils/app_text_theme_extension.dart';
-import 'package:sparkd/features/spark/presentation/screens/edit_gig_screen.dart';
+import 'package:sparkd/features/gigs/domain/entities/gig_entity.dart';
+import 'package:sparkd/features/gigs/presentation/bloc/create_gig/create_gig_bloc.dart';
+import 'package:sparkd/features/spark/presentation/screens/edit_gig_provider.dart';
 
 class SparkGigCard extends StatelessWidget {
-  final String? title;
-  final String? description;
-  final double? price;
-  final String? thumbnailImage;
-  final String? category;
+  final GigEntity gig;
 
-  const SparkGigCard({
-    super.key,
-    this.title,
-    this.description,
-    this.price,
-    this.thumbnailImage,
-    this.category,
-  });
+  const SparkGigCard({super.key, required this.gig});
 
   @override
   Widget build(BuildContext context) {
@@ -37,9 +30,9 @@ class SparkGigCard extends StatelessWidget {
             borderRadius: BorderRadius.circular(12),
             child: SizedBox(
               width: double.infinity,
-              child: thumbnailImage != null
+              child: gig.thumbnailImage != null
                   ? Image.network(
-                      thumbnailImage!,
+                      gig.thumbnailImage!,
                       fit: BoxFit.cover,
                       height: 160,
                       errorBuilder: (context, error, stackTrace) {
@@ -67,7 +60,7 @@ class SparkGigCard extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  title ?? "Untitled Gig",
+                  gig.title,
                   style: textStyles.heading4,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
@@ -121,7 +114,7 @@ class SparkGigCard extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        "${price?.toStringAsFixed(0) ?? 0}",
+                        gig.price.toStringAsFixed(0),
                         style: textStyles.heading2.copyWith(
                           color: colorScheme.onSurface.withValues(alpha: .8),
                           height: 1,
@@ -154,12 +147,24 @@ class SparkGigCard extends StatelessWidget {
           ),
 
           CustomButton(
-            onPressed: () {
-              Navigator.of(
-                context,
-              ).push(MaterialPageRoute(builder: (context) => EditGigScreen()));
+            onPressed: () async {
+              final result = await Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => EditGigProvider(gig: gig),
+                ),
+              );
+
+              // Refresh gigs list if update was successful
+              if (result == true && context.mounted) {
+                final currentUser = FirebaseAuth.instance.currentUser;
+                if (currentUser != null) {
+                  context.read<CreateGigBloc>().add(
+                    LoadUserGigs(currentUser.uid),
+                  );
+                }
+              }
             },
-            title: "Edit",
+            title: "View / Edit",
             borderRadius: BorderRadius.circular(12),
           ),
         ],

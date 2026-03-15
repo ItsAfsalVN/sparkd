@@ -128,23 +128,48 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
             }
 
             emit(AuthAuthenticated(userProfile.userType));
+            // Cache the user type for hot restart recovery
+            await _localDataSource.setCachedUserType(userProfile.userType);
             return;
           } else {
             logger.w(
               "AuthBloc: No profile found in Firestore for UID: ${currentUser.uid}",
             );
+            // Profile not found, try to use cached user type
+            final cachedUserType = await _localDataSource.getCachedUserType();
+            if (cachedUserType != null) {
+              logger.i("AuthBloc: Using cached user type: $cachedUserType");
+              emit(AuthAuthenticated(cachedUserType));
+              return;
+            }
+            // No profile and no cache, default to spark
+            emit(AuthAuthenticated(UserType.spark));
+            return;
           }
         } catch (e) {
           logger.e(
             "AuthBloc: Error fetching user profile from Firestore",
             error: e,
           );
+          // IMPORTANT: If profile fetch fails/times out but user is still in FirebaseAuth,
+          // keep them authenticated instead of signing them out.
+          // This handles hot restart timeouts gracefully.
+          logger.w(
+            "AuthBloc: Profile fetch failed, but keeping user authenticated since they're in FirebaseAuth",
+          );
+          // Try to use cached user type on timeout
+          final cachedUserType = await _localDataSource.getCachedUserType();
+          if (cachedUserType != null) {
+            logger.i(
+              "AuthBloc: Using cached user type on timeout: $cachedUserType",
+            );
+            emit(AuthAuthenticated(cachedUserType));
+            return;
+          }
+          // No cache, default to spark
+          emit(AuthAuthenticated(UserType.spark));
+          return;
         }
-        // If we couldn't get the profile, sign out and show unauthenticated
-        await FirebaseAuth.instance.signOut();
-        await _localDataSource.clearSignUpStep();
-        emit(AuthUnauthenticated());
-        logger.w("AuthBloc: Could not load user profile. User signed out.");
       } else {
         emit(AuthUnauthenticated());
         logger.i(

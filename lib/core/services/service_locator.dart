@@ -17,8 +17,10 @@ import 'package:sparkd/features/gigs/domain/repositories/gig_repository.dart';
 import 'package:sparkd/features/gigs/domain/usecases/create_new_gig.dart';
 import 'package:sparkd/features/gigs/domain/usecases/get_gigs.dart';
 import 'package:sparkd/features/gigs/domain/usecases/get_user_gigs.dart';
+import 'package:sparkd/features/gigs/domain/usecases/update_gig.dart';
 import 'package:sparkd/features/gigs/presentation/bloc/create_gig/create_gig_bloc.dart';
 import 'package:sparkd/features/gigs/presentation/bloc/discover_gig/discover_gig_bloc.dart';
+import 'package:sparkd/features/gigs/presentation/bloc/edit_gig/edit_gig_bloc.dart';
 import 'package:sparkd/features/orders/data/datasources/order_remote_repository.dart';
 import 'package:sparkd/features/orders/data/repositories/order_repository_implementation.dart';
 import 'package:sparkd/features/orders/domain/repository/order_repository.dart';
@@ -136,9 +138,12 @@ Future<void> init() async {
     () => CreateGigBloc(createNewGigUseCase: sl(), getUserGigsUseCase: sl()),
   );
 
+  sl.registerFactory(() => EditGigBloc(updateGigUseCase: sl()));
+
   sl.registerFactory(() => DiscoverGigBloc(getGigsUseCase: sl()));
 
   sl.registerLazySingleton(() => CreateNewGigUseCase(repository: sl()));
+  sl.registerLazySingleton(() => UpdateGigUseCase(repository: sl()));
 
   sl.registerLazySingleton(() => GetUserGigsUseCase(repository: sl()));
   sl.registerLazySingleton(() => GetGigsUseCase(gigRepository: sl()));

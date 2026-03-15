@@ -108,14 +108,29 @@ class GigRemoteDataSourceImpl implements GigRemoteDataSource {
         throw Exception('Gig ID cannot be null for update');
       }
 
-      final updatedGig = gig.copyWith(updatedAt: DateTime.now());
+      // Fetch existing gig to preserve immutable fields
+      final docSnapshot = await _firestore.collection('gigs').doc(gig.id).get();
+      if (!docSnapshot.exists) {
+        throw Exception('Gig not found for update');
+      }
+
+      final existingGig = GigModel.fromJson(docSnapshot.data()!);
+
+      // Create updated gig preserving creatorId and createdAt
+      final updatedGig = gig.copyWith(
+        creatorId: gig.creatorId ?? existingGig.creatorId,
+        createdAt: gig.createdAt ?? existingGig.createdAt,
+        updatedAt: DateTime.now(),
+      );
 
       await _firestore
           .collection('gigs')
           .doc(gig.id)
           .update(updatedGig.toJson());
 
-      logger.i('Gig updated successfully');
+      logger.i(
+        'Gig updated successfully with creatorId: ${updatedGig.creatorId}',
+      );
       return updatedGig;
     } catch (e) {
       logger.e('Error updating gig: $e');

@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:sparkd/core/utils/logger.dart';
 import 'package:sparkd/features/auth/domain/entities/user_profile.dart';
+import 'package:sparkd/firebase_options.dart';
 
 abstract class AuthRemoteDataSource {
   Future<String> requestOtp(String phoneNumber);
@@ -271,7 +272,19 @@ class AuthRemoteDataSourceImplementation extends AuthRemoteDataSource {
   Future<UserProfile?> getUserProfile(String uid) async {
     try {
       logger.d("Firestore: Fetching user profile for UID: $uid");
-      final doc = await firebaseFirestore.collection('users').doc(uid).get();
+      final doc = await firebaseFirestore
+          .collection('users')
+          .doc(uid)
+          .get()
+          .timeout(
+            const Duration(seconds: 7),
+            onTimeout: () {
+              logger.e(
+                'Timeout: Firestore getUserProfile exceeded 7 seconds for UID: $uid',
+              );
+              throw Exception('Firestore request timeout');
+            },
+          );
 
       if (!doc.exists || doc.data() == null) {
         logger.w("Firestore: No profile found for UID: $uid");
@@ -324,21 +337,20 @@ class AuthRemoteDataSourceImplementation extends AuthRemoteDataSource {
     try {
       logger.i('Initiating Google Sign-In');
 
-      // Trigger the authentication flow
-      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+      // Initialize Google Sign-In if needed
+      final googleSignIn = GoogleSignIn.instance;
+      await googleSignIn.initialize(
+        serverClientId: DefaultFirebaseOptions.googleSignInClientId,
+      );
 
-      if (googleUser == null) {
-        // User canceled the sign-in
-        throw Exception('Google Sign-In was canceled by user');
-      }
+      // Trigger the authentication flow
+      final GoogleSignInAccount googleUser = await googleSignIn.authenticate();
 
       // Obtain the auth details from the request
-      final GoogleSignInAuthentication googleAuth =
-          await googleUser.authentication;
+      final GoogleSignInAuthentication googleAuth = googleUser.authentication;
 
       // Create a new credential
       final credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
 
@@ -421,7 +433,7 @@ class AuthRemoteDataSourceImplementation extends AuthRemoteDataSource {
     try {
       logger.i('Logging out user');
       await firebaseAuth.signOut();
-      await GoogleSignIn().signOut();
+      await GoogleSignIn.instance.signOut();
       logger.i('User logged out successfully');
     } catch (error) {
       logger.e('Error during logout: $error');

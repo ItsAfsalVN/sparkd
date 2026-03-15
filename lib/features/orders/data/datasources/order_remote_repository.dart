@@ -75,12 +75,20 @@ class OrderRemoteRepositoryImplementation implements OrderRemoteRepository {
             _logger.i(
               'Received snapshot with ${snapshot.docs.length} documents',
             );
-            return snapshot.docs.map((doc) {
-              final data = doc.data();
-              data['id'] = doc.id;
-              _logger.d('Order data: $data');
-              return OrderModel.fromJson(data).order;
-            }).toList();
+            final orders = <OrderEntity>[];
+            for (final doc in snapshot.docs) {
+              try {
+                final data = doc.data();
+                data['id'] = doc.id;
+                _logger.d('Order data: $data');
+                _logger.d('createdAt type: ${data['createdAt'].runtimeType}');
+                orders.add(OrderModel.fromJson(data).order);
+              } catch (e) {
+                _logger.e('Error parsing order ${doc.id}: $e');
+                // Skip this order and continue with others
+              }
+            }
+            return orders;
           });
     } catch (e) {
       _logger.e('Error in getSparkOrders: $e');
@@ -97,11 +105,18 @@ class OrderRemoteRepositoryImplementation implements OrderRemoteRepository {
           .orderBy("createdAt", descending: true)
           .snapshots()
           .map((snapshot) {
-            return snapshot.docs.map((doc) {
-              final data = doc.data();
-              data['id'] = doc.id;
-              return OrderModel.fromJson(data).order;
-            }).toList();
+            final orders = <OrderEntity>[];
+            for (final doc in snapshot.docs) {
+              try {
+                final data = doc.data();
+                data['id'] = doc.id;
+                orders.add(OrderModel.fromJson(data).order);
+              } catch (e) {
+                _logger.e('Error parsing order ${doc.id}: $e');
+                // Skip this order and continue with others
+              }
+            }
+            return orders;
           });
     } catch (e) {
       throw Exception('Failed to get sme orders: $e');

@@ -1,8 +1,8 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:sparkd/core/services/notification_service.dart';
+import 'firebase_options.dart';
 import 'package:sparkd/core/utils/app_color_theme_extension.dart';
 import 'package:sparkd/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:sparkd/features/auth/presentation/screens/decision_screen.dart';
@@ -10,9 +10,6 @@ import 'package:sparkd/core/utils/app_colors.dart';
 import 'package:sparkd/core/utils/app_text_styles.dart';
 import 'package:sparkd/core/utils/app_text_theme_extension.dart';
 import 'core/services/service_locator.dart' as di;
-
-import 'dart:io' show Platform;
-import 'package:flutter/foundation.dart' show kIsWeb;
 
 void main(List<String> args) async {
   // Only keep the *absolutely essential* binding initialization here.
@@ -42,72 +39,26 @@ class _AppState extends State<App> {
 
   // This function now contains all the logic that was in main().
   Future<void> _initializeApp() async {
-    // 1. Load environment variables
-    await dotenv.load(fileName: ".env");
+    // 1. Initialize Firebase
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
 
-    // 2. Determine Firebase options
-    FirebaseOptions? options;
-    if (kIsWeb) {
-      options = FirebaseOptions(
-        apiKey: dotenv.env['FIREBASE_WEB_API_KEY']!,
-        appId: dotenv.env['FIREBASE_WEB_APP_ID']!,
-        messagingSenderId: dotenv.env['FIREBASE_WEB_MESSAGING_SENDER_ID']!,
-        projectId: dotenv.env['FIREBASE_WEB_PROJECT_ID']!,
-        authDomain: dotenv.env['FIREBASE_WEB_AUTH_DOMAIN']!,
-        storageBucket: dotenv.env['FIREBASE_WEB_STORAGE_BUCKET']!,
-        measurementId: dotenv.env['FIREBASE_WEB_MEASUREMENT_ID']!,
-      );
-    } else if (Platform.isMacOS || Platform.isIOS) {
-      options = FirebaseOptions(
-        apiKey: dotenv.env['FIREBASE_IOS_API_KEY']!,
-        appId: dotenv.env['FIREBASE_IOS_APP_ID']!,
-        messagingSenderId: dotenv.env['FIREBASE_IOS_MESSAGING_SENDER_ID']!,
-        projectId: dotenv.env['FIREBASE_IOS_PROJECT_ID']!,
-        storageBucket: dotenv.env['FIREBASE_IOS_STORAGE_BUCKET']!,
-        iosBundleId: dotenv.env['FIREBASE_IOS_IOS_BUNDLED']!,
-      );
-    } else if (Platform.isAndroid) {
-      options = FirebaseOptions(
-        apiKey: dotenv.env['FIREBASE_ANDROID_API_KEY']!,
-        appId: dotenv.env['FIREBASE_ANDROID_APP_ID']!,
-        messagingSenderId: dotenv.env['FIREBASE_ANDROID_MESSAGING_SENDER_ID']!,
-        projectId: dotenv.env['FIREBASE_ANDROID_PROJECT_ID']!,
-        storageBucket: dotenv.env['FIREBASE_ANDROID_STORAGE_BUCKET']!,
-      );
-    } else if (Platform.isWindows) {
-      options = FirebaseOptions(
-        apiKey: dotenv.env['FIREBASE_WINDOWS_API_KEY']!,
-        appId: dotenv.env['FIREBASE_WINDOWS_APP_ID']!,
-        messagingSenderId: dotenv.env['FIREBASE_WINDOWS_MESSAGING_SENDER_ID']!,
-        projectId: dotenv.env['FIREBASE_WINDOWS_PROJECT_ID']!,
-        authDomain: dotenv.env['FIREBASE_WINDOWS_AUTH_DOMAIN']!,
-        storageBucket: dotenv.env['FIREBASE_WINDOWS_STORAGE_BUCKET']!,
-        measurementId: dotenv.env['FIREBASE_WINDOWS_MEASUREMENT_ID'],
-      );
-    } else {
-      throw UnsupportedError(
-        'Firebase initialization is not supported on this platform',
-      );
-    }
-
-    // 3. Initialize Firebase
-    await Firebase.initializeApp(options: options);
-
-    // 4. Initialize your service locator (dependency injection)
+    // 2. Initialize your service locator (dependency injection)
     await di.init();
 
-    // 5. Initialize notification service
+    // 3. Initialize notification service
     final notificationService = di.sl<NotificationService>();
     await notificationService.initialize();
 
-    // 6. Listen to foreground messages
+    // 4. Listen to foreground messages
     notificationService.listenToForegroundMessages((message) {
       // Handle foreground notifications
       // You can show a custom in-app notification here
       print('Foreground notification: ${message.notification?.title}');
     });
 
-    // 7. Handle notification taps when app is in background
+    // 5. Handle notification taps when app is in background
     notificationService.handleBackgroundNotificationTap((message) {
       // Navigate to relevant screen based on notification data
       print('App opened from notification: ${message.data}');

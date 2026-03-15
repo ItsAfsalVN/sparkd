@@ -2,30 +2,35 @@ import 'package:sparkd/core/utils/logger.dart';
 import 'package:sparkd/features/gigs/domain/entities/gig_entity.dart';
 import 'package:sparkd/features/gigs/domain/repositories/gig_repository.dart';
 
-class CreateNewGigUseCase {
+class UpdateGigUseCase {
   final GigRepository repository;
 
-  CreateNewGigUseCase({required this.repository});
+  UpdateGigUseCase({required this.repository});
 
   Future<GigEntity> call(GigEntity gig) async {
     try {
-      logger.i('UseCase: Creating new gig - ${gig.title}');
+      logger.i('UseCase: Updating gig - ${gig.title} (ID: ${gig.id})');
 
       // Validate gig data
       _validateGig(gig);
 
-      // Create the gig
-      final createdGig = await repository.createGig(gig);
+      // Update the gig
+      final updatedGig = await repository.updateGig(gig);
 
-      logger.i('UseCase: Gig created successfully with ID: ${createdGig.id}');
-      return createdGig;
+      logger.i('UseCase: Gig updated successfully with ID: ${updatedGig.id}');
+      return updatedGig;
     } catch (e) {
-      logger.e('UseCase: Error creating gig - $e');
+      logger.e('UseCase: Error updating gig - $e');
       rethrow;
     }
   }
 
   void _validateGig(GigEntity gig) {
+
+    if (gig.id == null || gig.id!.trim().isEmpty) {
+      throw Exception('Gig ID is required for update');
+    }
+
     if (gig.title.trim().isEmpty) {
       throw Exception('Gig title cannot be empty');
     }

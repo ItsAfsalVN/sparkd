@@ -38,6 +38,16 @@ class _MandatoryRequirementsState extends State<MandatoryRequirements> {
   }
 
   @override
+  void didUpdateWidget(covariant MandatoryRequirements oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.requirements != widget.requirements) {
+      setState(() {
+        _requirements = List.from(widget.requirements);
+      });
+    }
+  }
+
+  @override
   void dispose() {
     _textController.dispose();
     super.dispose();
@@ -373,7 +383,9 @@ class _MandatoryRequirementsState extends State<MandatoryRequirements> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
-          color: isSelected ? colorScheme.primary : AppColors.white100,
+          color: isSelected
+              ? colorScheme.primary
+              : colorScheme.onSurface.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(4),
         ),
         child: Row(

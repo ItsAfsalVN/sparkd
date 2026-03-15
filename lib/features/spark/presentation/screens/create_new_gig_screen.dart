@@ -84,6 +84,7 @@ class _CreateNewGigScreenState extends State<CreateNewGigScreen> {
   Widget build(BuildContext context) {
     final textStyles = Theme.of(context).textStyles;
     return BlocListener<CreateGigBloc, CreateGigState>(
+      listenWhen: (previous, current) => previous.status != current.status,
       listener: (context, state) {
         if (state.status == FormStatus.success) {
           showSnackbar(

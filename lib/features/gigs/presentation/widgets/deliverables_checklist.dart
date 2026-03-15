@@ -47,6 +47,16 @@ class _DeliverablesChecklistState extends State<DeliverablesChecklist> {
     _selectedItems = List.from(widget.selectedDeliverables);
   }
 
+  @override
+  void didUpdateWidget(covariant DeliverablesChecklist oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.selectedDeliverables != widget.selectedDeliverables) {
+      setState(() {
+        _selectedItems = List.from(widget.selectedDeliverables);
+      });
+    }
+  }
+
   List<String> get _availableOptions =>
       widget.customOptions ?? _defaultDeliverables;
 
@@ -70,7 +80,11 @@ class _DeliverablesChecklistState extends State<DeliverablesChecklist> {
 
   void _showMaxSelectionsSnackBar() {
     if (mounted) {
-      showSnackbar(context, 'You can select a maximum of ${widget.maxSelections} deliverables', SnackBarType.info);
+      showSnackbar(
+        context,
+        'You can select a maximum of ${widget.maxSelections} deliverables',
+        SnackBarType.info,
+      );
     }
   }
 

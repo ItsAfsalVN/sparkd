@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:sparkd/features/gigs/domain/entities/requirement_entity.dart';
 import 'package:sparkd/features/orders/domain/entities/order_status.dart';
 
@@ -83,8 +84,8 @@ class OrderEntity {
       'requirements': requirements.map((r) => r.toMap()).toList(),
       'requirementResponses': requirementResponses,
       'status': status.toString().split('.').last,
-      'createdAt': createdAt.toIso8601String(),
-      'deadline': deadline?.toIso8601String(),
+      'createdAt': Timestamp.fromDate(createdAt),
+      'deadline': deadline != null ? Timestamp.fromDate(deadline!) : null,
       'paymentID': paymentID,
       'rejectionReason': rejectionReason,
     };

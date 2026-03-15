@@ -173,13 +173,7 @@ class _SparkGigScreenState extends State<SparkGigScreen> {
                       spacing: 12,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: state.userGigs.map((gig) {
-                        return SparkGigCard(
-                          title: gig.title,
-                          description: gig.description,
-                          price: gig.price,
-                          thumbnailImage: gig.thumbnailImage,
-                          category: gig.categoryId,
-                        );
+                        return SparkGigCard(gig: gig);
                       }).toList(),
                     ),
                   ),
