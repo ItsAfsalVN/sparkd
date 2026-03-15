@@ -9,17 +9,7 @@ class GetUserProfileUseCase {
 
   Future<UserProfile?> call(String uid) async {
     try {
-      final profile = await authRepository
-          .getUserProfile(uid: uid)
-          .timeout(
-            const Duration(seconds: 8),
-            onTimeout: () {
-              logger.e(
-                'Timeout: getUserProfile exceeded 8 seconds for UID: $uid',
-              );
-              throw Exception('Timeout fetching user profile');
-            },
-          );
+      final profile = await authRepository.getUserProfile(uid: uid);
       return profile;
     } catch (e) {
       logger.e('GetUserProfileUseCase: Error - $e');

@@ -1,8 +1,10 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart'
+    show defaultTargetPlatform, kIsWeb, TargetPlatform;
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:sparkd/core/services/notification_service.dart';
-import 'firebase_options.dart';
 import 'package:sparkd/core/utils/app_color_theme_extension.dart';
 import 'package:sparkd/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:sparkd/features/auth/presentation/screens/decision_screen.dart';
@@ -39,13 +41,17 @@ class _AppState extends State<App> {
 
   // This function now contains all the logic that was in main().
   Future<void> _initializeApp() async {
+    await dotenv.load(fileName: '.env');
+
     // 1. Initialize Firebase
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
+    print('=== Starting Firebase initialization ===');
+    await Firebase.initializeApp(options: _firebaseOptionsFromEnv());
+    print('=== Firebase initialized successfully ===');
 
     // 2. Initialize your service locator (dependency injection)
+    print('=== Starting service locator initialization ===');
     await di.init();
+    print('=== Service locator initialized successfully ===');
 
     // 3. Initialize notification service
     final notificationService = di.sl<NotificationService>();
@@ -63,6 +69,72 @@ class _AppState extends State<App> {
       // Navigate to relevant screen based on notification data
       print('App opened from notification: ${message.data}');
     });
+
+    print('=== App initialization complete ===');
+  }
+
+  FirebaseOptions _firebaseOptionsFromEnv() {
+    String env(String key) {
+      final value = dotenv.env[key];
+      if (value == null || value.isEmpty) {
+        throw Exception('Missing required env value: $key');
+      }
+      return value;
+    }
+
+    if (kIsWeb) {
+      return FirebaseOptions(
+        apiKey: env('FIREBASE_WEB_API_KEY'),
+        appId: env('FIREBASE_WEB_APP_ID'),
+        messagingSenderId: env('FIREBASE_WEB_MESSAGING_SENDER_ID'),
+        projectId: env('FIREBASE_WEB_PROJECT_ID'),
+        authDomain: env('FIREBASE_WEB_AUTH_DOMAIN'),
+        storageBucket: env('FIREBASE_WEB_STORAGE_BUCKET'),
+        measurementId: dotenv.env['FIREBASE_WEB_MEASUREMENT_ID'],
+      );
+    }
+
+    switch (defaultTargetPlatform) {
+      case TargetPlatform.android:
+        return FirebaseOptions(
+          apiKey: env('FIREBASE_ANDROID_API_KEY'),
+          appId: env('FIREBASE_ANDROID_APP_ID'),
+          messagingSenderId: env('FIREBASE_ANDROID_MESSAGING_SENDER_ID'),
+          projectId: env('FIREBASE_ANDROID_PROJECT_ID'),
+          storageBucket: env('FIREBASE_ANDROID_STORAGE_BUCKET'),
+        );
+      case TargetPlatform.iOS:
+        return FirebaseOptions(
+          apiKey: env('FIREBASE_IOS_API_KEY'),
+          appId: env('FIREBASE_IOS_APP_ID'),
+          messagingSenderId: env('FIREBASE_IOS_MESSAGING_SENDER_ID'),
+          projectId: env('FIREBASE_IOS_PROJECT_ID'),
+          storageBucket: env('FIREBASE_IOS_STORAGE_BUCKET'),
+          iosBundleId: dotenv.env['FIREBASE_IOS_IOS_BUNDLED'],
+        );
+      case TargetPlatform.macOS:
+        return FirebaseOptions(
+          apiKey: env('FIREBASE_IOS_API_KEY'),
+          appId: env('FIREBASE_IOS_APP_ID'),
+          messagingSenderId: env('FIREBASE_IOS_MESSAGING_SENDER_ID'),
+          projectId: env('FIREBASE_IOS_PROJECT_ID'),
+          storageBucket: env('FIREBASE_IOS_STORAGE_BUCKET'),
+          iosBundleId: dotenv.env['FIREBASE_IOS_IOS_BUNDLED'],
+        );
+      case TargetPlatform.windows:
+      case TargetPlatform.linux:
+        return FirebaseOptions(
+          apiKey: env('FIREBASE_WINDOWS_API_KEY'),
+          appId: env('FIREBASE_WINDOWS_APP_ID'),
+          messagingSenderId: env('FIREBASE_WINDOWS_MESSAGING_SENDER_ID'),
+          projectId: env('FIREBASE_WINDOWS_PROJECT_ID'),
+          authDomain: env('FIREBASE_WINDOWS_AUTH_DOMAIN'),
+          storageBucket: env('FIREBASE_WINDOWS_STORAGE_BUCKET'),
+          measurementId: dotenv.env['FIREBASE_WINDOWS_MEASUREMENT_ID'],
+        );
+      default:
+        throw UnsupportedError('Unsupported platform for Firebase options');
+    }
   }
 
   @override

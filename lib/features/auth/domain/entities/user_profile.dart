@@ -37,25 +37,52 @@ class UserProfile extends Equatable {
 
   factory UserProfile.fromFirestore(Map<String, dynamic> data) {
     UserType parseUserType(String? typeString) {
-      if (typeString == null) return UserType.spark; // Default fallback
+      if (typeString == null) return UserType.spark;
       try {
         return UserType.values.firstWhere((e) => e.name == typeString);
       } catch (e) {
-        return UserType.spark; // Default fallback
+        return UserType.spark;
       }
     }
 
-    return UserProfile(
-      uid: data['uid'] as String,
-      fullName: data['fullName'] as String,
-      email: data['email'] as String,
-      phoneNumber: data['phoneNumber'] as String,
-      userType: parseUserType(data['userType'] as String?),
-      skills: (data['skills'] as List<dynamic>?)
-          ?.map((e) => SkillModel.fromJson(e as Map<String, dynamic>))
-          .toList(),
-      businessData: data['businessData'] as Map<String, dynamic>?,
-    );
+    try {
+      final uid = data['uid'] as String?;
+      final fullName = data['fullName'] as String?;
+      final email = data['email'] as String?;
+      final phoneNumber = data['phoneNumber'] as String? ?? '';
+
+      if (uid == null || fullName == null || email == null) {
+        throw FormatException(
+          'Missing required fields. Expected: uid, fullName, email. '
+          'Found: ${data.keys.join(", ")}',
+        );
+      }
+
+      // Parse skills with error handling
+      List<SkillModel>? parsedSkills;
+      try {
+        parsedSkills = (data['skills'] as List<dynamic>?)?.map((e) {
+          if (e is! Map<String, dynamic>) {
+            throw FormatException('Skill item is not a map');
+          }
+          return SkillModel.fromJson(e);
+        }).toList();
+      } catch (skillError) {
+        throw FormatException('Failed to parse skills: $skillError');
+      }
+
+      return UserProfile(
+        uid: uid,
+        fullName: fullName,
+        email: email,
+        phoneNumber: phoneNumber,
+        userType: parseUserType(data['userType'] as String?),
+        skills: parsedSkills,
+        businessData: data['businessData'] as Map<String, dynamic>?,
+      );
+    } catch (e) {
+      rethrow;
+    }
   }
 
   Map<String, dynamic> toFirestore() {

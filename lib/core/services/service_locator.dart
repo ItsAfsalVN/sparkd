@@ -189,7 +189,10 @@ Future<void> init() async {
   final sharedPreferences = await SharedPreferences.getInstance();
   sl.registerLazySingleton(() => sharedPreferences);
   sl.registerLazySingleton(() => FirebaseAuth.instance);
+
+  // Use default Firestore instance without custom settings that might cause hangs
   sl.registerLazySingleton(() => FirebaseFirestore.instance);
+
   sl.registerLazySingleton(() => FirebaseMessaging.instance);
   sl.registerLazySingleton(() => const FlutterSecureStorage());
 

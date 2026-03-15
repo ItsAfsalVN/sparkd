@@ -2,10 +2,10 @@ import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:sparkd/core/utils/logger.dart';
 import 'package:sparkd/features/auth/domain/entities/user_profile.dart';
-import 'package:sparkd/firebase_options.dart';
 
 abstract class AuthRemoteDataSource {
   Future<String> requestOtp(String phoneNumber);
@@ -272,28 +272,88 @@ class AuthRemoteDataSourceImplementation extends AuthRemoteDataSource {
   Future<UserProfile?> getUserProfile(String uid) async {
     try {
       logger.d("Firestore: Fetching user profile for UID: $uid");
-      final doc = await firebaseFirestore
-          .collection('users')
-          .doc(uid)
-          .get()
-          .timeout(
-            const Duration(seconds: 7),
-            onTimeout: () {
-              logger.e(
-                'Timeout: Firestore getUserProfile exceeded 7 seconds for UID: $uid',
-              );
-              throw Exception('Firestore request timeout');
-            },
-          );
 
-      if (!doc.exists || doc.data() == null) {
-        logger.w("Firestore: No profile found for UID: $uid");
+      // Verify Firebase is initialized
+      final currentUser = firebaseAuth.currentUser;
+      if (currentUser == null) {
+        logger.w("Firestore: No authenticated user found");
         return null;
       }
 
-      final data = doc.data()!;
-      logger.i("Firestore: User profile fetched successfully for UID: $uid");
-      return UserProfile.fromFirestore(data);
+      logger.d("Firestore: Auth user verified: ${currentUser.uid}");
+
+      // Retry logic for Firestore connection issues
+      int retryCount = 0;
+      const maxRetries = 2;
+      const retryDelay = Duration(milliseconds: 500);
+
+      while (retryCount <= maxRetries) {
+        try {
+          logger.d(
+            "Firestore: Starting .get() call... (attempt ${retryCount + 1})",
+          );
+
+          final stopwatch = Stopwatch()..start();
+
+          final doc = await firebaseFirestore
+              .collection('users')
+              .doc(uid)
+              .get()
+              .timeout(
+                const Duration(seconds: 10),
+                onTimeout: () {
+                  stopwatch.stop();
+                  logger.e(
+                    'Timeout: Firestore getUserProfile exceeded 10 seconds (${stopwatch.elapsedMilliseconds}ms) for UID: $uid on attempt ${retryCount + 1}',
+                  );
+                  throw Exception('Firestore request timeout');
+                },
+              );
+
+          stopwatch.stop();
+          logger.d(
+            "Firestore: .get() completed in ${stopwatch.elapsedMilliseconds}ms",
+          );
+
+          if (!doc.exists || doc.data() == null) {
+            logger.w("Firestore: No profile found for UID: $uid");
+            return null;
+          }
+
+          final data = doc.data()!;
+          logger.d(
+            "Firestore: Raw document data for UID: $uid => ${data.keys.join(", ")}",
+          );
+
+          try {
+            logger.i(
+              "Firestore: User profile fetched successfully for UID: $uid",
+            );
+            return UserProfile.fromFirestore(data);
+          } catch (parseError) {
+            logger.e(
+              "Firestore: Failed to parse user profile for UID: $uid. Data keys: ${data.keys.join(", ")}",
+              error: parseError,
+            );
+            rethrow;
+          }
+        } catch (e) {
+          retryCount++;
+          if (retryCount > maxRetries) {
+            logger.e("Firestore: Failed after $retryCount attempts", error: e);
+            rethrow;
+          }
+
+          logger.w(
+            "Firestore: Attempt ${retryCount} failed, retrying in ${retryDelay.inMilliseconds}ms...",
+            error: e,
+          );
+
+          await Future.delayed(retryDelay);
+        }
+      }
+
+      return null;
     } catch (e) {
       logger.e("Firestore: Failed to fetch user profile.", error: e);
       throw Exception('Database error: Failed to fetch profile.');
@@ -339,8 +399,11 @@ class AuthRemoteDataSourceImplementation extends AuthRemoteDataSource {
 
       // Initialize Google Sign-In if needed
       final googleSignIn = GoogleSignIn.instance;
+      final serverClientId = dotenv.env['GOOGLE_SIGN_IN_CLIENT_ID'];
       await googleSignIn.initialize(
-        serverClientId: DefaultFirebaseOptions.googleSignInClientId,
+        serverClientId: (serverClientId != null && serverClientId.isNotEmpty)
+            ? serverClientId
+            : null,
       );
 
       // Trigger the authentication flow
