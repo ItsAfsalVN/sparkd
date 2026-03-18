@@ -12,6 +12,7 @@ import 'package:sparkd/core/utils/app_colors.dart';
 import 'package:sparkd/core/utils/app_text_styles.dart';
 import 'package:sparkd/core/utils/app_text_theme_extension.dart';
 import 'core/services/service_locator.dart' as di;
+import 'core/utils/logger.dart';
 
 void main(List<String> args) async {
   // Only keep the *absolutely essential* binding initialization here.
@@ -44,14 +45,14 @@ class _AppState extends State<App> {
     await dotenv.load(fileName: '.env');
 
     // 1. Initialize Firebase
-    print('=== Starting Firebase initialization ===');
+    logger.i('=== Starting Firebase initialization ===');
     await Firebase.initializeApp(options: _firebaseOptionsFromEnv());
-    print('=== Firebase initialized successfully ===');
+    logger.i('=== Firebase initialized successfully ===');
 
     // 2. Initialize your service locator (dependency injection)
-    print('=== Starting service locator initialization ===');
+    logger.i('=== Starting service locator initialization ===');
     await di.init();
-    print('=== Service locator initialized successfully ===');
+    logger.i('=== Service locator initialized successfully ===');
 
     // 3. Initialize notification service
     final notificationService = di.sl<NotificationService>();
@@ -61,16 +62,16 @@ class _AppState extends State<App> {
     notificationService.listenToForegroundMessages((message) {
       // Handle foreground notifications
       // You can show a custom in-app notification here
-      print('Foreground notification: ${message.notification?.title}');
+      logger.i('Foreground notification: ${message.notification?.title}');
     });
 
     // 5. Handle notification taps when app is in background
     notificationService.handleBackgroundNotificationTap((message) {
       // Navigate to relevant screen based on notification data
-      print('App opened from notification: ${message.data}');
+      logger.i('App opened from notification: ${message.data}');
     });
 
-    print('=== App initialization complete ===');
+    logger.i('=== App initialization complete ===');
   }
 
   FirebaseOptions _firebaseOptionsFromEnv() {
