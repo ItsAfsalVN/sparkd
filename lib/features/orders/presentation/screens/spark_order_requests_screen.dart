@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:sparkd/core/presentation/widgets/custom_button.dart';
+import 'package:sparkd/core/presentation/widgets/ui_card.dart';
 import 'package:sparkd/core/services/service_locator.dart';
 import 'package:sparkd/core/utils/app_text_theme_extension.dart';
 import 'package:sparkd/core/utils/snackbar_helper.dart';
@@ -49,7 +50,6 @@ class _SparkOrderRequestsContent extends StatelessWidget {
         listener: (context, state) {
           if (state is OrderUpdateSuccess) {
             showSnackbar(context, state.message, SnackBarType.success);
-            // Reload orders
             final currentUser = FirebaseAuth.instance.currentUser;
             context.read<SparkOrdersBloc>().add(
               LoadSparkOrdersEvent(sparkId: currentUser!.uid),
@@ -68,10 +68,10 @@ class _SparkOrderRequestsContent extends StatelessWidget {
           if (state is SparkOrdersError) {
             return Center(
               child: Column(
+                spacing: 16,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(Icons.error_outline, size: 64, color: colorScheme.error),
-                  const SizedBox(height: 16),
                   Text('Error: ${state.message}', style: textStyles.paragraph),
                 ],
               ),
@@ -82,6 +82,7 @@ class _SparkOrderRequestsContent extends StatelessWidget {
             if (state.pendingOrders.isEmpty) {
               return Center(
                 child: Column(
+                  spacing: 16,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(
@@ -89,7 +90,6 @@ class _SparkOrderRequestsContent extends StatelessWidget {
                       size: 80,
                       color: colorScheme.onSurface.withValues(alpha: 0.3),
                     ),
-                    const SizedBox(height: 16),
                     Text(
                       'No pending requests',
                       style: textStyles.heading4.copyWith(
@@ -129,228 +129,210 @@ class _OrderRequestCard extends StatelessWidget {
     final textStyles = Theme.of(context).textStyles;
     final colorScheme = Theme.of(context).colorScheme;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: colorScheme.primary.withValues(alpha: 0.2),
-          width: 2,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: colorScheme.onSurface.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
+    return UiCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        spacing: 8,
         children: [
-          // Header with gig info
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: colorScheme.primaryContainer.withValues(alpha: 0.3),
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(14),
-                topRight: Radius.circular(14),
-              ),
-            ),
-            child: Row(
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: Image.network(
-                    order.gigThumbnail,
-                    width: 60,
-                    height: 60,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        width: 60,
-                        height: 60,
-                        color: colorScheme.surfaceContainerHighest,
-                        child: Icon(
-                          Icons.image_not_supported,
-                          color: colorScheme.onSurface.withValues(alpha: 0.3),
-                        ),
-                      );
-                    },
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Image.network(
+              order.gigThumbnail,
+              width: double.infinity,
+              height: 160,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                return Container(
+                  width: double.infinity,
+                  height: 160,
+                  color: colorScheme.surfaceContainerHighest,
+                  child: Icon(
+                    Icons.image_not_supported,
+                    color: colorScheme.onSurface.withValues(alpha: 0.3),
                   ),
+                );
+              },
+            ),
+          ),
+
+          Text(
+            order.gigTitle,
+            style: textStyles.heading3,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    '₹',
+                    style: textStyles.heading4.copyWith(
+                      color: colorScheme.onSurface.withValues(alpha: 0.8),
+                      height: 1,
+                    ),
+                  ),
+                  Text(
+                    order.gigPrice.toStringAsFixed(0),
+                    style: textStyles.heading2.copyWith(
+                      color: colorScheme.onSurface.withValues(alpha: 0.8),
+                      height: 1,
+                    ),
+                  ),
+                ],
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    'Ordered',
+                    style: textStyles.subtext.copyWith(
+                      color: colorScheme.onSurface.withValues(alpha: 0.3),
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  Text(
+                    timeago.format(order.createdAt),
+                    style: textStyles.heading4.copyWith(
+                      color: colorScheme.onSurface.withValues(alpha: 0.6),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+
+          Column(
+            spacing: 8,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Client',
+                style: textStyles.subtext.copyWith(
+                  color: colorScheme.onSurface.withValues(alpha: 0.3),
+                  fontWeight: FontWeight.w900,
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        order.gigTitle,
-                        style: textStyles.heading4,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
+              ),
+              FutureBuilder<String?>(
+                future: UserHelper.getUserName(order.smeID),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          colorScheme.primary,
+                        ),
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '₹${order.gigPrice.toStringAsFixed(0)}',
-                        style: textStyles.heading3.copyWith(
-                          color: colorScheme.primary,
+                    );
+                  }
+
+                  return Text(
+                    snapshot.data ?? 'Unknown',
+                    style: textStyles.heading4.copyWith(
+                      color: colorScheme.onSurface.withValues(alpha: 0.6),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+
+
+          Text(
+            'Requirements',
+            style: textStyles.subtext.copyWith(
+              fontWeight: FontWeight.w900,
+              color: colorScheme.onSurface.withValues(alpha: 0.3),
+            ),
+          ),
+          ...order.requirements.map((requirement) {
+            final response =
+                order.requirementResponses[requirement.description];
+            return Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: colorScheme.surfaceContainerHighest.withValues(
+                  alpha: 0.5,
+                ),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        requirement.type == RequirementType.text
+                            ? Icons.text_fields
+                            : Icons.attach_file,
+                        size: 16,
+                        color: colorScheme.primary,
+                      ),
+
+                      Expanded(
+                        child: Text(
+                          requirement.description,
+                          style: textStyles.subtext.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                     ],
                   ),
-                ),
-              ],
-            ),
-          ),
-
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // SME info
-                FutureBuilder<String?>(
-                  future: UserHelper.getUserName(order.smeID),
-                  builder: (context, snapshot) {
-                    return Row(
-                      children: [
-                        Icon(
-                          Icons.person_outline,
-                          size: 20,
-                          color: colorScheme.onSurface.withValues(alpha: 0.6),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Client: ${snapshot.data ?? 'Loading...'}',
-                          style: textStyles.paragraph.copyWith(
-                            color: colorScheme.onSurface.withValues(alpha: 0.7),
-                          ),
-                        ),
-                      ],
-                    );
-                  },
-                ),
-                const SizedBox(height: 8),
-
-                // Time ago
-                Row(
-                  children: [
-                    Icon(
-                      Icons.access_time,
-                      size: 20,
-                      color: colorScheme.onSurface.withValues(alpha: 0.6),
-                    ),
-                    const SizedBox(width: 8),
+                  if (response != null)
                     Text(
-                      timeago.format(order.createdAt),
-                      style: textStyles.subtext.copyWith(
-                        color: colorScheme.onSurface.withValues(alpha: 0.6),
+                      response['type'] == 'text'
+                          ? response['value']
+                          : 'File uploaded',
+                      style: textStyles.paragraph.copyWith(
+                        fontSize: 14.0,
+                        color: colorScheme.onSurface.withValues(alpha: 0.7),
                       ),
                     ),
-                  ],
-                ),
-                const SizedBox(height: 16),
+                ],
+              ),
+            );
+          }),
 
-                // Requirements
-                Text(
-                  'Requirements:',
-                  style: textStyles.subtext.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: colorScheme.onSurface.withValues(alpha: 0.8),
+          Row(
+            spacing: 12,
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    _showRejectDialog(context);
+                  },
+                  icon: const Icon(Icons.close),
+                  label: const Text('Reject'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: colorScheme.error,
+                    side: BorderSide(color: colorScheme.error),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                 ),
-                const SizedBox(height: 8),
-                ...order.requirements.map((requirement) {
-                  final response =
-                      order.requirementResponses[requirement.description];
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: colorScheme.surfaceContainerHighest.withValues(
-                          alpha: 0.5,
-                        ),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Icon(
-                                requirement.type == RequirementType.text
-                                    ? Icons.text_fields
-                                    : Icons.attach_file,
-                                size: 16,
-                                color: colorScheme.primary,
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  requirement.description,
-                                  style: textStyles.subtext.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 4),
-                          if (response != null)
-                            Text(
-                              response['type'] == 'text'
-                                  ? response['value']
-                                  : 'File uploaded',
-                              style: textStyles.paragraph.copyWith(
-                                fontSize: 14.0,
-                                color: colorScheme.onSurface.withValues(
-                                  alpha: 0.7,
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                  );
-                }),
-
-                const SizedBox(height: 16),
-
-                // Action buttons
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () {
-                          _showRejectDialog(context);
-                        },
-                        icon: const Icon(Icons.close),
-                        label: const Text('Reject'),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: colorScheme.error,
-                          side: BorderSide(color: colorScheme.error),
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: CustomButton(
-                        onPressed: () {
-                          context.read<SparkOrdersBloc>().add(
-                            AcceptOrderEvent(orderId: order.id!),
-                          );
-                        },
-                        title: 'Accept',
-                      ),
-                    ),
-                  ],
+              ),
+              Expanded(
+                child: CustomButton(
+                  onPressed: () {
+                    context.read<SparkOrdersBloc>().add(
+                      AcceptOrderEvent(orderId: order.id!),
+                    );
+                  },
+                  title: 'Accept',
+                  borderRadius: BorderRadius.circular(12),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ],
       ),

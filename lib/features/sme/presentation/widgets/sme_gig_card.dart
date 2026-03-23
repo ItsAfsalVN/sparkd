@@ -150,6 +150,7 @@ class SmeGigCard extends StatelessWidget {
                         }
                         return Text(
                           snapshot.data ?? "Unknown",
+                          textDirection: TextDirection.rtl,
                           style: textStyles.heading4.copyWith(
                             color: colorScheme.onSurface.withValues(alpha: .6),
                           ),

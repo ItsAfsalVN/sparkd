@@ -39,7 +39,9 @@ class SparkNotificationsScreen extends StatelessWidget {
 
             if (state is SparkOrdersError) {
               return Center(
+                
                 child: Column(
+                  spacing: 16,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(
@@ -47,7 +49,6 @@ class SparkNotificationsScreen extends StatelessWidget {
                       size: 64,
                       color: colorScheme.error,
                     ),
-                    const SizedBox(height: 16),
                     Text(
                       'Error: ${state.message}',
                       style: textStyles.paragraph,
@@ -83,17 +84,17 @@ class SparkNotificationsScreen extends StatelessWidget {
                 return Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
+                    spacing: 6,
                     children: [
                       Icon(
                         Icons.notifications_none,
-                        size: 80,
+                        size: 40,
                         color: colorScheme.onSurface.withValues(alpha: 0.3),
                       ),
-                      const SizedBox(height: 16),
                       Text(
                         'No notifications',
                         style: textStyles.heading4.copyWith(
-                          color: colorScheme.onSurface.withValues(alpha: 0.5),
+                          color: colorScheme.onSurface.withValues(alpha: 0.3),
                         ),
                       ),
                     ],
@@ -102,7 +103,6 @@ class SparkNotificationsScreen extends StatelessWidget {
               }
 
               return ListView.separated(
-                padding: const EdgeInsets.all(16),
                 itemCount: allNotifications.length,
                 separatorBuilder: (context, index) => const SizedBox(height: 8),
                 itemBuilder: (context, index) {
@@ -144,20 +144,22 @@ class _NotificationCard extends StatelessWidget {
       },
       borderRadius: BorderRadius.circular(12),
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 20),
         decoration: BoxDecoration(
           color: isRead
               ? colorScheme.surface
               : colorScheme.primaryContainer.withValues(alpha: 0.2),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isRead
-                ? colorScheme.outline.withValues(alpha: 0.3)
-                : colorScheme.primary.withValues(alpha: 0.3),
-            width: 1,
+          border: Border.symmetric(
+            horizontal: BorderSide(
+              color: isRead
+                  ? colorScheme.outline.withValues(alpha: 0.3)
+                  : colorScheme.primary.withValues(alpha: 0.3),
+              width: 1,
+            ),
           ),
         ),
         child: Row(
+          spacing: 12,
           children: [
             Container(
               padding: const EdgeInsets.all(12),
@@ -171,10 +173,10 @@ class _NotificationCard extends StatelessWidget {
                 size: 24,
               ),
             ),
-            const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                spacing: 4,
                 children: [
                   Text(
                     notification['title'] as String,
@@ -183,7 +185,6 @@ class _NotificationCard extends StatelessWidget {
                       fontWeight: isRead ? FontWeight.normal : FontWeight.bold,
                     ),
                   ),
-                  const SizedBox(height: 4),
                   Text(
                     notification['subtitle'] as String,
                     style: textStyles.paragraph.copyWith(
@@ -191,7 +192,6 @@ class _NotificationCard extends StatelessWidget {
                       color: colorScheme.onSurface.withValues(alpha: 0.7),
                     ),
                   ),
-                  const SizedBox(height: 4),
                   Text(
                     _formatTimestamp(notification['timestamp'] as DateTime),
                     style: textStyles.subtext.copyWith(

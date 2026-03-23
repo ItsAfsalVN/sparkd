@@ -164,15 +164,14 @@ class _SmeGigDetailsScreenState extends State<SmeGigDetailsScreen>
             color: Colors.black,
             child: Center(
               child: Column(
+                spacing: 16,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const Icon(Icons.error, color: Colors.white, size: 48),
-                  const SizedBox(height: 16),
                   Text(
                     'Error loading video',
                     style: const TextStyle(color: Colors.white),
                   ),
-                  const SizedBox(height: 8),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Text(
@@ -263,15 +262,14 @@ class _SmeGigDetailsScreenState extends State<SmeGigDetailsScreen>
         color: Colors.black,
         child: Center(
           child: Column(
+            spacing: 16,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const Icon(Icons.error_outline, size: 80, color: Colors.red),
-              const SizedBox(height: 16),
               const Text(
                 'Failed to load video',
                 style: TextStyle(color: Colors.white, fontSize: 16),
               ),
-              const SizedBox(height: 8),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 32),
                 child: Text(
@@ -320,10 +318,10 @@ class _SmeGigDetailsScreenState extends State<SmeGigDetailsScreen>
         color: Colors.black,
         child: const Center(
           child: Column(
+            spacing: 16,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               CircularProgressIndicator(color: Colors.white),
-              SizedBox(height: 16),
               Text('Loading video...', style: TextStyle(color: Colors.white)),
             ],
           ),
@@ -336,10 +334,10 @@ class _SmeGigDetailsScreenState extends State<SmeGigDetailsScreen>
       color: Colors.black,
       child: const Center(
         child: Column(
+          spacing: 16,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.videocam_off, size: 80, color: Colors.white),
-            SizedBox(height: 16),
             Text('Video not available', style: TextStyle(color: Colors.white)),
           ],
         ),
@@ -426,11 +424,14 @@ class _SmeGigDetailsScreenState extends State<SmeGigDetailsScreen>
                     ),
                     child: Padding(
                       padding: const EdgeInsets.all(10.0),
-                      child: Text(
-                        widget.gig.description,
-                        style: textStyles.paragraph.copyWith(
-                          fontSize: 14,
-                          color: colorScheme.onSurface.withValues(alpha: 0.6),
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: Text(
+                          widget.gig.description,
+                          style: textStyles.paragraph.copyWith(
+                            fontSize: 14,
+                            color: colorScheme.onSurface.withValues(alpha: 0.6),
+                          ),
                         ),
                       ),
                     ),
@@ -601,6 +602,7 @@ class _SmeGigDetailsScreenState extends State<SmeGigDetailsScreen>
                           ),
                           ...widget.gig.requirements.map((requirement) {
                             return Row(
+                              spacing: 8,
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Icon(
@@ -610,7 +612,6 @@ class _SmeGigDetailsScreenState extends State<SmeGigDetailsScreen>
                                   size: 16,
                                   color: colorScheme.primary,
                                 ),
-                                const SizedBox(width: 8),
                                 Expanded(
                                   child: Text(
                                     requirement.description,
@@ -654,7 +655,9 @@ class _SmeGigDetailsScreenState extends State<SmeGigDetailsScreen>
                             ),
                           ),
                           Text(
-                            widget.gig.maxRevisions.toString(),
+                            widget.gig.maxRevisions == -1
+                                ? "Unlimited"
+                                : widget.gig.maxRevisions.toString(),
                             style: textStyles.heading4.copyWith(
                               color: colorScheme.onSurface.withValues(
                                 alpha: .6,

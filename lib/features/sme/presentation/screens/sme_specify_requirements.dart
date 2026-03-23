@@ -137,6 +137,7 @@ class _SmeSpecifyRequirementsState extends State<SmeSpecifyRequirements> {
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 16),
                       child: Column(
+                        spacing: 8,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(
@@ -148,7 +149,6 @@ class _SmeSpecifyRequirementsState extends State<SmeSpecifyRequirements> {
                                 size: 20,
                                 color: colorScheme.primary,
                               ),
-                              const SizedBox(width: 8),
                               Expanded(
                                 child: Text(
                                   requirement.description,
@@ -157,9 +157,9 @@ class _SmeSpecifyRequirementsState extends State<SmeSpecifyRequirements> {
                               ),
                             ],
                           ),
-                          const SizedBox(height: 8),
                           if (requirement.type == RequirementType.file)
                             Column(
+                              spacing: 8,
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 if (selectedFile != null)
@@ -175,13 +175,13 @@ class _SmeSpecifyRequirementsState extends State<SmeSpecifyRequirements> {
                                       ),
                                     ),
                                     child: Row(
+                                      spacing: 8,
                                       children: [
                                         Icon(
                                           Icons.attach_file,
                                           color: colorScheme.primary,
                                           size: 24,
                                         ),
-                                        const SizedBox(width: 8),
                                         Expanded(
                                           child: Text(
                                             selectedFile.path.split('/').last,
@@ -260,7 +260,6 @@ class _SmeSpecifyRequirementsState extends State<SmeSpecifyRequirements> {
                                             ),
                                     ),
                                   ),
-                                const SizedBox(height: 4),
                                 Text(
                                   'Accepted formats: PDF, DOC, DOCX, JPG, PNG, ZIP',
                                   style: textStyles.subtext.copyWith(

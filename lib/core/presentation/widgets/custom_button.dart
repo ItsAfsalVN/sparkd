@@ -30,6 +30,7 @@ class CustomButton extends StatelessWidget {
       ),
       child: isLoading
           ? Row(
+              spacing: 12,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 SizedBox(
@@ -42,7 +43,6 @@ class CustomButton extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(width: 12),
                 Text(
                   title,
                   style: TextStyle(

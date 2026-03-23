@@ -127,6 +127,7 @@ class _MandatoryRequirementsState extends State<MandatoryRequirements> {
             ],
           ),
         Row(
+          spacing: 8,
           children: [
             Expanded(
               child: TextField(
@@ -148,6 +149,7 @@ class _MandatoryRequirementsState extends State<MandatoryRequirements> {
                       ),
                       padding: const EdgeInsets.all(2),
                       child: Row(
+                        spacing: 2,
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           _buildTypeChip(
@@ -157,7 +159,6 @@ class _MandatoryRequirementsState extends State<MandatoryRequirements> {
                             colorScheme,
                             textStyles,
                           ),
-                          const SizedBox(width: 2),
                           _buildTypeChip(
                             "File",
                             RequirementType.file,
@@ -193,7 +194,6 @@ class _MandatoryRequirementsState extends State<MandatoryRequirements> {
                 textInputAction: TextInputAction.done,
               ),
             ),
-            const SizedBox(width: 8),
             ElevatedButton(
               onPressed: _addRequirement,
               style: ElevatedButton.styleFrom(
@@ -252,6 +252,7 @@ class _MandatoryRequirementsState extends State<MandatoryRequirements> {
                     ),
                   ),
                   child: Row(
+                    spacing: 8,
                     children: [
                       Icon(
                         requirement.type == RequirementType.text
@@ -260,7 +261,6 @@ class _MandatoryRequirementsState extends State<MandatoryRequirements> {
                         size: 16,
                         color: colorScheme.primary,
                       ),
-                      const SizedBox(width: 8),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -323,13 +323,13 @@ class _MandatoryRequirementsState extends State<MandatoryRequirements> {
               ),
             ),
             child: Column(
+              spacing: 8,
               children: [
                 Icon(
                   Icons.assignment_outlined,
                   size: 32,
                   color: colorScheme.onSurface.withValues(alpha: 0.4),
                 ),
-                const SizedBox(height: 8),
                 if (widget.isRequired)
                   Text(
                     "At least one requirement is mandatory",
@@ -389,6 +389,7 @@ class _MandatoryRequirementsState extends State<MandatoryRequirements> {
           borderRadius: BorderRadius.circular(4),
         ),
         child: Row(
+          spacing: 4,
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
@@ -398,7 +399,6 @@ class _MandatoryRequirementsState extends State<MandatoryRequirements> {
                   ? colorScheme.onPrimary
                   : colorScheme.onSurface.withValues(alpha: 0.7),
             ),
-            const SizedBox(width: 4),
             Text(
               label,
               style: textStyles.paragraph.copyWith(

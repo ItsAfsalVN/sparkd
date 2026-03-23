@@ -138,6 +138,7 @@ class _TagInputState extends State<TagInput> {
                   ),
                 ),
                 child: Row(
+                  spacing: 6,
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
@@ -148,7 +149,6 @@ class _TagInputState extends State<TagInput> {
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-                    const SizedBox(width: 6),
                     GestureDetector(
                       onTap: () => _removeTag(index),
                       child: Icon(

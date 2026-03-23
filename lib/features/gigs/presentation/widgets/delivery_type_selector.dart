@@ -114,6 +114,7 @@ class DeliveryTypeSelector extends StatelessWidget {
                       : null,
                 ),
                 child: Row(
+                  spacing: 16,
                   children: [
                     // Icon
                     Container(
@@ -132,8 +133,6 @@ class DeliveryTypeSelector extends StatelessWidget {
                             : colorScheme.onSurface.withValues(alpha: 0.6),
                       ),
                     ),
-
-                    const SizedBox(width: 16),
 
                     // Content
                     Expanded(
@@ -209,9 +208,9 @@ class DeliveryTypeSelector extends StatelessWidget {
               ),
             ),
             child: Row(
+              spacing: 8,
               children: [
                 Icon(Icons.error_outline, size: 16, color: Colors.red),
-                const SizedBox(width: 8),
                 Text(
                   "Please select a delivery type",
                   style: textStyles.paragraph.copyWith(
@@ -233,9 +232,9 @@ class DeliveryTypeSelector extends StatelessWidget {
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
+              spacing: 8,
               children: [
                 Icon(Icons.info_outline, size: 16, color: colorScheme.primary),
-                const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     selectedType == DeliveryTypes.file

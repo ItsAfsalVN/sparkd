@@ -231,10 +231,10 @@ class _VideoUploadState extends State<VideoUpload>
           height: double.infinity,
           child: _isUploading
               ? Column(
+                spacing: 12,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     CircularProgressIndicator(color: colorScheme.primary),
-                    const SizedBox(height: 12),
                     Text(
                       "Uploading video...",
                       style: textStyles.paragraph.copyWith(
@@ -242,7 +242,6 @@ class _VideoUploadState extends State<VideoUpload>
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    const SizedBox(height: 4),
                     Text(
                       "This may take a few minutes",
                       style: textStyles.paragraph.copyWith(
@@ -254,6 +253,7 @@ class _VideoUploadState extends State<VideoUpload>
                 )
               : Column(
                   mainAxisAlignment: MainAxisAlignment.center,
+                  spacing: 4,
                   children: [
                     Icon(
                       Icons.videocam_outlined,
@@ -261,7 +261,6 @@ class _VideoUploadState extends State<VideoUpload>
                       color: colorScheme.onSurface.withValues(alpha: 0.4),
                     ),
 
-                    const SizedBox(height: 4),
                     Text(
                       "Click to browse files",
                       style: textStyles.paragraph.copyWith(
@@ -283,10 +282,10 @@ class _VideoUploadState extends State<VideoUpload>
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
+        spacing: 12,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(Icons.link, size: 32, color: colorScheme.primary),
-          const SizedBox(height: 12),
           TextField(
             controller: _urlController,
             decoration: InputDecoration(
@@ -334,6 +333,7 @@ class _VideoUploadState extends State<VideoUpload>
             borderRadius: BorderRadius.circular(8),
           ),
           child: Column(
+            spacing: 8,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
@@ -341,7 +341,6 @@ class _VideoUploadState extends State<VideoUpload>
                 size: 48,
                 color: colorScheme.onSurface.withValues(alpha: .5),
               ),
-              const SizedBox(height: 8),
               Text(
                 "Video Ready",
                 style: textStyles.paragraph.copyWith(

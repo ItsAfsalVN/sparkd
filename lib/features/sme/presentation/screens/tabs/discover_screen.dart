@@ -7,17 +7,44 @@ import 'package:sparkd/core/utils/app_text_theme_extension.dart';
 import 'package:sparkd/core/utils/form_statuses.dart';
 import 'package:sparkd/features/gigs/presentation/bloc/discover_gig/discover_gig_bloc.dart';
 
-class SmeDiscoverScreen extends StatelessWidget {
+class SmeDiscoverScreen extends StatefulWidget {
   const SmeDiscoverScreen({super.key});
+
+  @override
+  State<SmeDiscoverScreen> createState() => _SmeDiscoverScreenState();
+}
+
+class _SmeDiscoverScreenState extends State<SmeDiscoverScreen> {
+  final TextEditingController _searchController = TextEditingController();
+  late final DiscoverGigBloc _discoverGigBloc;
+
+  @override
+  void initState() {
+    super.initState();
+    _discoverGigBloc = sl<DiscoverGigBloc>()..add(DiscoverGigsRequested());
+  }
+
+  void _triggerSearch() {
+    _discoverGigBloc.add(
+      DiscoverGigSearchRequested(query: _searchController.text),
+    );
+  }
+
+  @override
+  void dispose() {
+    _discoverGigBloc.close();
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final textStyles = Theme.of(context).textStyles;
-    return BlocProvider(
-      create: (context) => sl<DiscoverGigBloc>()..add(DiscoverGigsRequested()),
+    return BlocProvider.value(
+      value: _discoverGigBloc,
       child: Scaffold(
         appBar: AppBar(
-          toolbarHeight: kToolbarHeight + 54,
+          toolbarHeight: kToolbarHeight + 68,
           automaticallyImplyLeading: false,
           elevation: 0,
           scrolledUnderElevation: 0.0,
@@ -28,7 +55,22 @@ class SmeDiscoverScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text("Discover", style: textStyles.heading2),
-                const CustomSearchBox(hintText: "Search for gigs"),
+                Row(
+                  spacing: 8,
+                  children: [
+                    Expanded(
+                      child: CustomSearchBox(
+                        hintText: "Search for gigs",
+                        controller: _searchController,
+                        onFieldSubmitted: (_) => _triggerSearch(),
+                      ),
+                    ),
+                    ElevatedButton(
+                      onPressed: _triggerSearch,
+                      child: const Text("Search"),
+                    ),
+                  ],
+                ),
               ],
             ),
           ),
@@ -43,10 +85,10 @@ class SmeDiscoverScreen extends StatelessWidget {
                 } else if (state.status == FormStatus.failure) {
                   return Center(
                     child: Column(
+                      spacing: 16,
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         const Text("Failed to load gigs"),
-                        const SizedBox(height: 16),
                         ElevatedButton(
                           onPressed: () {
                             context.read<DiscoverGigBloc>().add(

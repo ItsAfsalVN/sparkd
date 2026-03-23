@@ -140,18 +140,17 @@ class _PermissionsScreenState extends State<PermissionsScreen> {
         child: Padding(
           padding: const EdgeInsets.all(24.0),
           child: Column(
+            spacing: 16,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
                 'Grant Permissions',
                 style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
               ),
-              const SizedBox(height: 8),
               const Text(
                 'We need these permissions to provide you with the best experience',
                 style: TextStyle(fontSize: 16, color: Colors.grey),
               ),
-              const SizedBox(height: 32),
               Expanded(
                 child: ListView.separated(
                   itemCount: _permissions.length,
@@ -166,7 +165,6 @@ class _PermissionsScreenState extends State<PermissionsScreen> {
                   },
                 ),
               ),
-              const SizedBox(height: 24),
               SizedBox(
                 width: double.infinity,
                 height: 56,
@@ -192,7 +190,6 @@ class _PermissionsScreenState extends State<PermissionsScreen> {
                         ),
                 ),
               ),
-              const SizedBox(height: 16),
               Center(
                 child: TextButton(
                   onPressed: widget.onComplete,

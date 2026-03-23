@@ -34,6 +34,7 @@ class PasswordResetSentScreen extends StatelessWidget {
               // Content Section
               Expanded(
                 child: Column(
+                  spacing: 16,
                   children: [
                     SizedBox(height: 60),
                     Text(
@@ -43,8 +44,6 @@ class PasswordResetSentScreen extends StatelessWidget {
                       ),
                       textAlign: TextAlign.center,
                     ),
-
-                    const SizedBox(height: 16),
 
                     // Description
                     Text(

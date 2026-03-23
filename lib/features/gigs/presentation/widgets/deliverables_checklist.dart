@@ -151,6 +151,7 @@ class _DeliverablesChecklistState extends State<DeliverablesChecklist> {
                           vertical: 12,
                         ),
                         child: Row(
+                          spacing: 12,
                           children: [
                             // Custom checkbox
                             Container(
@@ -178,7 +179,6 @@ class _DeliverablesChecklistState extends State<DeliverablesChecklist> {
                                     )
                                   : null,
                             ),
-                            const SizedBox(width: 12),
 
                             // Deliverable text
                             Expanded(

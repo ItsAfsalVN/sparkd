@@ -71,6 +71,7 @@ class _SparkGigScreenState extends State<SparkGigScreen> {
             if (state.status == FormStatus.failure) {
               return Center(
                 child: Column(
+                  spacing: 8,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
@@ -80,7 +81,6 @@ class _SparkGigScreenState extends State<SparkGigScreen> {
                         fontWeight: FontWeight.w900,
                       ),
                     ),
-                    const SizedBox(height: 8),
                     ElevatedButton(
                       onPressed: () {
                         final currentUser = FirebaseAuth.instance.currentUser;
@@ -113,6 +113,7 @@ class _SparkGigScreenState extends State<SparkGigScreen> {
                     height: MediaQuery.of(context).size.height * 0.7,
                     child: Center(
                       child: Column(
+                        spacing: 4,
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
@@ -123,7 +124,6 @@ class _SparkGigScreenState extends State<SparkGigScreen> {
                               ),
                             ),
                           ),
-                          const SizedBox(height: 4),
                           GestureDetector(
                             onTap: () {
                               Navigator.push(

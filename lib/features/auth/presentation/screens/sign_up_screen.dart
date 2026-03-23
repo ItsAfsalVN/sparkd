@@ -417,11 +417,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       child: Center(
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
+                          spacing: 16,
                           children: [
                             CircularProgressIndicator(
                               color: Theme.of(context).colorScheme.primary,
                             ),
-                            const SizedBox(height: 16),
                             Text(
                               'Signing in with Google...',
                               style: TextStyle(

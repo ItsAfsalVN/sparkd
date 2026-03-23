@@ -76,6 +76,8 @@ class SparkHomeScreen extends StatelessWidget {
 
                       return Badge(
                         isLabelVisible: badgeCount > 0,
+                        alignment: Alignment.topRight,
+                        offset: const Offset(-2, 2),
                         label: Text(badgeCount.toString()),
                         backgroundColor: colorScheme.error,
                         textColor: colorScheme.onError,
@@ -142,75 +144,44 @@ class _OrderNotificationBanner extends StatelessWidget {
     final textStyles = Theme.of(context).textStyles;
     final colorScheme = Theme.of(context).colorScheme;
 
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                colorScheme.primary,
-                colorScheme.primary.withValues(alpha: 0.8),
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: colorScheme.primary,
+          boxShadow: [
+            BoxShadow(
+              color: colorScheme.primary.withValues(alpha: 0.3),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
             ),
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(
-                color: colorScheme.primary.withValues(alpha: 0.3),
-                blurRadius: 8,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: colorScheme.onPrimary.withValues(alpha: 0.2),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.notifications_active,
+          ],
+        ),
+        child: Row(
+          spacing: 16,
+          children: [
+            Icon(
+              Icons.notifications_active,
+              color: colorScheme.onPrimary,
+              size: 24,
+            ),
+            Expanded(
+              child: Text(
+                '$pendingCount New Order${pendingCount > 1 ? 's' : ''} Pending',
+                style: textStyles.heading4.copyWith(
                   color: colorScheme.onPrimary,
-                  size: 28,
+                  fontWeight: FontWeight.w900,
                 ),
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '$pendingCount New Order${pendingCount > 1 ? 's' : ''} Pending',
-                      style: textStyles.heading4.copyWith(
-                        color: colorScheme.onPrimary,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Review and respond to client requests',
-                      style: textStyles.paragraph.copyWith(
-                        fontSize: 14.0,
-                        color: colorScheme.onPrimary.withValues(alpha: 0.9),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Icon(
-                Icons.arrow_forward_ios,
-                color: colorScheme.onPrimary,
-                size: 20,
-              ),
-            ],
-          ),
+            ),
+
+            Icon(
+              Icons.arrow_forward_ios,
+              color: colorScheme.onPrimary,
+              size: 20,
+            ),
+          ],
         ),
       ),
     );

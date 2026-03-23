@@ -269,6 +269,7 @@ class _MultiImageUploadState extends State<MultiImageUpload> {
                       ),
                     ),
                     child: Column(
+                      spacing: 4,
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         SizedBox(
@@ -279,7 +280,6 @@ class _MultiImageUploadState extends State<MultiImageUpload> {
                             color: colorScheme.primary,
                           ),
                         ),
-                        const SizedBox(height: 4),
                         Text(
                           "Uploading",
                           style: textStyles.paragraph.copyWith(
@@ -308,10 +308,10 @@ class _MultiImageUploadState extends State<MultiImageUpload> {
                         ),
                       ),
                       child: Column(
+                        spacing: 4,
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Icon(Icons.add, color: colorScheme.primary, size: 24),
-                          const SizedBox(height: 4),
                           Text(
                             "Add",
                             style: textStyles.paragraph.copyWith(

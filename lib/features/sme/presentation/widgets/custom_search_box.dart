@@ -3,7 +3,15 @@ import 'package:sparkd/core/utils/app_text_theme_extension.dart';
 
 class CustomSearchBox extends StatelessWidget {
   final String hintText;
-  const CustomSearchBox({super.key, required this.hintText});
+  final TextEditingController? controller;
+  final ValueChanged<String>? onFieldSubmitted;
+
+  const CustomSearchBox({
+    super.key,
+    required this.hintText,
+    this.controller,
+    this.onFieldSubmitted,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -11,6 +19,9 @@ class CustomSearchBox extends StatelessWidget {
     final textStyles = Theme.of(context).textStyles;
 
     return TextFormField(
+      controller: controller,
+      textInputAction: TextInputAction.search,
+      onFieldSubmitted: onFieldSubmitted,
       decoration: InputDecoration(
         hint: Text(
           hintText,

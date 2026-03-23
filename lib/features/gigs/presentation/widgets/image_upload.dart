@@ -287,10 +287,10 @@ class _ImageUploadState extends State<ImageUpload> {
           height: double.infinity,
           child: _isUploading
               ? Column(
+                  spacing: 12,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     CircularProgressIndicator(color: colorScheme.primary),
-                    const SizedBox(height: 12),
                     Text(
                       "Uploading...",
                       style: textStyles.paragraph.copyWith(

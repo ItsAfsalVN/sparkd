@@ -22,10 +22,10 @@ class SparkProfileScreen extends StatelessWidget {
       child: Scaffold(
         body: Center(
           child: Column(
+            spacing: 20,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const Text("Profile screen"),
-              const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () {
                   context.read<AuthBloc>().add(AuthLogoutRequested());

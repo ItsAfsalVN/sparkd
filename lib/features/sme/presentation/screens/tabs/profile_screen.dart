@@ -28,10 +28,10 @@ class SmeProfileScreen extends StatelessWidget {
         ),
         body: Center(
           child: Column(
+            spacing: 20,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const Text('This is the Profile Screen'),
-              const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () {
                   context.read<AuthBloc>().add(AuthLogoutRequested());
