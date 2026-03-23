@@ -23,7 +23,12 @@ class SparkOrdersScreen extends StatelessWidget {
           sl<SparkOrdersBloc>()
             ..add(LoadSparkOrdersEvent(sparkId: currentUser!.uid)),
       child: Scaffold(
-        appBar: AppBar(title: Text('My Orders', style: textStyles.heading3)),
+        appBar: AppBar(
+          elevation: 0,
+          title: Text("My Orders", style: textStyles.heading2),
+          scrolledUnderElevation: 0.0,
+          surfaceTintColor: Colors.transparent,
+        ),
         body: BlocBuilder<SparkOrdersBloc, SparkOrdersState>(
           builder: (context, state) {
             if (state is SparkOrdersLoading) {
@@ -86,7 +91,7 @@ class SparkOrdersScreen extends StatelessWidget {
                             ),
                           )
                         : ListView.separated(
-                            padding: const EdgeInsets.all(16),
+                            padding: const EdgeInsets.all(10),
                             itemCount: state.orders.length,
                             separatorBuilder: (context, index) =>
                                 const SizedBox(height: 12),
@@ -123,12 +128,11 @@ class _OrderNotificationBanner extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(10),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(12),
         child: Container(
-          padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [

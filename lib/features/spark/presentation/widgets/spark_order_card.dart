@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:sparkd/core/presentation/widgets/ui_card.dart';
 import 'package:sparkd/core/utils/app_text_theme_extension.dart';
 import 'package:sparkd/features/orders/domain/entities/order_entity.dart';
@@ -59,12 +60,12 @@ class SparkOrderCard extends StatelessWidget {
             child: Image.network(
               order.gigThumbnail,
               width: double.infinity,
-              height: 150,
+              height: 160,
               fit: BoxFit.cover,
               errorBuilder: (context, error, stackTrace) {
                 return Container(
                   width: double.infinity,
-                  height: 150,
+                  height: 160,
                   color: colorScheme.surfaceContainerHighest,
                   alignment: Alignment.center,
                   child: Icon(
@@ -75,53 +76,94 @@ class SparkOrderCard extends StatelessWidget {
               },
             ),
           ),
-          Text(
-            order.gigTitle,
-            style: textStyles.heading4,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
           Row(
             children: [
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  color: statusColor.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(999),
-                ),
+              Expanded(
+                flex: 3,
                 child: Text(
-                  _statusLabel(order.status),
-                  style: textStyles.subtext.copyWith(
-                    color: statusColor,
-                    fontWeight: FontWeight.w700,
-                  ),
+                  order.gigTitle,
+                  style: textStyles.heading4,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
-              const Spacer(),
-              Text(
-                timeago.format(order.createdAt),
-                style: textStyles.subtext.copyWith(
-                  color: colorScheme.onSurface.withValues(alpha: 0.6),
+              Expanded(
+                flex: 2,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: statusColor.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Center(
+                    child: Text(
+                      _statusLabel(order.status),
+                      style: textStyles.subtext.copyWith(
+                        color: statusColor,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ],
           ),
           Row(
-            spacing: 6,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Icon(
-                Icons.payments_outlined,
-                size: 18,
-                color: colorScheme.onSurface.withValues(alpha: 0.7),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  SvgPicture.asset(
+                    "assets/icons/rupee.svg",
+                    width: 24,
+                    height: 24,
+                    colorFilter: ColorFilter.mode(
+                      colorScheme.onSurface.withValues(alpha: .8),
+                      BlendMode.srcIn,
+                    ),
+                  ),
+                  Text(
+                    order.gigPrice.toStringAsFixed(0),
+                    style: textStyles.heading2.copyWith(
+                      color: colorScheme.onSurface.withValues(alpha: .8),
+                      height: 1,
+                    ),
+                  ),
+                ],
               ),
-              Text(
-                'INR ${order.gigPrice.toStringAsFixed(0)}',
-                style: textStyles.heading4.copyWith(
-                  color: colorScheme.onSurface.withValues(alpha: 0.85),
-                ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    "Created:",
+                    style: textStyles.subtext.copyWith(
+                      height: 1,
+                      fontWeight: FontWeight.w900,
+                      color: colorScheme.onSurface.withValues(alpha: .3),
+                    ),
+                  ),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.access_time,
+                        size: 16,
+                        color: colorScheme.onSurface.withValues(alpha: .3),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        timeago.format(order.createdAt),
+                        style: textStyles.subtext.copyWith(
+                          color: colorScheme.onSurface.withValues(alpha: .3),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ],
           ),

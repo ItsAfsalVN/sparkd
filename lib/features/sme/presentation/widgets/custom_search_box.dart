@@ -5,12 +5,14 @@ class CustomSearchBox extends StatelessWidget {
   final String hintText;
   final TextEditingController? controller;
   final ValueChanged<String>? onFieldSubmitted;
+  final FocusNode? focusNode;
 
   const CustomSearchBox({
     super.key,
     required this.hintText,
     this.controller,
     this.onFieldSubmitted,
+    this.focusNode,
   });
 
   @override
@@ -20,6 +22,7 @@ class CustomSearchBox extends StatelessWidget {
 
     return TextFormField(
       controller: controller,
+      focusNode: focusNode,
       textInputAction: TextInputAction.search,
       onFieldSubmitted: onFieldSubmitted,
       decoration: InputDecoration(
@@ -29,10 +32,7 @@ class CustomSearchBox extends StatelessWidget {
             color: colorScheme.onSurface.withValues(alpha: .5),
           ),
         ),
-        suffixIcon: Icon(
-          Icons.search,
-          color: colorScheme.onSurface.withValues(alpha: .5),
-        ),
+
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(

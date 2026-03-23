@@ -5,6 +5,7 @@ import 'package:sparkd/features/sme/presentation/widgets/sme_gig_card.dart';
 import 'package:sparkd/core/services/service_locator.dart';
 import 'package:sparkd/core/utils/app_text_theme_extension.dart';
 import 'package:sparkd/core/utils/form_statuses.dart';
+import 'package:sparkd/core/utils/logger.dart';
 import 'package:sparkd/features/gigs/presentation/bloc/discover_gig/discover_gig_bloc.dart';
 
 class SmeDiscoverScreen extends StatefulWidget {
@@ -17,29 +18,36 @@ class SmeDiscoverScreen extends StatefulWidget {
 class _SmeDiscoverScreenState extends State<SmeDiscoverScreen> {
   final TextEditingController _searchController = TextEditingController();
   late final DiscoverGigBloc _discoverGigBloc;
+  late final FocusNode _searchFocusNode;
 
   @override
   void initState() {
     super.initState();
-    _discoverGigBloc = sl<DiscoverGigBloc>()..add(DiscoverGigsRequested());
+    _discoverGigBloc = sl<DiscoverGigBloc>();
+    _searchFocusNode = FocusNode();
+    logger.i('SmeDiscoverScreen: Initialized, fetching all gigs...');
+    _discoverGigBloc.add(DiscoverGigsRequested());
   }
 
   void _triggerSearch() {
-    _discoverGigBloc.add(
-      DiscoverGigSearchRequested(query: _searchController.text),
-    );
+    final query = _searchController.text;
+    logger.i('SmeDiscoverScreen: Searching for gigs with query: "$query"');
+    FocusScope.of(context).unfocus();
+    _discoverGigBloc.add(DiscoverGigSearchRequested(query: query));
   }
 
   @override
   void dispose() {
     _discoverGigBloc.close();
     _searchController.dispose();
+    _searchFocusNode.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final textStyles = Theme.of(context).textStyles;
+    final colorTheme = Theme.of(context).colorScheme;
     return BlocProvider.value(
       value: _discoverGigBloc,
       child: Scaffold(
@@ -55,21 +63,36 @@ class _SmeDiscoverScreenState extends State<SmeDiscoverScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text("Discover", style: textStyles.heading2),
-                Row(
-                  spacing: 8,
-                  children: [
-                    Expanded(
-                      child: CustomSearchBox(
-                        hintText: "Search for gigs",
-                        controller: _searchController,
-                        onFieldSubmitted: (_) => _triggerSearch(),
+                IntrinsicHeight(
+                  child: Row(
+                    spacing: 8,
+                    children: [
+                      Expanded(
+                        child: CustomSearchBox(
+                          hintText: "Search for gigs",
+                          controller: _searchController,
+                          focusNode: _searchFocusNode,
+                          onFieldSubmitted: (_) => _triggerSearch(),
+                        ),
                       ),
-                    ),
-                    ElevatedButton(
-                      onPressed: _triggerSearch,
-                      child: const Text("Search"),
-                    ),
-                  ],
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          backgroundColor: colorTheme.primary,
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          minimumSize: const Size(0, 56),
+                        ),
+                        onPressed: _triggerSearch,
+                        child: Icon(
+                          Icons.search,
+                          color: colorTheme.onPrimary,
+                          size: 20,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -81,16 +104,24 @@ class _SmeDiscoverScreenState extends State<SmeDiscoverScreen> {
             child: BlocBuilder<DiscoverGigBloc, DiscoverGigState>(
               builder: (context, state) {
                 if (state.status == FormStatus.loading) {
+                  logger.i('SmeDiscoverScreen: Loading gigs...');
                   return const Center(child: CircularProgressIndicator());
                 } else if (state.status == FormStatus.failure) {
+                  logger.e(
+                    'SmeDiscoverScreen: Error loading gigs: ${state.errorMessage}',
+                  );
                   return Center(
                     child: Column(
                       spacing: 16,
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Text("Failed to load gigs"),
+                        Text(
+                          state.errorMessage ?? 'Failed to load gigs',
+                          textAlign: TextAlign.center,
+                        ),
                         ElevatedButton(
                           onPressed: () {
+                            logger.i('SmeDiscoverScreen: Retry loading gigs');
                             context.read<DiscoverGigBloc>().add(
                               DiscoverGigsRequested(),
                             );
@@ -102,16 +133,38 @@ class _SmeDiscoverScreenState extends State<SmeDiscoverScreen> {
                   );
                 } else if (state.status == FormStatus.success &&
                     state.gigs.isEmpty) {
-                  return const Center(child: Text("No gigs found"));
+                  logger.i(
+                    'SmeDiscoverScreen: No gigs found for query: "${state.query ?? ''}"',
+                  );
+                  return Center(
+                    child: Column(
+                      spacing: 12,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.search_off_rounded,
+                          size: 48,
+                          color: colorTheme.onSurface.withValues(alpha: 0.5),
+                        ),
+                        Text(
+                          state.query != null && state.query!.isNotEmpty
+                              ? 'No gigs found for "${state.query}"'
+                              : 'No gigs available',
+                        ),
+                      ],
+                    ),
+                  );
                 } else if (state.status == FormStatus.success) {
-                  return ListView.builder(
+                  logger.i(
+                    'SmeDiscoverScreen: Displaying ${state.gigs.length} gigs',
+                  );
+                  return ListView.separated(
                     itemCount: state.gigs.length,
+                    separatorBuilder: (context, index) =>
+                        const SizedBox(height: 10),
                     itemBuilder: (context, index) {
                       final gig = state.gigs[index];
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 10.0),
-                        child: SmeGigCard(gig: gig),
-                      );
+                      return SmeGigCard(gig: gig);
                     },
                   );
                 }
