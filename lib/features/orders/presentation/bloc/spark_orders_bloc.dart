@@ -8,12 +8,11 @@ import 'package:sparkd/features/orders/domain/usecases/get_spark_orders.dart';
 import 'package:sparkd/features/orders/domain/usecases/update_order_status.dart';
 import 'package:sparkd/features/orders/presentation/bloc/spark_orders_event.dart';
 import 'package:sparkd/features/orders/presentation/bloc/spark_orders_state.dart';
-import 'package:logger/logger.dart';
+import 'package:sparkd/core/utils/logger.dart';
 
 class SparkOrdersBloc extends Bloc<SparkOrdersEvent, SparkOrdersState> {
   final GetSparkOrdersUseCase _getSparkOrdersUseCase;
   final UpdateOrderStatusUseCase _updateOrderStatusUseCase;
-  final Logger _logger = Logger();
 
   SparkOrdersBloc({
     required GetSparkOrdersUseCase getSparkOrdersUseCase,
@@ -31,29 +30,29 @@ class SparkOrdersBloc extends Bloc<SparkOrdersEvent, SparkOrdersState> {
     LoadSparkOrdersEvent event,
     Emitter<SparkOrdersState> emit,
   ) async {
-    _logger.i('Loading orders for Spark: ${event.sparkId}');
+    logger.i('Loading orders for Spark: ${event.sparkId}');
     emit(SparkOrdersLoading());
     try {
       await emit.forEach<List<OrderEntity>>(
         _getSparkOrdersUseCase(event.sparkId),
         onData: (orders) {
-          _logger.i('Received ${orders.length} orders');
+          logger.i('Received ${orders.length} orders');
           final pendingOrders = orders
               .where((o) => o.status == OrderStatus.pendingSparkAcceptance)
               .toList();
-          _logger.i('${pendingOrders.length} pending orders');
+          logger.i('${pendingOrders.length} pending orders');
           return SparkOrdersLoaded(
             orders: orders,
             pendingOrders: pendingOrders,
           );
         },
         onError: (error, stackTrace) {
-          _logger.e('Stream error: $error');
+          logger.e('Stream error: $error');
           return SparkOrdersError(message: error.toString());
         },
       );
     } catch (e) {
-      _logger.e('Error loading orders: $e');
+      logger.e('Error loading orders: $e');
       emit(SparkOrdersError(message: e.toString()));
     }
   }
@@ -71,11 +70,11 @@ class SparkOrdersBloc extends Bloc<SparkOrdersEvent, SparkOrdersState> {
       });
 
       // Send notification to SME (will be handled by Cloud Function)
-      _logger.i('Order ${event.orderId} accepted');
+      logger.i('Order ${event.orderId} accepted');
 
       emit(OrderUpdateSuccess(message: 'Order accepted successfully!'));
     } catch (e) {
-      _logger.e('Error accepting order: $e');
+      logger.e('Error accepting order: $e');
       emit(OrderUpdateError(message: e.toString()));
     }
   }
@@ -93,11 +92,11 @@ class SparkOrdersBloc extends Bloc<SparkOrdersEvent, SparkOrdersState> {
         'rejectedAt': Timestamp.now(),
       });
 
-      _logger.i('Order ${event.orderId} rejected');
+      logger.i('Order ${event.orderId} rejected');
 
       emit(OrderUpdateSuccess(message: 'Order rejected'));
     } catch (e) {
-      _logger.e('Error rejecting order: $e');
+      logger.e('Error rejecting order: $e');
       emit(OrderUpdateError(message: e.toString()));
     }
   }

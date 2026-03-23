@@ -3,12 +3,11 @@ import 'package:sparkd/features/orders/domain/usecases/create_order_request.dart
 import 'package:sparkd/features/orders/presentation/bloc/order_event.dart';
 import 'package:sparkd/features/orders/presentation/bloc/order_state.dart';
 import 'package:sparkd/core/services/notification_service.dart';
-import 'package:logger/logger.dart';
+import 'package:sparkd/core/utils/logger.dart';
 
 class OrderBloc extends Bloc<OrderEvent, OrderState> {
   final CreateOrderRequestUseCase _createOrderRequestUseCase;
   final NotificationService _notificationService;
-  final Logger _logger = Logger();
 
   OrderBloc({
     required CreateOrderRequestUseCase createOrderRequestUseCase,
@@ -25,11 +24,11 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
   ) async {
     emit(OrderCreating());
     try {
-      _logger.i('Creating order request: ${event.order.gigTitle}');
+      logger.i('Creating order request: ${event.order.gigTitle}');
 
       final orderId = await _createOrderRequestUseCase(event.order);
 
-      _logger.i('Order request created with ID: $orderId');
+      logger.i('Order request created with ID: $orderId');
 
       // Send notification to Spark
       await _notificationService.sendNotificationToUser(
@@ -45,7 +44,7 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
 
       emit(OrderCreated(orderId: orderId));
     } catch (e) {
-      _logger.e('Error creating order: $e');
+      logger.e('Error creating order: $e');
       emit(OrderError(message: e.toString()));
     }
   }

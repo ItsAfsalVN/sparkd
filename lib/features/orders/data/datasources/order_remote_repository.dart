@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:logger/logger.dart';
 import 'package:sparkd/features/orders/data/models/order_model.dart';
 import 'package:sparkd/features/orders/domain/entities/order_entity.dart';
+import 'package:sparkd/core/utils/logger.dart';
 
 abstract class OrderRemoteRepository {
   Future<String> createOrderRequest(OrderEntity order);
@@ -13,7 +14,6 @@ abstract class OrderRemoteRepository {
 
 class OrderRemoteRepositoryImplementation implements OrderRemoteRepository {
   final FirebaseFirestore _firestore;
-  final Logger _logger = Logger();
 
   OrderRemoteRepositoryImplementation({required FirebaseFirestore firestore})
     : _firestore = firestore;
@@ -21,16 +21,16 @@ class OrderRemoteRepositoryImplementation implements OrderRemoteRepository {
   @override
   Future<String> createOrderRequest(OrderEntity order) async {
     try {
-      _logger.i('Creating order request for gig: ${order.gigID}');
-      _logger.d('Order data: ${order.toMap()}');
+      logger.i('Creating order request for gig: ${order.gigID}');
+      logger.d('Order data: ${order.toMap()}');
       final orderModel = OrderModel(order: order);
       final docRef = await _firestore
           .collection("orders")
           .add(orderModel.toJson());
-      _logger.i('Order created with ID: ${docRef.id}');
+      logger.i('Order created with ID: ${docRef.id}');
       return docRef.id;
     } catch (e) {
-      _logger.e('Failed to create order request: $e');
+      logger.e('Failed to create order request: $e');
       throw Exception('Failed to create order request: $e');
     }
   }
@@ -64,7 +64,7 @@ class OrderRemoteRepositoryImplementation implements OrderRemoteRepository {
 
   @override
   Stream<List<OrderEntity>> getSparkOrders(String sparkId) {
-    _logger.i('Setting up stream for Spark orders: $sparkId');
+    logger.i('Setting up stream for Spark orders: $sparkId');
     try {
       return _firestore
           .collection("orders")
@@ -72,7 +72,7 @@ class OrderRemoteRepositoryImplementation implements OrderRemoteRepository {
           .orderBy("createdAt", descending: true)
           .snapshots()
           .map((snapshot) {
-            _logger.i(
+            logger.i(
               'Received snapshot with ${snapshot.docs.length} documents',
             );
             final orders = <OrderEntity>[];
@@ -80,18 +80,18 @@ class OrderRemoteRepositoryImplementation implements OrderRemoteRepository {
               try {
                 final data = doc.data();
                 data['id'] = doc.id;
-                _logger.d('Order data: $data');
-                _logger.d('createdAt type: ${data['createdAt'].runtimeType}');
+                logger.d('Order data: $data');
+                logger.d('createdAt type: ${data['createdAt'].runtimeType}');
                 orders.add(OrderModel.fromJson(data).order);
               } catch (e) {
-                _logger.e('Error parsing order ${doc.id}: $e');
+                logger.e('Error parsing order ${doc.id}: $e');
                 // Skip this order and continue with others
               }
             }
             return orders;
           });
     } catch (e) {
-      _logger.e('Error in getSparkOrders: $e');
+      logger.e('Error in getSparkOrders: $e');
       throw Exception('Failed to get spark orders: $e');
     }
   }
@@ -112,7 +112,7 @@ class OrderRemoteRepositoryImplementation implements OrderRemoteRepository {
                 data['id'] = doc.id;
                 orders.add(OrderModel.fromJson(data).order);
               } catch (e) {
-                _logger.e('Error parsing order ${doc.id}: $e');
+                logger.e('Error parsing order ${doc.id}: $e');
                 // Skip this order and continue with others
               }
             }

@@ -10,7 +10,7 @@ import 'package:sparkd/features/sme/presentation/screens/sme_specify_requirement
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 import 'package:video_player/video_player.dart';
 import 'package:chewie/chewie.dart';
-import 'package:logger/logger.dart';
+import 'package:sparkd/core/utils/logger.dart';
 
 class SmeGigDetailsScreen extends StatefulWidget {
   final GigEntity gig;
@@ -31,7 +31,6 @@ class _SmeGigDetailsScreenState extends State<SmeGigDetailsScreen>
   ChewieController? _chewieController;
   bool _isVideoLoading = false;
   String? _videoError;
-  final logger = Logger();
 
   @override
   void initState() {

@@ -1,11 +1,10 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:logger/logger.dart';
+import 'package:sparkd/core/utils/logger.dart';
 
 class NotificationService {
   final FirebaseMessaging _messaging;
   final FirebaseFirestore _firestore;
-  final Logger _logger = Logger();
 
   NotificationService({
     required FirebaseMessaging messaging,
@@ -25,18 +24,18 @@ class NotificationService {
       );
 
       if (settings.authorizationStatus == AuthorizationStatus.authorized) {
-        _logger.i('User granted notification permission');
+        logger.i('User granted notification permission');
 
         // Get FCM token
         final token = await _messaging.getToken();
-        _logger.i('FCM Token: $token');
+        logger.i('FCM Token: $token');
 
         return;
       } else {
-        _logger.w('User declined notification permission');
+        logger.w('User declined notification permission');
       }
     } catch (e) {
-      _logger.e('Error initializing notifications: $e');
+      logger.e('Error initializing notifications: $e');
     }
   }
 
@@ -49,10 +48,10 @@ class NotificationService {
           'fcmToken': token,
           'fcmTokenUpdatedAt': FieldValue.serverTimestamp(),
         });
-        _logger.i('FCM token saved for user: $userId');
+        logger.i('FCM token saved for user: $userId');
       }
     } catch (e) {
-      _logger.e('Error saving FCM token: $e');
+      logger.e('Error saving FCM token: $e');
     }
   }
 
@@ -69,7 +68,7 @@ class NotificationService {
       final fcmToken = userDoc.data()?['fcmToken'] as String?;
 
       if (fcmToken == null) {
-        _logger.w('No FCM token found for user: $userId');
+        logger.w('No FCM token found for user: $userId');
         return;
       }
 
@@ -83,7 +82,7 @@ class NotificationService {
         'createdAt': FieldValue.serverTimestamp(),
       });
 
-      _logger.i('Notification saved for user: $userId');
+      logger.i('Notification saved for user: $userId');
 
       // Note: Actual FCM message sending requires a backend service
       // This is typically done via Cloud Functions or your backend server
@@ -92,7 +91,7 @@ class NotificationService {
       //   .document('notifications/{notificationId}')
       //   .onCreate(async (snap, context) => { /* send FCM */ });
     } catch (e) {
-      _logger.e('Error sending notification: $e');
+      logger.e('Error sending notification: $e');
       rethrow;
     }
   }

@@ -17,7 +17,7 @@ import 'package:sparkd/features/orders/presentation/bloc/order_event.dart';
 import 'package:sparkd/features/orders/presentation/bloc/order_state.dart';
 import 'package:sparkd/core/services/storage_service.dart';
 import 'package:sparkd/core/services/service_locator.dart';
-import 'package:logger/logger.dart';
+import 'package:sparkd/core/utils/logger.dart';
 
 class SmeSpecifyRequirements extends StatefulWidget {
   final GigEntity gig;
@@ -28,7 +28,6 @@ class SmeSpecifyRequirements extends StatefulWidget {
 }
 
 class _SmeSpecifyRequirementsState extends State<SmeSpecifyRequirements> {
-  final logger = Logger();
   final _storageService = sl<StorageService>();
 
   // Store text responses and selected files
