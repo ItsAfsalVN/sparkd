@@ -4,25 +4,26 @@ abstract class SmeOrderEvent extends Equatable {
   const SmeOrderEvent();
 
   @override
-  List<Object> get props => [];
+  List<Object?> get props => [];
 }
 
 class SmeOrdersRequested extends SmeOrderEvent {
   final String smeId;
+  final String? status; // null for "All", or specific status string
 
-  const SmeOrdersRequested({required this.smeId});
+  const SmeOrdersRequested({required this.smeId, this.status});
 
   @override
-  List<Object> get props => [smeId];
+  List<Object?> get props => [smeId, status];
 }
 
 class SmeOrderStatusFilterChanged extends SmeOrderEvent {
-  final String status;
+  final String? status; // null for "All", or specific status string
 
-  const SmeOrderStatusFilterChanged({required this.status});
+  const SmeOrderStatusFilterChanged({this.status});
 
   @override
-  List<Object> get props => [status];
+  List<Object?> get props => [status];
 }
 
 class SmeOrderSortOptionChanged extends SmeOrderEvent {
@@ -36,9 +37,10 @@ class SmeOrderSortOptionChanged extends SmeOrderEvent {
 
 class SmeOrderRefreshRequested extends SmeOrderEvent {
   final String smeId;
+  final String? status; // null for "All", or specific status string
 
-  const SmeOrderRefreshRequested({required this.smeId});
+  const SmeOrderRefreshRequested({required this.smeId, this.status});
 
   @override
-  List<Object> get props => [smeId];
+  List<Object?> get props => [smeId, status];
 }

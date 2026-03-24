@@ -9,7 +9,7 @@ import 'package:sparkd/features/auth/presentation/bloc/phone/phone_bloc.dart';
 import 'package:sparkd/core/utils/snackbar_helper.dart';
 import 'package:sparkd/features/sme/presentation/bloc/business_details/business_details_bloc.dart';
 import 'package:sparkd/features/sme/presentation/screens/add_business_details_screen.dart';
-import 'package:sparkd/features/spark/presentation/bloc/skills_bloc.dart';
+import 'package:sparkd/features/spark/domain/bloc/skills_bloc.dart';
 import 'package:sparkd/features/spark/presentation/screens/add_skills_screen.dart';
 import 'package:sparkd/core/utils/form_statuses.dart';
 

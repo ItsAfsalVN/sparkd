@@ -9,105 +9,215 @@ import 'package:sparkd/features/orders/presentation/bloc/spark_orders_state.dart
 import 'package:sparkd/features/orders/presentation/screens/spark_order_requests_screen.dart';
 import 'package:sparkd/features/spark/presentation/widgets/spark_order_card.dart';
 
-class SparkOrdersScreen extends StatelessWidget {
+class SparkOrdersScreen extends StatefulWidget {
   const SparkOrdersScreen({super.key});
+
+  @override
+  State<SparkOrdersScreen> createState() => _SparkOrdersScreenState();
+}
+
+class _SparkOrdersScreenState extends State<SparkOrdersScreen> {
+  String? _selectedStatus;
+
+  final List<(String?, String)> _statusOptions = [
+    (null, 'All'),
+    ('pendingSparkAcceptance', 'Pending'),
+    ('pendingPayment', 'Payment Pending'),
+    ('inProgress', 'In Progress'),
+    ('delivered', 'Delivered'),
+    ('completed', 'Completed'),
+    ('cancelled', 'Cancelled'),
+  ];
 
   @override
   Widget build(BuildContext context) {
     final currentUser = FirebaseAuth.instance.currentUser;
+
+    return BlocProvider(
+      create: (context) => sl<SparkOrdersBloc>()
+        ..add(
+          LoadSparkOrdersEvent(
+            sparkId: currentUser!.uid,
+            status: _selectedStatus,
+          ),
+        ),
+      child: _SparkOrdersScreenContent(
+        currentUser: currentUser,
+        selectedStatus: _selectedStatus,
+        statusOptions: _statusOptions,
+        onStatusChanged: (status) {
+          setState(() {
+            _selectedStatus = status;
+          });
+        },
+      ),
+    );
+  }
+}
+
+class _SparkOrdersScreenContent extends StatelessWidget {
+  final User? currentUser;
+  final String? selectedStatus;
+  final List<(String?, String)> statusOptions;
+  final Function(String?) onStatusChanged;
+
+  const _SparkOrdersScreenContent({
+    required this.currentUser,
+    required this.selectedStatus,
+    required this.statusOptions,
+    required this.onStatusChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     final textStyles = Theme.of(context).textStyles;
     final colorScheme = Theme.of(context).colorScheme;
 
-    return BlocProvider(
-      create: (context) =>
-          sl<SparkOrdersBloc>()
-            ..add(LoadSparkOrdersEvent(sparkId: currentUser!.uid)),
-      child: Scaffold(
-        appBar: AppBar(
-          elevation: 0,
-          title: Text("My Orders", style: textStyles.heading2),
-          scrolledUnderElevation: 0.0,
-          surfaceTintColor: Colors.transparent,
-        ),
-        body: BlocBuilder<SparkOrdersBloc, SparkOrdersState>(
-          builder: (context, state) {
-            if (state is SparkOrdersLoading) {
-              return Center(
-                child: CircularProgressIndicator(color: colorScheme.primary),
-              );
-            }
+    return Scaffold(
+      appBar: AppBar(
+        elevation: 0,
+        title: Text("My Orders", style: textStyles.heading2),
+        scrolledUnderElevation: 0.0,
+        surfaceTintColor: Colors.transparent,
+      ),
+      body: BlocBuilder<SparkOrdersBloc, SparkOrdersState>(
+        builder: (context, state) {
+          if (state is SparkOrdersLoading) {
+            return Center(
+              child: CircularProgressIndicator(color: colorScheme.primary),
+            );
+          }
 
-            if (state is SparkOrdersError) {
-              return Center(
-                child: Column(
-                  spacing: 16,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.error_outline,
-                      size: 64,
-                      color: colorScheme.error,
-                    ),
-                    Text(
-                      'Error: ${state.message}',
-                      style: textStyles.paragraph,
-                    ),
-                  ],
-                ),
-              );
-            }
-
-            if (state is SparkOrdersLoaded) {
-              final hasPendingOrders = state.pendingOrders.isNotEmpty;
-
-              return Column(
+          if (state is SparkOrdersError) {
+            return Center(
+              child: Column(
+                spacing: 16,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Banner for pending orders
-                  if (hasPendingOrders)
-                    _OrderNotificationBanner(
-                      pendingCount: state.pendingOrders.length,
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                const SparkOrderRequestsScreen(),
+                  Icon(Icons.error_outline, size: 64, color: colorScheme.error),
+                  Text('Error: ${state.message}', style: textStyles.paragraph),
+                  SizedBox(
+                    height: 40,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        context.read<SparkOrdersBloc>().add(
+                          LoadSparkOrdersEvent(
+                            sparkId: currentUser!.uid,
+                            status: selectedStatus,
                           ),
                         );
                       },
+                      child: const Text('Retry'),
                     ),
-
-                  // Orders list
-                  Expanded(
-                    child: state.orders.isEmpty
-                        ? Center(
-                            child: Text(
-                              'No Orders Yet',
-                              style: textStyles.heading3.copyWith(
-                                color: colorScheme.onSurface.withValues(
-                                  alpha: 0.5,
-                                ),
-                              ),
-                            ),
-                          )
-                        : ListView.separated(
-                            padding: const EdgeInsets.all(10),
-                            itemCount: state.orders.length,
-                            separatorBuilder: (context, index) =>
-                                const SizedBox(height: 12),
-                            itemBuilder: (context, index) {
-                              final order = state.orders[index];
-                              return SparkOrderCard(order: order);
-                            },
-                          ),
                   ),
                 ],
-              );
-            }
+              ),
+            );
+          }
 
-            return const SizedBox.shrink();
-          },
-        ),
+          if (state is SparkOrdersLoaded) {
+            final hasPendingOrders = state.pendingOrders.isNotEmpty;
+
+            return Column(
+              children: [
+                // Status Filter Chips
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      spacing: 8,
+                      children: statusOptions
+                          .map(
+                            (option) => FilterChip(
+                              checkmarkColor: colorScheme.onPrimary,
+                              label: Text(
+                                option.$2,
+                                style: TextStyle(
+                                  color: selectedStatus == option.$1
+                                      ? colorScheme.onPrimary
+                                      : colorScheme.onSurface,
+                                ),
+                              ),
+                              selected: selectedStatus == option.$1,
+                              onSelected: (sel) {
+                                onStatusChanged(sel ? option.$1 : null);
+                                context.read<SparkOrdersBloc>().add(
+                                  SparkOrderStatusFilterChanged(
+                                    status: sel ? option.$1 : null,
+                                  ),
+                                );
+                              },
+                              backgroundColor: Colors.transparent,
+                              selectedColor: colorScheme.primary,
+                              side: BorderSide(color: colorScheme.primary),
+                            ),
+                          )
+                          .toList(),
+                    ),
+                  ),
+                ),
+                // Banner for pending orders
+                if (hasPendingOrders && selectedStatus == null)
+                  _OrderNotificationBanner(
+                    pendingCount: state.pendingOrders.length,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              const SparkOrderRequestsScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                // Orders list
+                Expanded(
+                  child: state.orders.isEmpty
+                      ? Center(
+                          child: Column(
+                            spacing: 4,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.shopping_bag_outlined,
+                                size: 38,
+                                color: colorScheme.onSurface.withValues(
+                                  alpha: 0.3,
+                                ),
+                              ),
+                              Text(
+                                'No Orders',
+                                style: textStyles.heading4.copyWith(
+                                  height: 1,
+                                  color: colorScheme.onSurface.withValues(
+                                    alpha: 0.3,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      : ListView.separated(
+                          padding: const EdgeInsets.all(10),
+                          itemCount: state.orders.length,
+                          separatorBuilder: (context, index) =>
+                              const SizedBox(height: 12),
+                          itemBuilder: (context, index) {
+                            final order = state.orders[index];
+                            return SparkOrderCard(order: order);
+                          },
+                        ),
+                ),
+              ],
+            );
+          }
+
+          return const SizedBox.shrink();
+        },
       ),
     );
   }

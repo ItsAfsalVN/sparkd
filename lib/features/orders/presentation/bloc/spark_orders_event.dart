@@ -7,11 +7,21 @@ abstract class SparkOrdersEvent extends Equatable {
 
 class LoadSparkOrdersEvent extends SparkOrdersEvent {
   final String sparkId;
+  final String? status; // null for "All", or specific status string
 
-  LoadSparkOrdersEvent({required this.sparkId});
+  LoadSparkOrdersEvent({required this.sparkId, this.status});
 
   @override
-  List<Object?> get props => [sparkId];
+  List<Object?> get props => [sparkId, status];
+}
+
+class SparkOrderStatusFilterChanged extends SparkOrdersEvent {
+  final String? status; // null for "All", or specific status string
+
+  SparkOrderStatusFilterChanged({this.status});
+
+  @override
+  List<Object?> get props => [status];
 }
 
 class AcceptOrderEvent extends SparkOrdersEvent {

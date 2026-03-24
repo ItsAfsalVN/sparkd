@@ -25,14 +25,16 @@ import 'package:sparkd/features/orders/data/datasources/order_remote_repository.
 import 'package:sparkd/features/orders/data/repositories/order_repository_implementation.dart';
 import 'package:sparkd/features/orders/domain/repository/order_repository.dart';
 import 'package:sparkd/features/orders/domain/usecases/create_order_request.dart';
+import 'package:sparkd/features/orders/domain/usecases/get_sme_orders_usecase.dart';
 import 'package:sparkd/features/orders/domain/usecases/get_spark_orders.dart';
 import 'package:sparkd/features/orders/domain/usecases/update_order_status.dart';
 import 'package:sparkd/features/orders/presentation/bloc/order_bloc.dart';
+import 'package:sparkd/features/orders/presentation/bloc/sme_order_bloc.dart';
 import 'package:sparkd/features/orders/presentation/bloc/spark_orders_bloc.dart';
 import 'package:sparkd/features/spark/data/datasources/static_skill_data_source.dart';
 import 'package:sparkd/features/gigs/data/datasources/gig_remote_data_source.dart';
 import 'package:sparkd/features/gigs/data/repositories/gig_repository_impl.dart';
-import 'package:sparkd/features/spark/presentation/bloc/skills_bloc.dart';
+import 'package:sparkd/features/spark/domain/bloc/skills_bloc.dart';
 import 'package:sparkd/features/auth/data/datasources/auth_local_data_source.dart';
 import 'package:sparkd/features/auth/data/datasources/auth_remote_data_source.dart';
 import 'package:sparkd/features/auth/data/repositories/auth_repository_implementation.dart';
@@ -169,11 +171,17 @@ Future<void> init() async {
     ),
   );
 
+  sl.registerFactory(() => SmeOrderBloc(getSmeOrdersUsecase: sl()));
+
   sl.registerLazySingleton(
     () => CreateOrderRequestUseCase(orderRepository: sl()),
   );
 
   sl.registerLazySingleton(() => GetSparkOrdersUseCase(repository: sl()));
+
+  sl.registerLazySingleton(
+    () => GetSmeOrdersUsecase(repository: sl(), smeID: ''),
+  );
 
   sl.registerLazySingleton(() => UpdateOrderStatusUseCase(repository: sl()));
 

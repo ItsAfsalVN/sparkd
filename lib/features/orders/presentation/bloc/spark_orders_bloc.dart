@@ -13,6 +13,7 @@ import 'package:sparkd/core/utils/logger.dart';
 class SparkOrdersBloc extends Bloc<SparkOrdersEvent, SparkOrdersState> {
   final GetSparkOrdersUseCase _getSparkOrdersUseCase;
   final UpdateOrderStatusUseCase _updateOrderStatusUseCase;
+  String? _currentSparkId;
 
   SparkOrdersBloc({
     required GetSparkOrdersUseCase getSparkOrdersUseCase,
@@ -22,6 +23,7 @@ class SparkOrdersBloc extends Bloc<SparkOrdersEvent, SparkOrdersState> {
        _updateOrderStatusUseCase = updateOrderStatusUseCase,
        super(SparkOrdersInitial()) {
     on<LoadSparkOrdersEvent>(_onLoadSparkOrders);
+    on<SparkOrderStatusFilterChanged>(_onSparkOrderStatusFilterChanged);
     on<AcceptOrderEvent>(_onAcceptOrder);
     on<RejectOrderEvent>(_onRejectOrder);
   }
@@ -31,10 +33,14 @@ class SparkOrdersBloc extends Bloc<SparkOrdersEvent, SparkOrdersState> {
     Emitter<SparkOrdersState> emit,
   ) async {
     logger.i('Loading orders for Spark: ${event.sparkId}');
-    emit(SparkOrdersLoading());
+    emit(SparkOrdersLoading(currentStatus: event.status));
+    _currentSparkId = event.sparkId;
+
     try {
+      final orderStatus = _parseStatusString(event.status);
+
       await emit.forEach<List<OrderEntity>>(
-        _getSparkOrdersUseCase(event.sparkId),
+        _getSparkOrdersUseCase(event.sparkId, status: orderStatus),
         onData: (orders) {
           logger.i('Received ${orders.length} orders');
           final pendingOrders = orders
@@ -44,16 +50,78 @@ class SparkOrdersBloc extends Bloc<SparkOrdersEvent, SparkOrdersState> {
           return SparkOrdersLoaded(
             orders: orders,
             pendingOrders: pendingOrders,
+            currentStatus: event.status,
           );
         },
         onError: (error, stackTrace) {
           logger.e('Stream error: $error');
-          return SparkOrdersError(message: error.toString());
+          return SparkOrdersError(
+            message: error.toString(),
+            currentStatus: event.status,
+          );
         },
       );
     } catch (e) {
       logger.e('Error loading orders: $e');
-      emit(SparkOrdersError(message: e.toString()));
+      emit(
+        SparkOrdersError(message: e.toString(), currentStatus: event.status),
+      );
+    }
+  }
+
+  Future<void> _onSparkOrderStatusFilterChanged(
+    SparkOrderStatusFilterChanged event,
+    Emitter<SparkOrdersState> emit,
+  ) async {
+    if (_currentSparkId == null) return;
+
+    emit(SparkOrdersLoading(currentStatus: event.status));
+
+    final orderStatus = _parseStatusString(event.status);
+
+    try {
+      await emit.forEach<List<OrderEntity>>(
+        _getSparkOrdersUseCase(_currentSparkId!, status: orderStatus),
+        onData: (orders) {
+          logger.i('Received ${orders.length} filtered orders');
+          final pendingOrders = orders
+              .where((o) => o.status == OrderStatus.pendingSparkAcceptance)
+              .toList();
+          return SparkOrdersLoaded(
+            orders: orders,
+            pendingOrders: pendingOrders,
+            currentStatus: event.status,
+          );
+        },
+        onError: (error, stackTrace) {
+          logger.e('Stream error: $error');
+          return SparkOrdersError(
+            message: error.toString(),
+            currentStatus: event.status,
+          );
+        },
+      );
+    } catch (e) {
+      logger.e('Error filtering orders: $e');
+      emit(
+        SparkOrdersError(message: e.toString(), currentStatus: event.status),
+      );
+    }
+  }
+
+  /// Converts status string to OrderStatus enum
+  /// Returns null if status is "all" or null (meaning show all orders)
+  OrderStatus? _parseStatusString(String? status) {
+    if (status == null || status.toLowerCase() == 'all') {
+      return null;
+    }
+
+    try {
+      return OrderStatus.values.firstWhere(
+        (e) => e.toString().split('.').last == status,
+      );
+    } catch (e) {
+      return null;
     }
   }
 
