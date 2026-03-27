@@ -22,6 +22,10 @@ class OrderEntity {
   final String? paymentID;
   final String? rejectionReason;
 
+  final DateTime? paidAt;
+  final DateTime? deliveredAt;
+  
+
   const OrderEntity({
     this.id,
     required this.gigID,
@@ -37,6 +41,8 @@ class OrderEntity {
     this.deadline,
     this.paymentID,
     this.rejectionReason,
+    this.paidAt,
+    this.deliveredAt,
   });
 
   OrderEntity copyWith({
@@ -54,6 +60,8 @@ class OrderEntity {
     DateTime? deadline,
     String? paymentID,
     String? rejectionReason,
+    DateTime? paidAt,
+    DateTime? deliveredAt,
   }) {
     return OrderEntity(
       id: id ?? this.id,
@@ -70,6 +78,8 @@ class OrderEntity {
       deadline: deadline ?? this.deadline,
       paymentID: paymentID ?? this.paymentID,
       rejectionReason: rejectionReason ?? this.rejectionReason,
+      paidAt: paidAt ?? this.paidAt,
+      deliveredAt: deliveredAt ?? this.deliveredAt,
     );
   }
 
@@ -88,6 +98,8 @@ class OrderEntity {
       'deadline': deadline != null ? Timestamp.fromDate(deadline!) : null,
       'paymentID': paymentID,
       'rejectionReason': rejectionReason,
+      'paidAt': paidAt != null ? Timestamp.fromDate(paidAt!) : null,
+      'deliveredAt': deliveredAt != null ? Timestamp.fromDate(deliveredAt!) : null,
     };
   }
 }

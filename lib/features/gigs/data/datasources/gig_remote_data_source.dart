@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:sparkd/core/utils/logger.dart';
@@ -41,12 +43,25 @@ class GigRemoteDataSourceImpl implements GigRemoteDataSource {
 
       final docRef = await _firestore
           .collection('gigs')
-          .add(gigWithCreator.toJson());
+          .add(gigWithCreator.toJson())
+          .timeout(
+            const Duration(seconds: 15),
+            onTimeout: () => throw TimeoutException(
+              'Failed to create gig - connection timeout',
+            ),
+          );
 
       final createdGig = gigWithCreator.copyWith(id: docRef.id);
 
       // Update the document with the generated ID
-      await docRef.update({'id': docRef.id});
+      await docRef
+          .update({'id': docRef.id})
+          .timeout(
+            const Duration(seconds: 15),
+            onTimeout: () => throw TimeoutException(
+              'Failed to update gig ID - connection timeout',
+            ),
+          );
 
       logger.i('Gig created successfully with ID: ${docRef.id}');
       return createdGig;
@@ -65,7 +80,13 @@ class GigRemoteDataSourceImpl implements GigRemoteDataSource {
           .collection('gigs')
           .where('isActive', isEqualTo: true)
           .orderBy('createdAt', descending: true)
-          .get();
+          .get()
+          .timeout(
+            const Duration(seconds: 20),
+            onTimeout: () => throw TimeoutException(
+              'Failed to fetch gigs - connection timeout',
+            ),
+          );
 
       final gigs = querySnapshot.docs
           .map((doc) => GigModel.fromJson(doc.data()))
@@ -84,7 +105,16 @@ class GigRemoteDataSourceImpl implements GigRemoteDataSource {
     try {
       logger.i('Fetching gig by ID: $id');
 
-      final docSnapshot = await _firestore.collection('gigs').doc(id).get();
+      final docSnapshot = await _firestore
+          .collection('gigs')
+          .doc(id)
+          .get()
+          .timeout(
+            const Duration(seconds: 15),
+            onTimeout: () => throw TimeoutException(
+              'Failed to fetch gig - connection timeout',
+            ),
+          );
 
       if (!docSnapshot.exists) {
         throw Exception('Gig not found');
@@ -109,7 +139,16 @@ class GigRemoteDataSourceImpl implements GigRemoteDataSource {
       }
 
       // Fetch existing gig to preserve immutable fields
-      final docSnapshot = await _firestore.collection('gigs').doc(gig.id).get();
+      final docSnapshot = await _firestore
+          .collection('gigs')
+          .doc(gig.id)
+          .get()
+          .timeout(
+            const Duration(seconds: 15),
+            onTimeout: () => throw TimeoutException(
+              'Failed to fetch gig for update - connection timeout',
+            ),
+          );
       if (!docSnapshot.exists) {
         throw Exception('Gig not found for update');
       }
@@ -126,7 +165,13 @@ class GigRemoteDataSourceImpl implements GigRemoteDataSource {
       await _firestore
           .collection('gigs')
           .doc(gig.id)
-          .update(updatedGig.toJson());
+          .update(updatedGig.toJson())
+          .timeout(
+            const Duration(seconds: 15),
+            onTimeout: () => throw TimeoutException(
+              'Failed to update gig - connection timeout',
+            ),
+          );
 
       logger.i(
         'Gig updated successfully with creatorId: ${updatedGig.creatorId}',
@@ -144,10 +189,19 @@ class GigRemoteDataSourceImpl implements GigRemoteDataSource {
       logger.i('Deleting gig: $id');
 
       // Soft delete by setting isActive to false
-      await _firestore.collection('gigs').doc(id).update({
-        'isActive': false,
-        'updatedAt': DateTime.now().toIso8601String(),
-      });
+      await _firestore
+          .collection('gigs')
+          .doc(id)
+          .update({
+            'isActive': false,
+            'updatedAt': DateTime.now().toIso8601String(),
+          })
+          .timeout(
+            const Duration(seconds: 15),
+            onTimeout: () => throw TimeoutException(
+              'Failed to delete gig - connection timeout',
+            ),
+          );
 
       logger.i('Gig deleted successfully');
     } catch (e) {
@@ -166,7 +220,13 @@ class GigRemoteDataSourceImpl implements GigRemoteDataSource {
           .where('categoryId', isEqualTo: categoryId)
           .where('isActive', isEqualTo: true)
           .orderBy('createdAt', descending: true)
-          .get();
+          .get()
+          .timeout(
+            const Duration(seconds: 20),
+            onTimeout: () => throw TimeoutException(
+              'Failed to fetch gigs by category - connection timeout',
+            ),
+          );
 
       final gigs = querySnapshot.docs
           .map((doc) => GigModel.fromJson(doc.data()))
@@ -190,7 +250,13 @@ class GigRemoteDataSourceImpl implements GigRemoteDataSource {
           .where('creatorId', isEqualTo: creatorId)
           .where('isActive', isEqualTo: true)
           .orderBy('createdAt', descending: true)
-          .get();
+          .get()
+          .timeout(
+            const Duration(seconds: 20),
+            onTimeout: () => throw TimeoutException(
+              'Failed to fetch gigs by creator - connection timeout',
+            ),
+          );
 
       final gigs = querySnapshot.docs
           .map((doc) => GigModel.fromJson(doc.data()))

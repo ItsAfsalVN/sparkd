@@ -6,7 +6,7 @@ import 'package:sparkd/core/utils/app_text_theme_extension.dart';
 import 'package:sparkd/features/orders/presentation/bloc/spark_orders_bloc.dart';
 import 'package:sparkd/features/orders/presentation/bloc/spark_orders_event.dart';
 import 'package:sparkd/features/orders/presentation/bloc/spark_orders_state.dart';
-import 'package:sparkd/features/orders/presentation/screens/spark_order_requests_screen.dart';
+import 'package:sparkd/features/orders/presentation/screens/order_details_screen.dart';
 import 'package:sparkd/features/spark/presentation/widgets/spark_order_card.dart';
 
 class SparkOrdersScreen extends StatefulWidget {
@@ -76,7 +76,7 @@ class _SparkOrdersScreenContent extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         elevation: 0,
-        title: Text("My Orders", style: textStyles.heading2),
+        title: Text("Orders", style: textStyles.heading2),
         scrolledUnderElevation: 0.0,
         surfaceTintColor: Colors.transparent,
       ),
@@ -119,57 +119,59 @@ class _SparkOrdersScreenContent extends StatelessWidget {
             final hasPendingOrders = state.pendingOrders.isNotEmpty;
 
             return Column(
+              spacing: 12,
               children: [
                 // Status Filter Chips
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
-                  ),
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      spacing: 8,
-                      children: statusOptions
-                          .map(
-                            (option) => FilterChip(
-                              checkmarkColor: colorScheme.onPrimary,
-                              label: Text(
-                                option.$2,
-                                style: TextStyle(
-                                  color: selectedStatus == option.$1
-                                      ? colorScheme.onPrimary
-                                      : colorScheme.onSurface,
-                                ),
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    spacing: 8,
+                    children: statusOptions
+                        .map(
+                          (option) => FilterChip(
+                            checkmarkColor: colorScheme.onPrimary,
+                            label: Text(
+                              option.$2,
+                              style: TextStyle(
+                                color: selectedStatus == option.$1
+                                    ? colorScheme.onPrimary
+                                    : colorScheme.onSurface.withValues(
+                                        alpha: .6,
+                                      ),
                               ),
-                              selected: selectedStatus == option.$1,
-                              onSelected: (sel) {
-                                onStatusChanged(sel ? option.$1 : null);
-                                context.read<SparkOrdersBloc>().add(
-                                  SparkOrderStatusFilterChanged(
-                                    status: sel ? option.$1 : null,
-                                  ),
-                                );
-                              },
-                              backgroundColor: Colors.transparent,
-                              selectedColor: colorScheme.primary,
-                              side: BorderSide(color: colorScheme.primary),
                             ),
-                          )
-                          .toList(),
-                    ),
+                            selected: selectedStatus == option.$1,
+                            onSelected: (sel) {
+                              onStatusChanged(sel ? option.$1 : null);
+                              context.read<SparkOrdersBloc>().add(
+                                SparkOrderStatusFilterChanged(
+                                  status: sel ? option.$1 : null,
+                                ),
+                              );
+                            },
+                            backgroundColor: Colors.transparent,
+                            selectedColor: colorScheme.primary,
+                            side: BorderSide.none,
+                          ),
+                        )
+                        .toList(),
                   ),
                 ),
+
                 // Banner for pending orders
                 if (hasPendingOrders && selectedStatus == null)
                   _OrderNotificationBanner(
                     pendingCount: state.pendingOrders.length,
                     onTap: () {
+                      final bloc = context.read<SparkOrdersBloc>();
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) =>
-                              const SparkOrderRequestsScreen(),
+                          builder: (routeContext) => OrderDetailsScreen(
+                            order: state.pendingOrders.first,
+                            isSme: false,
+                            sparksOrdersBloc: bloc,
+                          ),
                         ),
                       );
                     },
@@ -208,7 +210,22 @@ class _SparkOrdersScreenContent extends StatelessWidget {
                               const SizedBox(height: 12),
                           itemBuilder: (context, index) {
                             final order = state.orders[index];
-                            return SparkOrderCard(order: order);
+                            final bloc = context.read<SparkOrdersBloc>();
+                            return SparkOrderCard(
+                              order: order,
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (routeContext) => OrderDetailsScreen(
+                                      order: order,
+                                      isSme: false,
+                                      sparksOrdersBloc: bloc,
+                                    ),
+                                  ),
+                                );
+                              },
+                            );
                           },
                         ),
                 ),
@@ -237,44 +254,29 @@ class _OrderNotificationBanner extends StatelessWidget {
     final textStyles = Theme.of(context).textStyles;
     final colorScheme = Theme.of(context).colorScheme;
 
-    return Padding(
-      padding: const EdgeInsets.all(10),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                colorScheme.primary,
-                colorScheme.primary.withValues(alpha: 0.8),
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        decoration: BoxDecoration(
+          color: colorScheme.surface,
+          boxShadow: [
+            BoxShadow(
+              color: colorScheme.surface.withValues(alpha: 0.3),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
             ),
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(
-                color: colorScheme.primary.withValues(alpha: 0.3),
-                blurRadius: 8,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
+          ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16),
           child: Row(
             spacing: 16,
             children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: colorScheme.onPrimary.withValues(alpha: 0.2),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.notifications_active,
-                  color: colorScheme.onPrimary,
-                  size: 28,
-                ),
+              Icon(
+                Icons.notifications_active,
+                color: colorScheme.primary,
+                size: 24,
               ),
               Expanded(
                 child: Column(
@@ -284,15 +286,17 @@ class _OrderNotificationBanner extends StatelessWidget {
                     Text(
                       '$pendingCount New Request${pendingCount > 1 ? 's' : ''} Pending',
                       style: textStyles.heading4.copyWith(
-                        color: colorScheme.onPrimary,
-                        fontWeight: FontWeight.bold,
+                        height: 1,
+                        color: colorScheme.primary,
+                        fontWeight: FontWeight.w900,
                       ),
                     ),
                     Text(
                       'Tap to review and respond',
                       style: textStyles.paragraph.copyWith(
-                        fontSize: 14.0,
-                        color: colorScheme.onPrimary.withValues(alpha: 0.9),
+                        height: 1,
+                        fontSize: 12,
+                        color: colorScheme.primary.withValues(alpha: 0.7),
                       ),
                     ),
                   ],
@@ -300,7 +304,7 @@ class _OrderNotificationBanner extends StatelessWidget {
               ),
               Icon(
                 Icons.arrow_forward_ios,
-                color: colorScheme.onPrimary,
+                color: colorScheme.primary.withValues(alpha: 0.7),
                 size: 20,
               ),
             ],

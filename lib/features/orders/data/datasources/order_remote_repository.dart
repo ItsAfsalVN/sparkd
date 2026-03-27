@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:logger/logger.dart';
 import 'package:sparkd/features/orders/data/models/order_model.dart';
@@ -26,7 +28,13 @@ class OrderRemoteRepositoryImplementation implements OrderRemoteRepository {
       final orderModel = OrderModel(order: order);
       final docRef = await _firestore
           .collection("orders")
-          .add(orderModel.toJson());
+          .add(orderModel.toJson())
+          .timeout(
+            const Duration(seconds: 15),
+            onTimeout: () => throw TimeoutException(
+              'Failed to create order request - connection timeout',
+            ),
+          );
       logger.i('Order created with ID: ${docRef.id}');
       return docRef.id;
     } catch (e) {
@@ -41,8 +49,19 @@ class OrderRemoteRepositoryImplementation implements OrderRemoteRepository {
     Map<String, dynamic> updates,
   ) async {
     try {
-      await _firestore.collection("orders").doc(orderId).update(updates);
+      await _firestore
+          .collection("orders")
+          .doc(orderId)
+          .update(updates)
+          .timeout(
+            const Duration(seconds: 15),
+            onTimeout: () => throw TimeoutException(
+              'Failed to update order - connection timeout',
+            ),
+          );
+      logger.i('Order $orderId status updated successfully');
     } catch (e) {
+      logger.e('Failed to update order $orderId: $e');
       throw Exception('Failed to update order: $e');
     }
   }
@@ -50,7 +69,16 @@ class OrderRemoteRepositoryImplementation implements OrderRemoteRepository {
   @override
   Future<OrderEntity> getOrder(String orderId) async {
     try {
-      final doc = await _firestore.collection("orders").doc(orderId).get();
+      final doc = await _firestore
+          .collection("orders")
+          .doc(orderId)
+          .get()
+          .timeout(
+            const Duration(seconds: 15),
+            onTimeout: () => throw TimeoutException(
+              'Failed to fetch order - connection timeout',
+            ),
+          );
       if (!doc.exists) {
         throw Exception('Order not found');
       }
@@ -58,6 +86,7 @@ class OrderRemoteRepositoryImplementation implements OrderRemoteRepository {
       data['id'] = doc.id;
       return OrderModel.fromJson(data).order;
     } catch (e) {
+      logger.e('Failed to get order $orderId: $e');
       throw Exception('Failed to get order: $e');
     }
   }
@@ -71,6 +100,17 @@ class OrderRemoteRepositoryImplementation implements OrderRemoteRepository {
           .where("sparkID", isEqualTo: sparkId)
           .orderBy("createdAt", descending: true)
           .snapshots()
+          .timeout(
+            const Duration(seconds: 30),
+            onTimeout: (sink) {
+              logger.e('Firestore stream timeout for spark orders');
+              sink.addError(
+                Exception(
+                  'Firestore connection timeout. Please check your internet connection.',
+                ),
+              );
+            },
+          )
           .map((snapshot) {
             logger.i(
               'Received snapshot with ${snapshot.docs.length} documents',
@@ -89,22 +129,43 @@ class OrderRemoteRepositoryImplementation implements OrderRemoteRepository {
               }
             }
             return orders;
+          })
+          .handleError((error) {
+            logger.e('Error in getSparkOrders stream: $error');
+            // Return empty list on error to allow UI to recover
+            return <OrderEntity>[];
           });
     } catch (e) {
-      logger.e('Error in getSparkOrders: $e');
-      throw Exception('Failed to get spark orders: $e');
+      logger.e('Error setting up getSparkOrders stream: $e');
+      // Return error stream that the app can handle
+      return Stream.error(Exception('Failed to set up orders stream: $e'));
     }
   }
 
   @override
   Stream<List<OrderEntity>> getSmeOrders(String smeId) {
+    logger.i('Setting up stream for SME orders: $smeId');
     try {
       return _firestore
           .collection("orders")
           .where("smeID", isEqualTo: smeId)
           .orderBy("createdAt", descending: true)
           .snapshots()
+          .timeout(
+            const Duration(seconds: 30),
+            onTimeout: (sink) {
+              logger.e('Firestore stream timeout for SME orders');
+              sink.addError(
+                Exception(
+                  'Firestore connection timeout. Please check your internet connection.',
+                ),
+              );
+            },
+          )
           .map((snapshot) {
+            logger.i(
+              'Received SME orders snapshot with ${snapshot.docs.length} documents',
+            );
             final orders = <OrderEntity>[];
             for (final doc in snapshot.docs) {
               try {
@@ -112,14 +173,21 @@ class OrderRemoteRepositoryImplementation implements OrderRemoteRepository {
                 data['id'] = doc.id;
                 orders.add(OrderModel.fromJson(data).order);
               } catch (e) {
-                logger.e('Error parsing order ${doc.id}: $e');
+                logger.e('Error parsing SME order ${doc.id}: $e');
                 // Skip this order and continue with others
               }
             }
             return orders;
+          })
+          .handleError((error) {
+            logger.e('Error in getSmeOrders stream: $error');
+            // Return empty list on error to allow UI to recover
+            return <OrderEntity>[];
           });
     } catch (e) {
-      throw Exception('Failed to get sme orders: $e');
+      logger.e('Error setting up getSmeOrders stream: $e');
+      // Return error stream that the app can handle
+      return Stream.error(Exception('Failed to set up SME orders stream: $e'));
     }
   }
 }

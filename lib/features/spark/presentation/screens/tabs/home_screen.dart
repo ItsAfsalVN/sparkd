@@ -6,7 +6,7 @@ import 'package:sparkd/core/utils/app_text_theme_extension.dart';
 import 'package:sparkd/features/orders/presentation/bloc/spark_orders_bloc.dart';
 import 'package:sparkd/features/orders/presentation/bloc/spark_orders_event.dart';
 import 'package:sparkd/features/orders/presentation/bloc/spark_orders_state.dart';
-import 'package:sparkd/features/orders/presentation/screens/spark_order_requests_screen.dart';
+import 'package:sparkd/features/orders/presentation/screens/order_details_screen.dart';
 import 'package:sparkd/features/orders/presentation/screens/spark_notifications_screen.dart';
 
 class SparkHomeScreen extends StatelessWidget {
@@ -91,7 +91,11 @@ class SparkHomeScreen extends StatelessWidget {
                               ),
                             );
                           },
-                          icon: Icon(Icons.notifications, size: 32),
+                          icon: Icon(
+                            Icons.notifications,
+                            size: 28,
+                            color: colorScheme.onSurface.withValues(alpha: 0.7),
+                          ),
                         ),
                       );
                     },
@@ -110,11 +114,15 @@ class SparkHomeScreen extends StatelessWidget {
                     _OrderNotificationBanner(
                       pendingCount: state.pendingOrders.length,
                       onTap: () {
+                        final bloc = context.read<SparkOrdersBloc>();
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) =>
-                                const SparkOrderRequestsScreen(),
+                            builder: (routeContext) => OrderDetailsScreen(
+                              order: state.pendingOrders.first,
+                              isSme: false,
+                              sparksOrdersBloc: bloc,
+                            ),
                           ),
                         );
                       },
@@ -149,10 +157,10 @@ class _OrderNotificationBanner extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: colorScheme.primary,
+          color: colorScheme.surface,
           boxShadow: [
             BoxShadow(
-              color: colorScheme.primary.withValues(alpha: 0.3),
+              color: colorScheme.surface.withValues(alpha: 0.3),
               blurRadius: 8,
               offset: const Offset(0, 4),
             ),
@@ -163,24 +171,20 @@ class _OrderNotificationBanner extends StatelessWidget {
           children: [
             Icon(
               Icons.notifications_active,
-              color: colorScheme.onPrimary,
+              color: colorScheme.primary,
               size: 24,
             ),
             Expanded(
               child: Text(
                 '$pendingCount New Order${pendingCount > 1 ? 's' : ''} Pending',
                 style: textStyles.heading4.copyWith(
-                  color: colorScheme.onPrimary,
+                  color: colorScheme.primary,
                   fontWeight: FontWeight.w900,
                 ),
               ),
             ),
 
-            Icon(
-              Icons.arrow_forward_ios,
-              color: colorScheme.onPrimary,
-              size: 20,
-            ),
+            Icon(Icons.arrow_forward_ios, color: colorScheme.primary, size: 20),
           ],
         ),
       ),

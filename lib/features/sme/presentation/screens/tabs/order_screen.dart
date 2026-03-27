@@ -1,10 +1,10 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_launcher_icons/xml_templates.dart';
 import 'package:sparkd/core/services/service_locator.dart';
 import 'package:sparkd/core/utils/app_text_theme_extension.dart';
 import 'package:sparkd/features/orders/presentation/bloc/sme_order_bloc.dart';
+import 'package:sparkd/features/orders/presentation/screens/order_details_screen.dart';
 import 'package:sparkd/features/spark/presentation/widgets/spark_order_card.dart';
 
 class SmeOrdersScreen extends StatefulWidget {
@@ -194,7 +194,22 @@ class _OrderScreenContent extends StatelessWidget {
                         const SizedBox(height: 12),
                     itemBuilder: (context, index) {
                       final order = state.orders[index];
-                      return SparkOrderCard(order: order);
+                      final smeOrderBloc = context.read<SmeOrderBloc>();
+                      return SparkOrderCard(
+                        order: order,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (routeContext) => OrderDetailsScreen(
+                                order: order,
+                                isSme: true,
+                                smeOrderBloc: smeOrderBloc,
+                              ),
+                            ),
+                          );
+                        },
+                      );
                     },
                   );
                 }

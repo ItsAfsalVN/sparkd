@@ -55,4 +55,31 @@ class UserHelper {
       return null;
     }
   }
+
+  static Future<String?> getSmeBusinessName(String smeId) async {
+    try {
+      logger.d("UserHelper: Fetching SME business name for UID: $smeId");
+
+      final doc = await _firestore.collection('users').doc(smeId).get();
+
+      if (!doc.exists || doc.data() == null) {
+        logger.w("UserHelper: No user found for UID: $smeId");
+        return null;
+      }
+
+      final data = doc.data()!;
+      final businessName = data['businessData']['businessName'] as String?;
+
+      logger.i(
+        "UserHelper: SME business name fetched successfully for UID: $smeId",
+      );
+      return businessName;
+    } catch (e) {
+      logger.e(
+        "UserHelper: Failed to fetch SME business name for UID: $smeId",
+        error: e,
+      );
+      return null;
+    }
+  }
 }

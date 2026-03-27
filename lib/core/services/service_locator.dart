@@ -31,6 +31,11 @@ import 'package:sparkd/features/orders/domain/usecases/update_order_status.dart'
 import 'package:sparkd/features/orders/presentation/bloc/order_bloc.dart';
 import 'package:sparkd/features/orders/presentation/bloc/sme_order_bloc.dart';
 import 'package:sparkd/features/orders/presentation/bloc/spark_orders_bloc.dart';
+import 'package:sparkd/features/orders/data/datasources/workshop_remote_data_source.dart';
+import 'package:sparkd/features/orders/data/repositories/workshop_repository_impl.dart';
+import 'package:sparkd/features/orders/domain/repository/workshop_repository.dart';
+import 'package:sparkd/features/orders/domain/usecases/workshop_usecases.dart';
+import 'package:sparkd/features/orders/presentation/bloc/workshop_bloc.dart';
 import 'package:sparkd/features/spark/data/datasources/static_skill_data_source.dart';
 import 'package:sparkd/features/gigs/data/datasources/gig_remote_data_source.dart';
 import 'package:sparkd/features/gigs/data/repositories/gig_repository_impl.dart';
@@ -171,7 +176,18 @@ Future<void> init() async {
     ),
   );
 
-  sl.registerFactory(() => SmeOrderBloc(getSmeOrdersUsecase: sl()));
+  sl.registerFactory(
+    () =>
+        SmeOrderBloc(getSmeOrdersUsecase: sl(), updateOrderStatusUseCase: sl()),
+  );
+
+  sl.registerFactory(
+    () => WorkshopBloc(
+      getMessagesUseCase: sl(),
+      sendMessageUseCase: sl(),
+      deleteMessageUseCase: sl(),
+    ),
+  );
 
   sl.registerLazySingleton(
     () => CreateOrderRequestUseCase(orderRepository: sl()),
@@ -185,12 +201,24 @@ Future<void> init() async {
 
   sl.registerLazySingleton(() => UpdateOrderStatusUseCase(repository: sl()));
 
+  sl.registerLazySingleton(() => GetWorkshopMessagesUseCase(sl()));
+  sl.registerLazySingleton(() => SendWorkshopMessageUseCase(sl()));
+  sl.registerLazySingleton(() => DeleteWorkshopMessageUseCase(sl()));
+
   sl.registerLazySingleton<OrderRepository>(
     () => OrderRepositoryImplementation(remoteRepository: sl()),
   );
 
   sl.registerLazySingleton<OrderRemoteRepository>(
     () => OrderRemoteRepositoryImplementation(firestore: sl()),
+  );
+
+  sl.registerLazySingleton<WorkshopRepository>(
+    () => WorkshopRepositoryImpl(sl()),
+  );
+
+  sl.registerLazySingleton<WorkshopRemoteDataSource>(
+    () => WorkshopRemoteDataSourceImpl(sl()),
   );
 
   // --- External ---

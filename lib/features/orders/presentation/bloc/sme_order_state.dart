@@ -37,3 +37,25 @@ class SmeOrderBlocError extends SmeOrderState {
   @override
   List<Object?> get props => [message, currentStatus];
 }
+
+class OrderStatusUpdateInProgress extends SmeOrderState {
+ const OrderStatusUpdateInProgress();
+}
+
+class OrderStatusUpdateSuccess extends SmeOrderState {
+  final String orderId;
+
+  const OrderStatusUpdateSuccess({required this.orderId});
+
+  @override
+  List<Object> get props => [orderId];
+}
+
+class OrderStatusUpdateFailure extends SmeOrderState {
+  final String message;
+
+  const OrderStatusUpdateFailure({required this.message});
+
+  @override
+  List<Object> get props => [message];
+}

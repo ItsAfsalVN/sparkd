@@ -3,10 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:sparkd/core/services/service_locator.dart';
 import 'package:sparkd/core/utils/app_text_theme_extension.dart';
+import 'package:sparkd/features/orders/domain/entities/order_entity.dart';
 import 'package:sparkd/features/orders/presentation/bloc/spark_orders_bloc.dart';
 import 'package:sparkd/features/orders/presentation/bloc/spark_orders_event.dart';
 import 'package:sparkd/features/orders/presentation/bloc/spark_orders_state.dart';
-import 'package:sparkd/features/orders/presentation/screens/spark_order_requests_screen.dart';
+import 'package:sparkd/features/orders/presentation/screens/order_details_screen.dart';
 
 class SparkNotificationsScreen extends StatelessWidget {
   const SparkNotificationsScreen({super.key});
@@ -39,7 +40,6 @@ class SparkNotificationsScreen extends StatelessWidget {
 
             if (state is SparkOrdersError) {
               return Center(
-                
                 child: Column(
                   spacing: 16,
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -69,7 +69,7 @@ class SparkNotificationsScreen extends StatelessWidget {
                   'subtitle': 'Order for ${order.gigTitle}',
                   'timestamp': order.createdAt,
                   'isRead': false,
-                  'orderId': order.id,
+                  'order': order,
                 });
               }
 
@@ -102,9 +102,8 @@ class SparkNotificationsScreen extends StatelessWidget {
                 );
               }
 
-              return ListView.separated(
+              return ListView.builder(
                 itemCount: allNotifications.length,
-                separatorBuilder: (context, index) => const SizedBox(height: 8),
                 itemBuilder: (context, index) {
                   final notification = allNotifications[index];
                   return _NotificationCard(notification: notification);
@@ -134,21 +133,25 @@ class _NotificationCard extends StatelessWidget {
     return InkWell(
       onTap: () {
         if (notification['type'] == 'order_request') {
+          final order = notification['order'] as OrderEntity;
+          final bloc = context.read<SparkOrdersBloc>();
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => const SparkOrderRequestsScreen(),
+              builder: (routeContext) => OrderDetailsScreen(
+                order: order,
+                isSme: false,
+                sparksOrdersBloc: bloc,
+              ),
             ),
           );
         }
       },
       borderRadius: BorderRadius.circular(12),
       child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 20),
+        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 16),
         decoration: BoxDecoration(
-          color: isRead
-              ? colorScheme.surface
-              : colorScheme.primaryContainer.withValues(alpha: 0.2),
+          color: colorScheme.surface,
           border: Border.symmetric(
             horizontal: BorderSide(
               color: isRead
@@ -161,18 +164,6 @@ class _NotificationCard extends StatelessWidget {
         child: Row(
           spacing: 12,
           children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: colorScheme.primaryContainer,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                _getIconForType(notification['type'] as String),
-                color: colorScheme.primary,
-                size: 24,
-              ),
-            ),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -181,21 +172,23 @@ class _NotificationCard extends StatelessWidget {
                   Text(
                     notification['title'] as String,
                     style: textStyles.heading4.copyWith(
-                      fontSize: 16.0,
+                      height: 1,
                       fontWeight: isRead ? FontWeight.normal : FontWeight.bold,
                     ),
                   ),
                   Text(
                     notification['subtitle'] as String,
                     style: textStyles.paragraph.copyWith(
-                      fontSize: 14.0,
+                      height: 1,
+                      fontSize: 12.0,
                       color: colorScheme.onSurface.withValues(alpha: 0.7),
                     ),
                   ),
                   Text(
                     _formatTimestamp(notification['timestamp'] as DateTime),
                     style: textStyles.subtext.copyWith(
-                      fontSize: 12.0,
+                      height: 1,
+                      fontSize: 10.0,
                       color: colorScheme.onSurface.withValues(alpha: 0.5),
                     ),
                   ),
@@ -215,19 +208,6 @@ class _NotificationCard extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  IconData _getIconForType(String type) {
-    switch (type) {
-      case 'order_request':
-        return Icons.shopping_bag;
-      case 'order_update':
-        return Icons.update;
-      case 'payment':
-        return Icons.payment;
-      default:
-        return Icons.notifications;
-    }
   }
 
   String _formatTimestamp(DateTime timestamp) {

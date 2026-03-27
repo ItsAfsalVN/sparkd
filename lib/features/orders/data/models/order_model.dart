@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:logger/logger.dart';
 import 'package:sparkd/features/gigs/domain/entities/requirement_entity.dart';
 import 'package:sparkd/features/orders/domain/entities/order_entity.dart';
 import 'package:sparkd/features/orders/domain/entities/order_status.dart';
@@ -33,6 +32,10 @@ class OrderModel {
             : null,
         paymentID: json["paymentID"] as String?,
         rejectionReason: json["rejectionReason"] as String?,
+        paidAt: json["paidAt"] != null
+            ? _parseDateTime(json["paidAt"])
+            : null,
+        deliveredAt: json["deliveredAt"] != null ? _parseDateTime(json["deliveredAt"]) : null,
       ),
     );
   }

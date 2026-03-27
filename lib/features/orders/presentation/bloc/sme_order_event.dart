@@ -44,3 +44,12 @@ class SmeOrderRefreshRequested extends SmeOrderEvent {
   @override
   List<Object?> get props => [smeId, status];
 }
+
+class MarkOrderAsPaidEvent extends SmeOrderEvent{
+  final String orderId;
+
+  const MarkOrderAsPaidEvent({required this.orderId});
+
+  @override
+  List<Object> get props => [orderId];
+}

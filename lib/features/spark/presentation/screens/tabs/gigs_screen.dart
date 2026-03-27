@@ -33,7 +33,7 @@ class _SparkGigScreenState extends State<SparkGigScreen> {
       child: Scaffold(
         appBar: AppBar(
           elevation: 0,
-          title: Text("My Gigs", style: textStyles.heading2),
+          title: Text("Gigs", style: textStyles.heading2),
           scrolledUnderElevation: 0.0,
           surfaceTintColor: Colors.transparent,
         ),

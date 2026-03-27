@@ -1,23 +1,31 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:sparkd/features/orders/domain/entities/order_entity.dart';
 import 'package:sparkd/features/orders/domain/entities/order_status.dart';
 import 'package:sparkd/features/orders/domain/usecases/get_sme_orders_usecase.dart';
+import 'package:sparkd/features/orders/domain/usecases/update_order_status.dart';
+import 'package:sparkd/core/utils/logger.dart';
 
 part 'sme_order_event.dart';
 part 'sme_order_state.dart';
 
 class SmeOrderBloc extends Bloc<SmeOrderEvent, SmeOrderState> {
+  final UpdateOrderStatusUseCase _updateOrderStatusUseCase;
   final GetSmeOrdersUsecase _getSmeOrdersUsecase;
   String? _currentSmeId;
   String? _currentStatusFilter;
 
-  SmeOrderBloc({required GetSmeOrdersUsecase getSmeOrdersUsecase})
-    : _getSmeOrdersUsecase = getSmeOrdersUsecase,
-      super(SmeOrderBlocInitial()) {
+  SmeOrderBloc({
+    required GetSmeOrdersUsecase getSmeOrdersUsecase,
+    required UpdateOrderStatusUseCase updateOrderStatusUseCase,
+  }) : _getSmeOrdersUsecase = getSmeOrdersUsecase,
+       _updateOrderStatusUseCase = updateOrderStatusUseCase,
+       super(SmeOrderBlocInitial()) {
     on<SmeOrdersRequested>(_onSmeOrdersRequested);
     on<SmeOrderStatusFilterChanged>(_onSmeOrderStatusFilterChanged);
     on<SmeOrderRefreshRequested>(_onSmeOrderRefreshRequested);
+    on<MarkOrderAsPaidEvent>(_onMarkOrderAsPaidEvent);
   }
 
   Future<void> _onSmeOrdersRequested(
@@ -96,6 +104,25 @@ class SmeOrderBloc extends Bloc<SmeOrderEvent, SmeOrderState> {
       );
     } catch (e) {
       return null;
+    }
+  }
+
+  Future<void> _onMarkOrderAsPaidEvent(
+    MarkOrderAsPaidEvent event,
+    Emitter<SmeOrderState> emit,
+  ) async {
+    try {
+      emit(OrderStatusUpdateInProgress());
+
+      await _updateOrderStatusUseCase.call(event.orderId, {
+        'status': OrderStatus.inProgress.toString().split('.').last,
+        'paidAt': Timestamp.now(),
+      });
+
+      emit(OrderStatusUpdateSuccess(orderId: event.orderId));
+    } catch (e) {
+      logger.e('Error marking order as paid: $e');
+      emit(OrderStatusUpdateFailure(message: e.toString()));
     }
   }
 }

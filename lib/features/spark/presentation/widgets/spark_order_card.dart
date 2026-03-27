@@ -8,8 +8,9 @@ import 'package:timeago/timeago.dart' as timeago;
 
 class SparkOrderCard extends StatelessWidget {
   final OrderEntity order;
+  final VoidCallback? onTap;
 
-  const SparkOrderCard({super.key, required this.order});
+  const SparkOrderCard({super.key, required this.order, this.onTap});
 
   String _statusLabel(OrderStatus status) {
     switch (status) {
@@ -50,124 +51,128 @@ class SparkOrderCard extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final statusColor = _statusColor(colorScheme, order.status);
 
-    return UiCard(
-      child: Column(
-        spacing: 8,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: Image.network(
-              order.gigThumbnail,
-              width: double.infinity,
-              height: 160,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                return Container(
-                  width: double.infinity,
-                  height: 160,
-                  color: colorScheme.surfaceContainerHighest,
-                  alignment: Alignment.center,
-                  child: Icon(
-                    Icons.image_not_supported_outlined,
-                    color: colorScheme.onSurface.withValues(alpha: 0.3),
-                  ),
-                );
-              },
+    return GestureDetector(
+      onTap: onTap,
+      child: UiCard(
+        child: Column(
+          spacing: 8,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Image.network(
+                order.gigThumbnail,
+                width: double.infinity,
+                height: 160,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    width: double.infinity,
+                    height: 160,
+                    color: colorScheme.surfaceContainerHighest,
+                    alignment: Alignment.center,
+                    child: Icon(
+                      Icons.image_not_supported_outlined,
+                      color: colorScheme.onSurface.withValues(alpha: 0.3),
+                    ),
+                  );
+                },
+              ),
             ),
-          ),
-          Row(
-            children: [
-              Expanded(
-                flex: 3,
-                child: Text(
-                  order.gigTitle,
-                  style: textStyles.heading4,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              Expanded(
-                flex: 2,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: statusColor.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                  child: Center(
-                    child: Text(
-                      _statusLabel(order.status),
-                      style: textStyles.subtext.copyWith(
-                        color: statusColor,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
+            Row(
+              children: [
+                Expanded(
+                  flex: 3,
+                  child: Text(
+                    order.gigTitle,
+                    style: textStyles.heading4,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
-              ),
-            ],
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  SvgPicture.asset(
-                    "assets/icons/rupee.svg",
-                    width: 24,
-                    height: 24,
-                    colorFilter: ColorFilter.mode(
-                      colorScheme.onSurface.withValues(alpha: .8),
-                      BlendMode.srcIn,
+                Expanded(
+                  flex: 2,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
                     ),
-                  ),
-                  Text(
-                    order.gigPrice.toStringAsFixed(0),
-                    style: textStyles.heading2.copyWith(
-                      color: colorScheme.onSurface.withValues(alpha: .8),
-                      height: 1,
+                    decoration: BoxDecoration(
+                      color: statusColor.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(999),
                     ),
-                  ),
-                ],
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    "Created:",
-                    style: textStyles.subtext.copyWith(
-                      height: 1,
-                      fontWeight: FontWeight.w900,
-                      color: colorScheme.onSurface.withValues(alpha: .3),
-                    ),
-                  ),
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.access_time,
-                        size: 16,
-                        color: colorScheme.onSurface.withValues(alpha: .3),
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        timeago.format(order.createdAt),
+                    child: Center(
+                      child: Text(
+                        _statusLabel(order.status),
                         style: textStyles.subtext.copyWith(
-                          color: colorScheme.onSurface.withValues(alpha: .3),
+                          fontSize: 12,
+                          color: statusColor,
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
-                    ],
+                    ),
                   ),
-                ],
-              ),
-            ],
-          ),
-        ],
+                ),
+              ],
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    SvgPicture.asset(
+                      "assets/icons/rupee.svg",
+                      width: 24,
+                      height: 24,
+                      colorFilter: ColorFilter.mode(
+                        colorScheme.onSurface.withValues(alpha: .8),
+                        BlendMode.srcIn,
+                      ),
+                    ),
+                    Text(
+                      order.gigPrice.toStringAsFixed(0),
+                      style: textStyles.heading2.copyWith(
+                        color: colorScheme.onSurface.withValues(alpha: .8),
+                        height: 1,
+                      ),
+                    ),
+                  ],
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      "Created:",
+                      style: textStyles.subtext.copyWith(
+                        height: 1,
+                        fontWeight: FontWeight.w900,
+                        color: colorScheme.onSurface.withValues(alpha: .3),
+                      ),
+                    ),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.access_time,
+                          size: 16,
+                          color: colorScheme.onSurface.withValues(alpha: .3),
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          timeago.format(order.createdAt),
+                          style: textStyles.subtext.copyWith(
+                            color: colorScheme.onSurface.withValues(alpha: .3),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
