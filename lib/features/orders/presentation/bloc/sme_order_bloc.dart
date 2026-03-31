@@ -117,6 +117,9 @@ class SmeOrderBloc extends Bloc<SmeOrderEvent, SmeOrderState> {
       await _updateOrderStatusUseCase.call(event.orderId, {
         'status': OrderStatus.inProgress.toString().split('.').last,
         'paidAt': Timestamp.now(),
+        'deadline': event.deadline != null
+            ? Timestamp.fromDate(event.deadline!)
+            : null,
       });
 
       emit(OrderStatusUpdateSuccess(orderId: event.orderId));

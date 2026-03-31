@@ -108,27 +108,31 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
     final actionLabel = _getNextActionLabel();
     if (actionLabel == null) return;
 
-    // Show confirmation dialog
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Confirm Action'),
-        content: Text('Are you sure you want to $actionLabel?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _performOrderAction();
-            },
-            child: const Text('Confirm'),
-          ),
-        ],
-      ),
-    );
+    if (actionLabel != 'Go to Workshop') {
+      // Show confirmation dialog
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text('Confirm Action'),
+          content: Text('Are you sure you want to $actionLabel?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                _performOrderAction();
+              },
+              child: const Text('Confirm'),
+            ),
+          ],
+        ),
+      );
+    } else {
+      _performOrderAction();
+    }
   }
 
   void _performOrderAction() {
@@ -144,10 +148,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
         MaterialPageRoute(
           builder: (context) => BlocProvider(
             create: (_) => sl<WorkshopBloc>(),
-            child: WorkshopScreen(
-              order: widget.order,
-              isSme: widget.isSme,
-            ),
+            child: WorkshopScreen(order: widget.order, isSme: widget.isSme),
           ),
         ),
       );
@@ -156,7 +157,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
 
     if (widget.isSme && widget.order.status == OrderStatus.pendingPayment) {
       if (widget.smeOrderBloc == null) return;
-      widget.smeOrderBloc!.add(MarkOrderAsPaidEvent(orderId: widget.order.id!));
+      widget.smeOrderBloc!.add(MarkOrderAsPaidEvent(orderId: widget.order.id!, deadline: widget.order.deadline));
       return;
     }
 

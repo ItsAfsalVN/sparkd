@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:sparkd/core/presentation/widgets/custom_message_box.dart';
 import 'package:sparkd/core/utils/app_text_theme_extension.dart';
 import 'package:sparkd/core/utils/snackbar_helper.dart';
+import 'package:sparkd/core/utils/user_helper.dart';
 import 'package:sparkd/features/orders/domain/entities/order_entity.dart';
 import 'package:sparkd/features/orders/domain/entities/workshop_message_entity.dart';
 import 'package:sparkd/features/orders/presentation/bloc/workshop_bloc.dart';
@@ -22,6 +24,8 @@ class WorkshopScreen extends StatefulWidget {
 class _WorkshopScreenState extends State<WorkshopScreen> {
   late TextEditingController _messageController;
   late ScrollController _scrollController;
+  bool _isLoadingName = true;
+  String? _otherPartyName;
 
   @override
   void initState() {
@@ -31,6 +35,29 @@ class _WorkshopScreenState extends State<WorkshopScreen> {
     context.read<WorkshopBloc>().add(
       WorkshopLoadMessages(orderId: widget.order.id!),
     );
+    _loadOtherPartyName();
+  }
+
+  Future<void> _loadOtherPartyName() async {
+    try {
+      final name = widget.isSme
+          ? await UserHelper.getUserName(widget.order.sparkID)
+          : await UserHelper.getSmeBusinessName(widget.order.smeID);
+
+      if (mounted) {
+        setState(() {
+          _otherPartyName = name ?? 'Unknown';
+          _isLoadingName = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _otherPartyName = 'Unknown';
+          _isLoadingName = false;
+        });
+      }
+    }
   }
 
   @override
@@ -138,28 +165,21 @@ class _WorkshopScreenState extends State<WorkshopScreen> {
                       return Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
-                          spacing: 8,
+                          spacing: 2,
                           children: [
                             Icon(
                               Icons.chat_outlined,
-                              size: 48,
+                              size: 32,
                               color: colorScheme.onSurface.withValues(
                                 alpha: 0.3,
                               ),
                             ),
                             Text(
                               'No messages yet',
-                              style: textStyles.heading4.copyWith(
+                              style: textStyles.paragraph.copyWith(
+                                fontSize: 12,
                                 color: colorScheme.onSurface.withValues(
                                   alpha: 0.5,
-                                ),
-                              ),
-                            ),
-                            Text(
-                              'Start the conversation',
-                              style: textStyles.subtext.copyWith(
-                                color: colorScheme.onSurface.withValues(
-                                  alpha: 0.3,
                                 ),
                               ),
                             ),
@@ -256,57 +276,89 @@ class _WorkshopScreenState extends State<WorkshopScreen> {
                 },
               ),
             ),
+            // Message input box
             Container(
-              decoration: BoxDecoration(
-                color: colorScheme.surface,
-                border: Border(
-                  top: BorderSide(
-                    color: colorScheme.onSurface.withValues(alpha: 0.1),
-                  ),
-                ),
-              ),
-              padding: EdgeInsets.fromLTRB(
-                12,
-                12,
-                12,
-                12 + MediaQuery.of(context).viewInsets.bottom,
-              ),
-              child: Row(
-                spacing: 8,
+              decoration: BoxDecoration(color: colorScheme.surface),
+              padding: EdgeInsets.all(10),
+              child: Column(
                 children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _messageController,
-                      decoration: InputDecoration(
-                        hintText: 'Type a message...',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(24),
-                          borderSide: BorderSide(
-                            color: colorScheme.onSurface.withValues(alpha: 0.2),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // Client and spark details
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            widget.isSme ? "Brought by" : "Client",
+                            style: textStyles.subtext.copyWith(
+                              color: colorScheme.onSurface.withValues(
+                                alpha: 0.5,
+                              ),
+                            ),
+                          ),
+                          if (_isLoadingName)
+                            SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  colorScheme.primary,
+                                ),
+                              ),
+                            )
+                          else
+                            Text(
+                              _otherPartyName ?? 'Unknown',
+                              style: textStyles.heading5.copyWith(height: 1),
+                            ),
+                        ],
+                      ),
+
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            "Due in",
+                            style: textStyles.subtext.copyWith(
+                              color: colorScheme.onSurface.withValues(
+                                alpha: 0.5,
+                              ),
+                            ),
+                          ),
+                          Text(
+                            widget.order.deadline != null
+                                ? '${widget.order.deadline!.difference(DateTime.now()).inDays} days'
+                                : 'N/A',
+                            style: textStyles.heading5.copyWith(height: 1),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 8),
+                  Row(
+                    spacing: 8,
+                    children: [
+                      Expanded(
+                        child: CustomMessageBox(controller: _messageController),
+                      ),
+                      SizedBox(
+                        height: 50,
+                        width: 50,
+                        child: CircleAvatar(
+                          backgroundColor: colorScheme.primary,
+                          child: IconButton(
+                            icon: Icon(
+                              Icons.send_rounded,
+                              color: colorScheme.onPrimary,
+                            ),
+                            onPressed: _sendMessage,
                           ),
                         ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(24),
-                          borderSide: BorderSide(color: colorScheme.primary),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 10,
-                        ),
                       ),
-                      maxLines: null,
-                      minLines: 1,
-                    ),
-                  ),
-                  CircleAvatar(
-                    backgroundColor: colorScheme.primary,
-                    child: IconButton(
-                      icon: Icon(
-                        Icons.send_rounded,
-                        color: colorScheme.onPrimary,
-                      ),
-                      onPressed: _sendMessage,
-                    ),
+                    ],
                   ),
                 ],
               ),

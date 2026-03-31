@@ -41,7 +41,7 @@ class AppTextStyles {
   );
   static const TextStyle subtext = TextStyle(
     fontFamily: 'Urbanist',
-    fontWeight: FontWeight.normal,
+    fontWeight: FontWeight.w900,
     fontSize: 14,
     fontStyle: FontStyle.normal,
   );
