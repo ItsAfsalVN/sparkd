@@ -35,7 +35,11 @@ import 'package:sparkd/features/orders/data/datasources/workshop_remote_data_sou
 import 'package:sparkd/features/orders/data/repositories/workshop_repository_impl.dart';
 import 'package:sparkd/features/orders/domain/repository/workshop_repository.dart';
 import 'package:sparkd/features/orders/domain/usecases/workshop_usecases.dart';
+import 'package:sparkd/features/orders/domain/usecases/send_workshop_message_with_attachment.dart';
 import 'package:sparkd/features/orders/presentation/bloc/workshop_bloc.dart';
+import 'package:sparkd/features/orders/data/datasources/upload_file_remote_repository.dart';
+import 'package:sparkd/features/orders/data/repositories/upload_file_repository_implementation.dart';
+import 'package:sparkd/features/orders/domain/repository/upload_file_repository.dart';
 import 'package:sparkd/features/spark/data/datasources/static_skill_data_source.dart';
 import 'package:sparkd/features/gigs/data/datasources/gig_remote_data_source.dart';
 import 'package:sparkd/features/gigs/data/repositories/gig_repository_impl.dart';
@@ -204,6 +208,9 @@ Future<void> init() async {
   sl.registerLazySingleton(() => GetWorkshopMessagesUseCase(sl()));
   sl.registerLazySingleton(() => SendWorkshopMessageUseCase(sl()));
   sl.registerLazySingleton(() => DeleteWorkshopMessageUseCase(sl()));
+  sl.registerLazySingleton(
+    () => SendWorkshopMessageWithAttachment(workshopRepository: sl()),
+  );
 
   sl.registerLazySingleton<OrderRepository>(
     () => OrderRepositoryImplementation(remoteRepository: sl()),
@@ -213,12 +220,25 @@ Future<void> init() async {
     () => OrderRemoteRepositoryImplementation(firestore: sl()),
   );
 
+  sl.registerLazySingleton<UploadFileRemoteRepository>(
+    () => UploadFileRemoteRepositoryImplementation(),
+  );
+
+  sl.registerLazySingleton<UploadFileRepository>(
+    () => UploadFileRepositoryImplementation(
+      remoteRepository: sl(),
+    ),
+  );
+
   sl.registerLazySingleton<WorkshopRepository>(
     () => WorkshopRepositoryImpl(sl()),
   );
 
   sl.registerLazySingleton<WorkshopRemoteDataSource>(
-    () => WorkshopRemoteDataSourceImpl(sl()),
+    () => WorkshopRemoteDataSourceImpl(
+      sl(),
+      sl<UploadFileRepository>(),
+    ),
   );
 
   // --- External ---

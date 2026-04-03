@@ -1,6 +1,7 @@
 import 'package:sparkd/features/orders/domain/entities/workshop_message_entity.dart';
 import 'package:sparkd/features/orders/domain/repository/workshop_repository.dart';
 
+/// Get all workshop messages for a specific order
 class GetWorkshopMessagesUseCase {
   final WorkshopRepository _repository;
 
@@ -11,6 +12,7 @@ class GetWorkshopMessagesUseCase {
   }
 }
 
+/// Send a workshop message
 class SendWorkshopMessageUseCase {
   final WorkshopRepository _repository;
 
@@ -21,6 +23,7 @@ class SendWorkshopMessageUseCase {
   }
 }
 
+/// Delete a workshop message
 class DeleteWorkshopMessageUseCase {
   final WorkshopRepository _repository;
 

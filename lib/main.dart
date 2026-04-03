@@ -206,13 +206,17 @@ class _AppState extends State<App> {
           return const MaterialApp(
             debugShowCheckedModeBanner: false,
             home: Scaffold(
+              backgroundColor: AppColors.white100,
               body: Center(
                 child: Column(
+                  spacing: 2,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const CircularProgressIndicator(),
-                    const SizedBox(height: 16),
-                    const Text('Initializing app...'),
+                    CircularProgressIndicator(color: AppColors.secondary500),
+                    Text(
+                      'Initializing...',
+                      style: TextStyle(color: AppColors.secondary500),
+                    ),
                   ],
                 ),
               ),

@@ -157,7 +157,12 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
 
     if (widget.isSme && widget.order.status == OrderStatus.pendingPayment) {
       if (widget.smeOrderBloc == null) return;
-      widget.smeOrderBloc!.add(MarkOrderAsPaidEvent(orderId: widget.order.id!, deadline: widget.order.deadline));
+      widget.smeOrderBloc!.add(
+        MarkOrderAsPaidEvent(
+          orderId: widget.order.id!,
+          deliveryTimeInDays: widget.order.gigDeliveryTimeInDays,
+        ),
+      );
       return;
     }
 
@@ -539,8 +544,10 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                               ),
                               Expanded(
                                 child: SizedBox(
+                                  width: double.infinity,
                                   height: 48,
                                   child: CustomButton(
+                                    borderRadius: BorderRadius.circular(12),
                                     onPressed: _handleOrderAction,
                                     title: nextActionLabel ?? 'Accept Order',
                                     isLoading: _isLoading,

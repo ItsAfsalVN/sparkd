@@ -114,12 +114,13 @@ class SmeOrderBloc extends Bloc<SmeOrderEvent, SmeOrderState> {
     try {
       emit(OrderStatusUpdateInProgress());
 
+      final now = DateTime.now();
+      final deadline = now.add(Duration(days: event.deliveryTimeInDays));
+
       await _updateOrderStatusUseCase.call(event.orderId, {
         'status': OrderStatus.inProgress.toString().split('.').last,
         'paidAt': Timestamp.now(),
-        'deadline': event.deadline != null
-            ? Timestamp.fromDate(event.deadline!)
-            : null,
+        'deadline': Timestamp.fromDate(deadline),
       });
 
       emit(OrderStatusUpdateSuccess(orderId: event.orderId));

@@ -376,6 +376,7 @@ class _SmeSpecifyRequirementsState extends State<SmeSpecifyRequirements> {
         gigTitle: widget.gig.title,
         gigPrice: widget.gig.price,
         gigThumbnail: widget.gig.thumbnailImage ?? '',
+        gigDeliveryTimeInDays: widget.gig.deliveryTimeInDays,
         requirements: widget.gig.requirements,
         requirementResponses: requirementResponses,
         status: OrderStatus.pendingSparkAcceptance,

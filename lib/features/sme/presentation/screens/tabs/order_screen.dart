@@ -5,7 +5,7 @@ import 'package:sparkd/core/services/service_locator.dart';
 import 'package:sparkd/core/utils/app_text_theme_extension.dart';
 import 'package:sparkd/features/orders/presentation/bloc/sme_order_bloc.dart';
 import 'package:sparkd/features/orders/presentation/screens/order_details_screen.dart';
-import 'package:sparkd/features/spark/presentation/widgets/spark_order_card.dart';
+import 'package:sparkd/features/orders/presentation/widgets/order_card.dart';
 
 class SmeOrdersScreen extends StatefulWidget {
   const SmeOrdersScreen({super.key});
@@ -195,7 +195,7 @@ class _OrderScreenContent extends StatelessWidget {
                     itemBuilder: (context, index) {
                       final order = state.orders[index];
                       final smeOrderBloc = context.read<SmeOrderBloc>();
-                      return SparkOrderCard(
+                      return OrderCard(
                         order: order,
                         onTap: () {
                           Navigator.push(

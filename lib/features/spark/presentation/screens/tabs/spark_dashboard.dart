@@ -4,7 +4,7 @@ import 'package:sparkd/core/presentation/widgets/app_bottom_navigation_bar_item.
 import 'package:sparkd/features/spark/presentation/screens/tabs/earning_screen.dart';
 import 'package:sparkd/features/spark/presentation/screens/tabs/gigs_screen.dart';
 import 'package:sparkd/features/spark/presentation/screens/tabs/home_screen.dart';
-import 'package:sparkd/features/spark/presentation/screens/tabs/orders_screen.dart';
+import 'package:sparkd/features/spark/presentation/screens/tabs/order_screen.dart';
 import 'package:sparkd/features/spark/presentation/screens/tabs/profile_screen.dart';
 
 class SparkDashboardScreen extends StatefulWidget {

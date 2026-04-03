@@ -18,6 +18,7 @@ class OrderModel {
         gigPrice: (json["gigPrice"] as num).toDouble(),
         gigThumbnail: json["gigThumbnail"] as String,
         gigTitle: json["gigTitle"] as String,
+        gigDeliveryTimeInDays: json["gigDeliveryTimeInDays"] as int? ?? 0,
         requirements: (json["requirements"] as List)
             .map((r) => RequirementEntity.fromMap(r as Map<String, dynamic>))
             .toList(),
@@ -32,10 +33,10 @@ class OrderModel {
             : null,
         paymentID: json["paymentID"] as String?,
         rejectionReason: json["rejectionReason"] as String?,
-        paidAt: json["paidAt"] != null
-            ? _parseDateTime(json["paidAt"])
+        paidAt: json["paidAt"] != null ? _parseDateTime(json["paidAt"]) : null,
+        deliveredAt: json["deliveredAt"] != null
+            ? _parseDateTime(json["deliveredAt"])
             : null,
-        deliveredAt: json["deliveredAt"] != null ? _parseDateTime(json["deliveredAt"]) : null,
       ),
     );
   }

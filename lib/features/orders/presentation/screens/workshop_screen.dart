@@ -21,9 +21,11 @@ class WorkshopScreen extends StatefulWidget {
   State<WorkshopScreen> createState() => _WorkshopScreenState();
 }
 
-class _WorkshopScreenState extends State<WorkshopScreen> {
+class _WorkshopScreenState extends State<WorkshopScreen>
+    with TickerProviderStateMixin {
   late TextEditingController _messageController;
   late ScrollController _scrollController;
+  late TabController _tabController;
   bool _isLoadingName = true;
   String? _otherPartyName;
 
@@ -32,6 +34,7 @@ class _WorkshopScreenState extends State<WorkshopScreen> {
     super.initState();
     _messageController = TextEditingController();
     _scrollController = ScrollController();
+    _tabController = TabController(length: 2, vsync: this);
     context.read<WorkshopBloc>().add(
       WorkshopLoadMessages(orderId: widget.order.id!),
     );
@@ -64,6 +67,7 @@ class _WorkshopScreenState extends State<WorkshopScreen> {
   void dispose() {
     _messageController.dispose();
     _scrollController.dispose();
+    _tabController.dispose();
     super.dispose();
   }
 
@@ -89,6 +93,10 @@ class _WorkshopScreenState extends State<WorkshopScreen> {
     _messageController.clear();
   }
 
+  void _onAttachPressed() async {
+    
+  }
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
@@ -96,6 +104,8 @@ class _WorkshopScreenState extends State<WorkshopScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: colorScheme.surface,
+        titleSpacing: 0,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -188,87 +198,121 @@ class _WorkshopScreenState extends State<WorkshopScreen> {
                       );
                     }
 
-                    return ListView.builder(
-                      controller: _scrollController,
-                      reverse: true,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 12,
-                      ),
-                      itemCount: messages.length,
-                      itemBuilder: (context, index) {
-                        final message = messages[index];
-                        final isCurrentUser =
-                            message.senderId ==
-                            FirebaseAuth.instance.currentUser?.uid;
+                    return Column(
+                      children: [
+                        TabBar(
+                          controller: _tabController,
+                          dividerHeight: 0,
+                          indicatorSize: TabBarIndicatorSize.tab,
+                          labelPadding: EdgeInsets.symmetric(vertical: 12),
+                          unselectedLabelColor: colorScheme.onSurface
+                              .withValues(alpha: 0.5),
+                          tabs: [
+                            Text(
+                              "Messages",
+                              style: textStyles.heading4.copyWith(
+                                fontWeight: FontWeight.normal,
+                              ),
+                            ),
 
-                        return Align(
-                          alignment: isCurrentUser
-                              ? Alignment.centerRight
-                              : Alignment.centerLeft,
-                          child: Container(
-                            margin: const EdgeInsets.symmetric(vertical: 4),
-                            constraints: BoxConstraints(
-                              maxWidth:
-                                  MediaQuery.of(context).size.width * 0.75,
+                            Text(
+                              "Files",
+                              style: textStyles.heading4.copyWith(
+                                fontWeight: FontWeight.normal,
+                              ),
                             ),
-                            decoration: BoxDecoration(
-                              color: isCurrentUser
-                                  ? colorScheme.primary
-                                  : colorScheme.surfaceContainer,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 8,
-                            ),
-                            child: Column(
-                              crossAxisAlignment: isCurrentUser
-                                  ? CrossAxisAlignment.end
-                                  : CrossAxisAlignment.start,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  message.senderName,
-                                  style: textStyles.subtext.copyWith(
-                                    color: isCurrentUser
-                                        ? colorScheme.onPrimary.withValues(
-                                            alpha: 0.7,
-                                          )
-                                        : colorScheme.onSurface.withValues(
-                                            alpha: 0.6,
+                          ],
+                        ),
+                        Expanded(
+                          child: TabBarView(
+                            controller: _tabController,
+                            children: [
+                              ListView.builder(
+                                controller: _scrollController,
+                                reverse: true,
+                                padding: EdgeInsets.all(10),
+                                itemCount: messages.length,
+                                itemBuilder: (context, index) {
+                                  final message = messages[index];
+                                  final isCurrentUser =
+                                      message.senderId ==
+                                      FirebaseAuth.instance.currentUser?.uid;
+
+                                  return Align(
+                                    alignment: isCurrentUser
+                                        ? Alignment.centerRight
+                                        : Alignment.centerLeft,
+                                    child: Container(
+                                      margin: const EdgeInsets.symmetric(
+                                        vertical: 4,
+                                      ),
+                                      constraints: BoxConstraints(
+                                        maxWidth:
+                                            MediaQuery.of(context).size.width *
+                                            0.75,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: isCurrentUser
+                                            ? colorScheme.primary
+                                            : colorScheme.surfaceContainer,
+                                        borderRadius: BorderRadius.only(
+                                          topLeft: Radius.circular(12),
+                                          topRight: Radius.circular(12),
+                                          bottomLeft: Radius.circular(
+                                            isCurrentUser ? 12 : 0,
                                           ),
-                                    fontSize: 12,
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  message.message,
-                                  style: textStyles.paragraph.copyWith(
-                                    color: isCurrentUser
-                                        ? colorScheme.onPrimary
-                                        : colorScheme.onSurface,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  _formatTime(message.sentAt),
-                                  style: textStyles.subtext.copyWith(
-                                    fontSize: 10,
-                                    color: isCurrentUser
-                                        ? colorScheme.onPrimary.withValues(
-                                            alpha: 0.5,
-                                          )
-                                        : colorScheme.onSurface.withValues(
-                                            alpha: 0.4,
+                                          bottomRight: Radius.circular(
+                                            isCurrentUser ? 0 : 12,
                                           ),
-                                  ),
+                                        ),
+                                      ),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: 8,
+                                      ),
+                                      child: Column(
+                                        crossAxisAlignment: isCurrentUser
+                                            ? CrossAxisAlignment.end
+                                            : CrossAxisAlignment.start,
+                                        mainAxisSize: MainAxisSize.min,
+                                        spacing: 1,
+                                        children: [
+                                          Text(
+                                            message.message,
+                                            style: textStyles.paragraph
+                                                .copyWith(
+                                                  height: 1,
+                                                  color: isCurrentUser
+                                                      ? colorScheme.onPrimary
+                                                      : colorScheme.onSurface,
+                                                ),
+                                          ),
+                                          Text(
+                                            _formatTime(message.sentAt),
+                                            style: textStyles.subtext.copyWith(
+                                              fontSize: 10,
+                                              color: isCurrentUser
+                                                  ? colorScheme.onPrimary
+                                                        .withValues(alpha: 0.3)
+                                                  : colorScheme.onSurface
+                                                        .withValues(alpha: 0.4),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                              Expanded(
+                                child: Center(
+                                  child: Text("File sharing coming soon!"),
                                 ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
-                        );
-                      },
+                        ),
+                      ],
                     );
                   }
 
@@ -281,6 +325,7 @@ class _WorkshopScreenState extends State<WorkshopScreen> {
               decoration: BoxDecoration(color: colorScheme.surface),
               padding: EdgeInsets.all(10),
               child: Column(
+                spacing: 4,
                 children: [
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -342,20 +387,23 @@ class _WorkshopScreenState extends State<WorkshopScreen> {
                     spacing: 8,
                     children: [
                       Expanded(
-                        child: CustomMessageBox(controller: _messageController),
+                        child: CustomMessageBox(
+                          controller: _messageController,
+                          onAttachPressed: _onAttachPressed,
+                        ),
                       ),
                       SizedBox(
                         height: 50,
                         width: 50,
-                        child: CircleAvatar(
-                          backgroundColor: colorScheme.primary,
-                          child: IconButton(
-                            icon: Icon(
-                              Icons.send_rounded,
-                              color: colorScheme.onPrimary,
-                            ),
-                            onPressed: _sendMessage,
+                        child: IconButton(
+                          style: IconButton.styleFrom(
+                            backgroundColor: colorScheme.primary,
                           ),
+                          icon: Icon(
+                            Icons.send_rounded,
+                            color: colorScheme.onPrimary,
+                          ),
+                          onPressed: _sendMessage,
                         ),
                       ),
                     ],

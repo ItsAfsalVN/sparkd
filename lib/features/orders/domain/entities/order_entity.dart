@@ -11,6 +11,7 @@ class OrderEntity {
   final String gigTitle;
   final double gigPrice;
   final String gigThumbnail;
+  final int gigDeliveryTimeInDays;
 
   final List<RequirementEntity> requirements;
   final Map<String, dynamic>
@@ -24,7 +25,6 @@ class OrderEntity {
 
   final DateTime? paidAt;
   final DateTime? deliveredAt;
-  
 
   const OrderEntity({
     this.id,
@@ -34,6 +34,7 @@ class OrderEntity {
     required this.gigTitle,
     required this.gigPrice,
     required this.gigThumbnail,
+    required this.gigDeliveryTimeInDays,
     required this.requirements,
     required this.requirementResponses,
     required this.status,
@@ -53,6 +54,7 @@ class OrderEntity {
     String? gigTitle,
     double? gigPrice,
     String? gigThumbnail,
+    int? gigDeliveryTimeInDays,
     List<RequirementEntity>? requirements,
     Map<String, dynamic>? requirementResponses,
     OrderStatus? status,
@@ -71,6 +73,8 @@ class OrderEntity {
       gigTitle: gigTitle ?? this.gigTitle,
       gigPrice: gigPrice ?? this.gigPrice,
       gigThumbnail: gigThumbnail ?? this.gigThumbnail,
+      gigDeliveryTimeInDays:
+          gigDeliveryTimeInDays ?? this.gigDeliveryTimeInDays,
       requirements: requirements ?? this.requirements,
       requirementResponses: requirementResponses ?? this.requirementResponses,
       status: status ?? this.status,
@@ -91,6 +95,7 @@ class OrderEntity {
       'gigTitle': gigTitle,
       'gigPrice': gigPrice,
       'gigThumbnail': gigThumbnail,
+      'gigDeliveryTimeInDays': gigDeliveryTimeInDays,
       'requirements': requirements.map((r) => r.toMap()).toList(),
       'requirementResponses': requirementResponses,
       'status': status.toString().split('.').last,
@@ -99,7 +104,9 @@ class OrderEntity {
       'paymentID': paymentID,
       'rejectionReason': rejectionReason,
       'paidAt': paidAt != null ? Timestamp.fromDate(paidAt!) : null,
-      'deliveredAt': deliveredAt != null ? Timestamp.fromDate(deliveredAt!) : null,
+      'deliveredAt': deliveredAt != null
+          ? Timestamp.fromDate(deliveredAt!)
+          : null,
     };
   }
 }

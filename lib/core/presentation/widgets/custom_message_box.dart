@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:sparkd/core/utils/app_text_theme_extension.dart';
 
 class CustomMessageBox extends StatelessWidget {
+  final VoidCallback onAttachPressed;
   final TextEditingController? controller;
 
-  const CustomMessageBox({super.key, this.controller});
+  const CustomMessageBox({super.key, this.controller, required this.onAttachPressed});
 
   @override
   Widget build(BuildContext context) {
@@ -14,10 +15,13 @@ class CustomMessageBox extends StatelessWidget {
     return TextFormField(
       controller: controller,
       decoration: InputDecoration(
-        suffixIcon: Icon(
-          Icons.attach_file_rounded,
-          size: 20,
-          color: colorScheme.onSurface.withValues(alpha: 0.5),
+        suffixIcon: IconButton(
+          onPressed: onAttachPressed,
+          icon: Icon(
+            Icons.attach_file_rounded,
+            size: 20,
+            color: colorScheme.onSurface.withValues(alpha: 0.5),
+          ),
         ),
         contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         hintText: "Message",

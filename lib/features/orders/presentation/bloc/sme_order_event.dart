@@ -45,12 +45,15 @@ class SmeOrderRefreshRequested extends SmeOrderEvent {
   List<Object?> get props => [smeId, status];
 }
 
-class MarkOrderAsPaidEvent extends SmeOrderEvent{
+class MarkOrderAsPaidEvent extends SmeOrderEvent {
   final String orderId;
-  final DateTime? deadline;
+  final int deliveryTimeInDays;
 
-  const MarkOrderAsPaidEvent({required this.orderId,this.deadline});
+  const MarkOrderAsPaidEvent({
+    required this.orderId,
+    required this.deliveryTimeInDays,
+  });
 
   @override
-  List<Object> get props => [orderId];
+  List<Object> get props => [orderId, deliveryTimeInDays];
 }

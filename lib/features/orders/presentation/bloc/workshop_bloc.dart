@@ -47,9 +47,15 @@ class WorkshopBloc extends Bloc<WorkshopEvent, WorkshopState> {
     Emitter<WorkshopState> emit,
   ) async {
     try {
-      emit(WorkshopMessageSending());
       await _sendMessageUseCase(event.message);
-      emit(WorkshopMessageSent(message: event.message));
+      await emit.forEach(
+        _getMessagesUseCase(event.message.orderId),
+        onData: (messages) => WorkshopLoaded(messages: messages),
+        onError: (error, stackTrace) {
+          logger.e('Error loading messages: $error');
+          return WorkshopError(message: error.toString());
+        },
+      );
     } catch (e) {
       logger.e('Error sending message: $e');
       emit(WorkshopMessageSentError(message: e.toString()));

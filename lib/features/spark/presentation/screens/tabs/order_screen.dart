@@ -7,7 +7,7 @@ import 'package:sparkd/features/orders/presentation/bloc/spark_orders_bloc.dart'
 import 'package:sparkd/features/orders/presentation/bloc/spark_orders_event.dart';
 import 'package:sparkd/features/orders/presentation/bloc/spark_orders_state.dart';
 import 'package:sparkd/features/orders/presentation/screens/order_details_screen.dart';
-import 'package:sparkd/features/spark/presentation/widgets/spark_order_card.dart';
+import 'package:sparkd/features/orders/presentation/widgets/order_card.dart';
 
 class SparkOrdersScreen extends StatefulWidget {
   const SparkOrdersScreen({super.key});
@@ -211,7 +211,7 @@ class _SparkOrdersScreenContent extends StatelessWidget {
                           itemBuilder: (context, index) {
                             final order = state.orders[index];
                             final bloc = context.read<SparkOrdersBloc>();
-                            return SparkOrderCard(
+                            return OrderCard(
                               order: order,
                               onTap: () {
                                 Navigator.push(

@@ -6,11 +6,11 @@ import 'package:sparkd/features/orders/domain/entities/order_entity.dart';
 import 'package:sparkd/features/orders/domain/entities/order_status.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
-class SparkOrderCard extends StatelessWidget {
+class OrderCard extends StatelessWidget {
   final OrderEntity order;
   final VoidCallback? onTap;
 
-  const SparkOrderCard({super.key, required this.order, this.onTap});
+  const OrderCard({super.key, required this.order, this.onTap});
 
   String _statusLabel(OrderStatus status) {
     switch (status) {
@@ -82,7 +82,7 @@ class SparkOrderCard extends StatelessWidget {
             Row(
               children: [
                 Expanded(
-                  flex: 3,
+                  flex: 4,
                   child: Text(
                     order.gigTitle,
                     style: textStyles.heading4,
@@ -105,7 +105,7 @@ class SparkOrderCard extends StatelessWidget {
                       child: Text(
                         _statusLabel(order.status),
                         style: textStyles.subtext.copyWith(
-                          fontSize: 12,
+                          fontSize: 10,
                           color: statusColor,
                           fontWeight: FontWeight.w700,
                         ),

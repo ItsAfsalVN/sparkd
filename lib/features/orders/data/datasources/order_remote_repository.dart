@@ -1,7 +1,5 @@
 import 'dart:async';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:logger/logger.dart';
 import 'package:sparkd/features/orders/data/models/order_model.dart';
 import 'package:sparkd/features/orders/domain/entities/order_entity.dart';
 import 'package:sparkd/core/utils/logger.dart';
