@@ -14,4 +14,8 @@ abstract class WorkshopRepository {
     String messageText,
     PlatformFile file,
   );
+  Future<String> downloadWorkshopFile({
+    required String fileUrl,
+    required String fileName,
+  });
 }

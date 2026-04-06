@@ -1,5 +1,9 @@
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dio/dio.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:sparkd/features/orders/data/models/workshop_message_model.dart';
 import 'package:sparkd/features/orders/domain/repository/upload_file_repository.dart';
 import 'package:sparkd/core/utils/logger.dart';
@@ -17,16 +21,17 @@ abstract class WorkshopRemoteDataSource {
     String messageText,
     PlatformFile file,
   );
+  Future<String> downloadWorkshopFile({
+    required String fileUrl,
+    required String fileName,
+  });
 }
 
 class WorkshopRemoteDataSourceImpl implements WorkshopRemoteDataSource {
   final FirebaseFirestore _firestore;
   final UploadFileRepository _uploadFileRepository;
 
-  WorkshopRemoteDataSourceImpl(
-    this._firestore,
-    this._uploadFileRepository,
-  );
+  WorkshopRemoteDataSourceImpl(this._firestore, this._uploadFileRepository);
 
   @override
   Stream<List<WorkshopMessageModel>> getWorkshopMessages(String orderId) {
@@ -78,7 +83,7 @@ class WorkshopRemoteDataSourceImpl implements WorkshopRemoteDataSource {
       rethrow;
     }
   }
-  
+
   @override
   Future<void> uploadAttachment(
     String userId,
@@ -112,6 +117,48 @@ class WorkshopRemoteDataSourceImpl implements WorkshopRemoteDataSource {
       await sendMessage(message);
     } catch (e) {
       logger.e('Error uploading attachment: $e');
+      rethrow;
+    }
+  }
+
+  @override
+  Future<String> downloadWorkshopFile({
+    required String fileUrl,
+    required String fileName,
+  }) async {
+    final dio = Dio();
+    try {
+      Directory directory = await getApplicationCacheDirectory();
+      final cacheDir = Directory('${directory.path}/workshop_files');
+
+      if (!await cacheDir.exists()) {
+        await cacheDir.create(recursive: true);
+      }
+
+      String savePath = '${cacheDir.path}/$fileName';
+
+      // Check if file already exists
+      if (File(savePath).existsSync()) {
+        logger.i('File already cached: $fileName');
+        return savePath;
+      }
+
+      await dio.download(
+        fileUrl,
+        savePath,
+        onReceiveProgress: (count, total) {
+          if (total != -1) {
+            logger.i(
+              'Downloading: ${(count / total * 100).toStringAsFixed(0)}%',
+            );
+          }
+        },
+      );
+
+      logger.i('File downloaded successfully: $fileName');
+      return savePath;
+    } catch (e) {
+      logger.e('Error downloading file: $e');
       rethrow;
     }
   }

@@ -49,4 +49,14 @@ class WorkshopRepositoryImpl implements WorkshopRepository {
     );
   }
 
+  @override
+  Future<String> downloadWorkshopFile({
+    required String fileUrl,
+    required String fileName,
+  }) {
+    return _remoteDataSource.downloadWorkshopFile(
+      fileUrl: fileUrl,
+      fileName: fileName,
+    );
+  }
 }

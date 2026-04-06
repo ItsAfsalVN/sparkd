@@ -47,3 +47,60 @@ class WorkshopMessageSentError extends WorkshopState {
   @override
   List<Object?> get props => [message];
 }
+
+class WorkshopAttachmentUploading extends WorkshopState {
+  final double? progress;
+
+  WorkshopAttachmentUploading({this.progress});
+
+  @override
+  List<Object?> get props => [progress];
+}
+
+class WorkshopAttachmentUploadSuccess extends WorkshopState {
+  final String fileUrl;
+  final String messageId;
+
+  WorkshopAttachmentUploadSuccess({
+    required this.fileUrl,
+    required this.messageId,
+  });
+
+  @override
+  List<Object?> get props => [fileUrl, messageId];
+}
+
+class WorkshopAttachmentUploadError extends WorkshopState {
+  final String message;
+
+  WorkshopAttachmentUploadError({required this.message});
+
+  @override
+  List<Object?> get props => [message];
+}
+
+class WorkshopFileDownloadInProgress extends WorkshopState {
+  final double? progress;
+
+  WorkshopFileDownloadInProgress({this.progress});
+
+  @override
+  List<Object?> get props => [progress];
+}
+
+class WorkshopFileDownloadSuccess extends WorkshopState {
+  final Map<String, String> downloadedFiles; // Map of file names to their local paths
+  WorkshopFileDownloadSuccess({required this.downloadedFiles});
+
+  @override
+  List<Object?> get props => [downloadedFiles];
+}
+
+class WorkshopFileDownloadError extends WorkshopState {
+  final String message;
+
+  WorkshopFileDownloadError({required this.message});
+
+  @override
+  List<Object?> get props => [message];
+}

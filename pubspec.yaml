@@ -40,6 +40,8 @@ dependencies:
   video_player: ^2.10.1
   chewie: ^1.8.5
   timeago: ^3.7.0
+  dio: ^5.9.2
+  path_provider: ^2.1.5
 
 # Dev dependencies
 dev_dependencies:

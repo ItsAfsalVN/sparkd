@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 
@@ -26,7 +27,19 @@ class UploadFileRemoteRepositoryImplementation
         'orders/$userId/$fileName',
       );
 
-      final uploadTask = reference.putData(file.bytes!);
+      // Handle both in-memory bytes and file path
+      late UploadTask uploadTask;
+      if (file.bytes != null) {
+        // If bytes are available, upload directly
+        uploadTask = reference.putData(file.bytes!);
+      } else if (file.path != null) {
+        // If bytes are not available, read from file path
+        final fileToUpload = File(file.path!);
+        uploadTask = reference.putFile(fileToUpload);
+      } else {
+        throw Exception('File has no bytes or path available');
+      }
+
       await uploadTask;
 
       final downloadUrl = await reference.getDownloadURL();

@@ -25,6 +25,7 @@ import 'package:sparkd/features/orders/data/datasources/order_remote_repository.
 import 'package:sparkd/features/orders/data/repositories/order_repository_implementation.dart';
 import 'package:sparkd/features/orders/domain/repository/order_repository.dart';
 import 'package:sparkd/features/orders/domain/usecases/create_order_request.dart';
+import 'package:sparkd/features/orders/domain/usecases/download_workshop_file.dart';
 import 'package:sparkd/features/orders/domain/usecases/get_sme_orders_usecase.dart';
 import 'package:sparkd/features/orders/domain/usecases/get_spark_orders.dart';
 import 'package:sparkd/features/orders/domain/usecases/update_order_status.dart';
@@ -190,6 +191,8 @@ Future<void> init() async {
       getMessagesUseCase: sl(),
       sendMessageUseCase: sl(),
       deleteMessageUseCase: sl(),
+      uploadMessageWithAttachmentUseCase: sl(),
+      downloadWorkshopFileUseCase: sl(),
     ),
   );
 
@@ -211,6 +214,7 @@ Future<void> init() async {
   sl.registerLazySingleton(
     () => SendWorkshopMessageWithAttachment(workshopRepository: sl()),
   );
+  sl.registerLazySingleton(() => DownloadWorkshopFileUseCase(repository: sl()));
 
   sl.registerLazySingleton<OrderRepository>(
     () => OrderRepositoryImplementation(remoteRepository: sl()),
@@ -225,9 +229,7 @@ Future<void> init() async {
   );
 
   sl.registerLazySingleton<UploadFileRepository>(
-    () => UploadFileRepositoryImplementation(
-      remoteRepository: sl(),
-    ),
+    () => UploadFileRepositoryImplementation(remoteRepository: sl()),
   );
 
   sl.registerLazySingleton<WorkshopRepository>(
@@ -235,10 +237,7 @@ Future<void> init() async {
   );
 
   sl.registerLazySingleton<WorkshopRemoteDataSource>(
-    () => WorkshopRemoteDataSourceImpl(
-      sl(),
-      sl<UploadFileRepository>(),
-    ),
+    () => WorkshopRemoteDataSourceImpl(sl(), sl<UploadFileRepository>()),
   );
 
   // --- External ---

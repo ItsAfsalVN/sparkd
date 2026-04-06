@@ -208,17 +208,7 @@ class _AppState extends State<App> {
             home: Scaffold(
               backgroundColor: AppColors.white100,
               body: Center(
-                child: Column(
-                  spacing: 2,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    CircularProgressIndicator(color: AppColors.secondary500),
-                    Text(
-                      'Initializing...',
-                      style: TextStyle(color: AppColors.secondary500),
-                    ),
-                  ],
-                ),
+                child: CircularProgressIndicator(color: AppColors.secondary500),
               ),
             ),
           );
