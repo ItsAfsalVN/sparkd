@@ -65,22 +65,16 @@ class _WorkshopScreenState extends State<WorkshopScreen>
         final filesMap = _parseJsonStringToMap(cachedFiles);
         setState(() {
           _downloadedFiles = filesMap;
-          logger.d(
-            '📁 Restored from SharedPreferences: ${filesMap.length} files',
-          );
         });
       } else {
-        // Fall back to bloc cache if SharedPreferences is empty
         final bloc = context.read<WorkshopBloc>();
         final blocCache = bloc.getDownloadedFilesCache();
         setState(() {
           _downloadedFiles = blocCache;
-          logger.d('📁 Restored from Bloc cache: ${blocCache.length} files');
         });
       }
     } catch (e) {
       logger.e('Error restoring downloaded files: $e');
-      // Fall back to bloc cache on error
       final bloc = context.read<WorkshopBloc>();
       setState(() {
         _downloadedFiles = bloc.getDownloadedFilesCache();
@@ -95,9 +89,6 @@ class _WorkshopScreenState extends State<WorkshopScreen>
       final cacheKey = _getCacheKey();
       final jsonString = jsonEncode(_downloadedFiles);
       await prefs.setString(cacheKey, jsonString);
-      logger.d(
-        '💾 Saved to SharedPreferences: ${_downloadedFiles.length} files',
-      );
     } catch (e) {
       logger.e('Error saving downloaded files to SharedPreferences: $e');
     }
@@ -224,23 +215,13 @@ class _WorkshopScreenState extends State<WorkshopScreen>
       ),
       body: BlocListener<WorkshopBloc, WorkshopState>(
         listener: (context, state) {
-          final timestamp = DateTime.now().toString().split('.')[0];
-          logger.d('[$timestamp] 📨 STATE RECEIVED: ${state.runtimeType}');
           if (state is WorkshopMessageSentError) {
             showSnackbar(context, state.message, SnackBarType.error);
           }
           if (state is WorkshopFileDownloadSuccess) {
-            logger.d(
-              '✅✅✅ GOT WorkshopFileDownloadSuccess! Files: ${state.downloadedFiles}',
-            );
-            // Update local cache with downloaded files from bloc
-            logger.d(
-              'DEBUG: Download success. Files: ${state.downloadedFiles}',
-            );
             setState(() {
               // Don't clear! Just merge new downloads with existing ones
               _downloadedFiles.addAll(state.downloadedFiles);
-              logger.d('DEBUG: Updated _downloadedFiles: $_downloadedFiles');
             });
 
             // Save to SharedPreferences for persistence across navigations (fire and forget)
@@ -256,42 +237,24 @@ class _WorkshopScreenState extends State<WorkshopScreen>
             showSnackbar(context, message, SnackBarType.success);
           }
           if (state is WorkshopFileDownloadError) {
-            logger.d('❌ Download error: ${state.message}');
             showSnackbar(
               context,
               'Download failed: ${state.message}',
               SnackBarType.error,
             );
           }
-          // Also sync on FileDownloadInProgress and WorkshopLoaded to ensure UI updates
           if (state is WorkshopFileDownloadInProgress) {
-            logger.d('⏳ Download in progress for: ${state.fileUrl}');
-            // Force a rebuild to show the overlay
             setState(() {});
           }
           if (state is WorkshopLoaded) {
-            // Sync downloaded files when messages load
-            final timestamp = DateTime.now().toString().split('.')[0];
             final blocCache = context
                 .read<WorkshopBloc>()
                 .getDownloadedFilesCache();
-            logger.d(
-              '[$timestamp] 📁 WorkshopLoaded fired! Bloc has ${blocCache.length} items, Local has ${_downloadedFiles.length} items',
-            );
             setState(() {
-              // Only merge if bloc has items - don't clear local cache if bloc is empty
               if (blocCache.isNotEmpty) {
                 _downloadedFiles.addAll(blocCache);
-                logger.d(
-                  '[$timestamp] 📁 Merged, now ${_downloadedFiles.length} items',
-                );
-              } else {
-                logger.d(
-                  '[$timestamp] 📁 Bloc cache empty, preserving local ${_downloadedFiles.length} items',
-                );
               }
             });
-            // Persist the current cache to SharedPreferences (fire and forget)
             _saveDownloadedFilesToPrefs();
           }
         },
@@ -714,10 +677,6 @@ class _WorkshopScreenState extends State<WorkshopScreen>
     final isDownloaded = _downloadedFiles.containsKey(url);
     final localPath = isDownloaded ? _downloadedFiles[url] : null;
 
-    logger.i(
-      'DEBUG _buildImageAttachment: url=$url, isDownloaded=$isDownloaded, localPath=$localPath, ALL_CACHED=$_downloadedFiles',
-    );
-
     return Stack(
       key: ValueKey('image_${url}_$isDownloaded'),
       children: [
@@ -732,9 +691,7 @@ class _WorkshopScreenState extends State<WorkshopScreen>
                     File(localPath),
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) {
-                      logger.e(
-                        'DEBUG: Image.file error for $localPath: $error',
-                      );
+                      logger.e('Image.file error for $localPath: $error');
                       return Container(
                         color: colorScheme.surfaceContainer,
                         child: Icon(
@@ -748,7 +705,7 @@ class _WorkshopScreenState extends State<WorkshopScreen>
                     url,
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) {
-                      logger.e('DEBUG: Image.network error for $url: $error');
+                      logger.e('Image.network error for $url: $error');
                       return Container(
                         color: colorScheme.surfaceContainer,
                         child: Icon(

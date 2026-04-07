@@ -134,28 +134,17 @@ class WorkshopBloc extends Bloc<WorkshopEvent, WorkshopState> {
     Emitter<WorkshopState> emit,
   ) async {
     try {
-      logger.i(
-        '🔵 _onDownloadFile START: fileUrl=${event.fileUrl}, fileName=${event.fileName}',
-      );
       emit(WorkshopFileDownloadInProgress(progress: 0, fileUrl: event.fileUrl));
-      logger.i('🟡 Emitted InProgress state');
 
       final localPath = await _downloadWorkshopFileUseCase(
         fileUrl: event.fileUrl,
         fileName: event.fileName,
       );
-      logger.i('🟢 Download completed. localPath=$localPath');
 
       _downloadedFilesCache[event.fileUrl] = localPath;
-      logger.i(
-        '🟣 Cache updated. _downloadedFilesCache=$_downloadedFilesCache',
-      );
-
-      logger.i('🔴 Emitting success state with cache: $_downloadedFilesCache');
       emit(WorkshopFileDownloadSuccess(downloadedFiles: _downloadedFilesCache));
-      logger.i('✅ SUCCESS state emitted!');
     } catch (e) {
-      logger.e('❌ Error downloading file: $e');
+      logger.e('Error downloading file: $e');
       emit(WorkshopFileDownloadError(message: e.toString()));
     }
   }
