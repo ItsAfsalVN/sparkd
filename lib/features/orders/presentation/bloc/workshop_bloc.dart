@@ -1,4 +1,3 @@
-import 'package:dio/dio.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:sparkd/core/utils/logger.dart';
 import 'package:sparkd/features/orders/domain/usecases/download_workshop_file.dart';
@@ -15,7 +14,6 @@ class WorkshopBloc extends Bloc<WorkshopEvent, WorkshopState> {
   final DownloadWorkshopFileUseCase _downloadWorkshopFileUseCase;
   Map<String, String> _downloadedFilesCache =
       {}; // Map of file names to their local paths
-  late Dio _dio;
 
   WorkshopBloc({
     required GetWorkshopMessagesUseCase getMessagesUseCase,
@@ -30,7 +28,6 @@ class WorkshopBloc extends Bloc<WorkshopEvent, WorkshopState> {
        _uploadMessageWithAttachmentUseCase = uploadMessageWithAttachmentUseCase,
        _downloadWorkshopFileUseCase = downloadWorkshopFileUseCase,
        super(WorkshopInitial()) {
-    _dio = Dio();
     on<WorkshopLoadMessages>(_onLoadMessages);
     on<WorkshopSendMessage>(_onSendMessage);
     on<WorkshopDeleteMessage>(_onDeleteMessage);
@@ -137,18 +134,34 @@ class WorkshopBloc extends Bloc<WorkshopEvent, WorkshopState> {
     Emitter<WorkshopState> emit,
   ) async {
     try {
-      emit(WorkshopFileDownloadInProgress(progress: 0));
+      logger.i(
+        '🔵 _onDownloadFile START: fileUrl=${event.fileUrl}, fileName=${event.fileName}',
+      );
+      emit(WorkshopFileDownloadInProgress(progress: 0, fileUrl: event.fileUrl));
+      logger.i('🟡 Emitted InProgress state');
 
       final localPath = await _downloadWorkshopFileUseCase(
         fileUrl: event.fileUrl,
         fileName: event.fileName,
       );
+      logger.i('🟢 Download completed. localPath=$localPath');
 
       _downloadedFilesCache[event.fileUrl] = localPath;
+      logger.i(
+        '🟣 Cache updated. _downloadedFilesCache=$_downloadedFilesCache',
+      );
+
+      logger.i('🔴 Emitting success state with cache: $_downloadedFilesCache');
       emit(WorkshopFileDownloadSuccess(downloadedFiles: _downloadedFilesCache));
+      logger.i('✅ SUCCESS state emitted!');
     } catch (e) {
-      logger.e('Error downloading file: $e');
+      logger.e('❌ Error downloading file: $e');
       emit(WorkshopFileDownloadError(message: e.toString()));
     }
+  }
+
+  /// Get the cache of downloaded files
+  Map<String, String> getDownloadedFilesCache() {
+    return Map.from(_downloadedFilesCache);
   }
 }

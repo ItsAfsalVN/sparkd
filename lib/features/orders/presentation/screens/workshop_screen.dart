@@ -1,10 +1,10 @@
 import 'dart:io';
-import 'dart:ui' as ui;
-import 'package:flutter/rendering.dart';
+import 'dart:convert';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sparkd/core/presentation/widgets/custom_message_box.dart';
 import 'package:sparkd/core/utils/app_text_theme_extension.dart';
 import 'package:sparkd/core/utils/snackbar_helper.dart';
@@ -15,6 +15,7 @@ import 'package:sparkd/features/orders/presentation/bloc/workshop_bloc.dart';
 import 'package:sparkd/features/orders/presentation/bloc/workshop_event.dart';
 import 'package:sparkd/features/orders/presentation/bloc/workshop_state.dart';
 import 'package:sparkd/core/utils/file_helper.dart';
+import 'package:sparkd/core/utils/logger.dart';
 
 class WorkshopScreen extends StatefulWidget {
   final OrderEntity order;
@@ -33,6 +34,9 @@ class _WorkshopScreenState extends State<WorkshopScreen>
   late TabController _tabController;
   bool _isLoadingName = true;
   String? _otherPartyName;
+  Map<String, String> _downloadedFiles = {}; // Track downloaded files locally
+  List<WorkshopMessageEntity> _lastLoadedMessages =
+      []; // Track last loaded messages
 
   @override
   void initState() {
@@ -40,10 +44,79 @@ class _WorkshopScreenState extends State<WorkshopScreen>
     _messageController = TextEditingController();
     _scrollController = ScrollController();
     _tabController = TabController(length: 2, vsync: this);
+
+    // Restore downloaded files from both Bloc cache and SharedPreferences
+    _restoreDownloadedFiles();
+
     context.read<WorkshopBloc>().add(
       WorkshopLoadMessages(orderId: widget.order.id!),
     );
     _loadOtherPartyName();
+  }
+
+  /// Restore downloaded files cache from SharedPreferences and Bloc
+  Future<void> _restoreDownloadedFiles() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final cacheKey = _getCacheKey();
+      final cachedFiles = prefs.getString(cacheKey);
+
+      if (cachedFiles != null && cachedFiles.isNotEmpty) {
+        final filesMap = _parseJsonStringToMap(cachedFiles);
+        setState(() {
+          _downloadedFiles = filesMap;
+          logger.d(
+            '📁 Restored from SharedPreferences: ${filesMap.length} files',
+          );
+        });
+      } else {
+        // Fall back to bloc cache if SharedPreferences is empty
+        final bloc = context.read<WorkshopBloc>();
+        final blocCache = bloc.getDownloadedFilesCache();
+        setState(() {
+          _downloadedFiles = blocCache;
+          logger.d('📁 Restored from Bloc cache: ${blocCache.length} files');
+        });
+      }
+    } catch (e) {
+      logger.e('Error restoring downloaded files: $e');
+      // Fall back to bloc cache on error
+      final bloc = context.read<WorkshopBloc>();
+      setState(() {
+        _downloadedFiles = bloc.getDownloadedFilesCache();
+      });
+    }
+  }
+
+  /// Save downloaded files to SharedPreferences for persistence
+  Future<void> _saveDownloadedFilesToPrefs() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final cacheKey = _getCacheKey();
+      final jsonString = jsonEncode(_downloadedFiles);
+      await prefs.setString(cacheKey, jsonString);
+      logger.d(
+        '💾 Saved to SharedPreferences: ${_downloadedFiles.length} files',
+      );
+    } catch (e) {
+      logger.e('Error saving downloaded files to SharedPreferences: $e');
+    }
+  }
+
+  /// Generate a unique cache key for this order
+  String _getCacheKey() => 'workshop_downloads_${widget.order.id}';
+
+  /// Parse JSON string back to Map<String, String>
+  Map<String, String> _parseJsonStringToMap(String jsonString) {
+    try {
+      final decoded = jsonDecode(jsonString);
+      if (decoded is Map) {
+        return Map<String, String>.from(decoded);
+      }
+    } catch (e) {
+      logger.e('Error parsing JSON string to map: $e');
+    }
+    return {};
   }
 
   Future<void> _loadOtherPartyName() async {
@@ -151,8 +224,75 @@ class _WorkshopScreenState extends State<WorkshopScreen>
       ),
       body: BlocListener<WorkshopBloc, WorkshopState>(
         listener: (context, state) {
+          final timestamp = DateTime.now().toString().split('.')[0];
+          logger.d('[$timestamp] 📨 STATE RECEIVED: ${state.runtimeType}');
           if (state is WorkshopMessageSentError) {
             showSnackbar(context, state.message, SnackBarType.error);
+          }
+          if (state is WorkshopFileDownloadSuccess) {
+            logger.d(
+              '✅✅✅ GOT WorkshopFileDownloadSuccess! Files: ${state.downloadedFiles}',
+            );
+            // Update local cache with downloaded files from bloc
+            logger.d(
+              'DEBUG: Download success. Files: ${state.downloadedFiles}',
+            );
+            setState(() {
+              // Don't clear! Just merge new downloads with existing ones
+              _downloadedFiles.addAll(state.downloadedFiles);
+              logger.d('DEBUG: Updated _downloadedFiles: $_downloadedFiles');
+            });
+
+            // Save to SharedPreferences for persistence across navigations (fire and forget)
+            _saveDownloadedFilesToPrefs();
+
+            // Clear image cache to force reload of images
+            imageCache.clear();
+            imageCache.clearLiveImages();
+
+            final message = Platform.isAndroid
+                ? '✓ Downloaded!\nLocation: Downloads/Sparkd folder'
+                : '✓ Downloaded!\nCheck app Documents folder in Files app.';
+            showSnackbar(context, message, SnackBarType.success);
+          }
+          if (state is WorkshopFileDownloadError) {
+            logger.d('❌ Download error: ${state.message}');
+            showSnackbar(
+              context,
+              'Download failed: ${state.message}',
+              SnackBarType.error,
+            );
+          }
+          // Also sync on FileDownloadInProgress and WorkshopLoaded to ensure UI updates
+          if (state is WorkshopFileDownloadInProgress) {
+            logger.d('⏳ Download in progress for: ${state.fileUrl}');
+            // Force a rebuild to show the overlay
+            setState(() {});
+          }
+          if (state is WorkshopLoaded) {
+            // Sync downloaded files when messages load
+            final timestamp = DateTime.now().toString().split('.')[0];
+            final blocCache = context
+                .read<WorkshopBloc>()
+                .getDownloadedFilesCache();
+            logger.d(
+              '[$timestamp] 📁 WorkshopLoaded fired! Bloc has ${blocCache.length} items, Local has ${_downloadedFiles.length} items',
+            );
+            setState(() {
+              // Only merge if bloc has items - don't clear local cache if bloc is empty
+              if (blocCache.isNotEmpty) {
+                _downloadedFiles.addAll(blocCache);
+                logger.d(
+                  '[$timestamp] 📁 Merged, now ${_downloadedFiles.length} items',
+                );
+              } else {
+                logger.d(
+                  '[$timestamp] 📁 Bloc cache empty, preserving local ${_downloadedFiles.length} items',
+                );
+              }
+            });
+            // Persist the current cache to SharedPreferences (fire and forget)
+            _saveDownloadedFilesToPrefs();
           }
         },
         child: Column(
@@ -195,7 +335,9 @@ class _WorkshopScreenState extends State<WorkshopScreen>
                     );
                   }
 
+                  // Handle WorkshopLoaded state
                   if (state is WorkshopLoaded) {
+                    _lastLoadedMessages = state.messages;
                     final messages = state.messages;
 
                     if (messages.isEmpty) {
@@ -225,349 +367,29 @@ class _WorkshopScreenState extends State<WorkshopScreen>
                       );
                     }
 
-                    return Column(
-                      children: [
-                        TabBar(
-                          controller: _tabController,
-                          dividerHeight: 0,
-                          indicatorSize: TabBarIndicatorSize.tab,
-                          labelPadding: EdgeInsets.symmetric(vertical: 12),
-                          unselectedLabelColor: colorScheme.onSurface
-                              .withValues(alpha: 0.5),
-                          tabs: [
-                            Text(
-                              "Messages",
-                              style: textStyles.heading4.copyWith(
-                                fontWeight: FontWeight.normal,
-                              ),
-                            ),
-
-                            Text(
-                              "Files",
-                              style: textStyles.heading4.copyWith(
-                                fontWeight: FontWeight.normal,
-                              ),
-                            ),
-                          ],
-                        ),
-                        Expanded(
-                          child: TabBarView(
-                            controller: _tabController,
-                            children: [
-                              ListView.builder(
-                                controller: _scrollController,
-                                reverse: true,
-                                padding: EdgeInsets.all(10),
-                                itemCount: messages.length,
-                                itemBuilder: (context, index) {
-                                  final message = messages[index];
-                                  final isCurrentUser =
-                                      message.senderId ==
-                                      FirebaseAuth.instance.currentUser?.uid;
-
-                                  return Align(
-                                    alignment: isCurrentUser
-                                        ? Alignment.centerRight
-                                        : Alignment.centerLeft,
-                                    child: Container(
-                                      margin: const EdgeInsets.symmetric(
-                                        vertical: 4,
-                                      ),
-                                      constraints: BoxConstraints(
-                                        maxWidth:
-                                            MediaQuery.of(context).size.width *
-                                            0.75,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: isCurrentUser
-                                            ? colorScheme.primary
-                                            : colorScheme.surfaceContainer,
-                                        borderRadius: BorderRadius.only(
-                                          topLeft: Radius.circular(12),
-                                          topRight: Radius.circular(12),
-                                          bottomLeft: Radius.circular(
-                                            isCurrentUser ? 12 : 0,
-                                          ),
-                                          bottomRight: Radius.circular(
-                                            isCurrentUser ? 0 : 12,
-                                          ),
-                                        ),
-                                      ),
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 12,
-                                        vertical: 8,
-                                      ),
-                                      child: Column(
-                                        crossAxisAlignment: isCurrentUser
-                                            ? CrossAxisAlignment.end
-                                            : CrossAxisAlignment.start,
-                                        mainAxisSize: MainAxisSize.min,
-                                        spacing: 1,
-                                        children: [
-                                          if (message.attachmentUrls != null &&
-                                              message
-                                                  .attachmentUrls!
-                                                  .isNotEmpty)
-                                            Column(
-                                              mainAxisSize: MainAxisSize.min,
-                                              spacing: 2,
-                                              children: message.attachmentUrls!.map((
-                                                url,
-                                              ) {
-                                                if (FileHelper.isImage(
-                                                  FileHelper.getFileName(url),
-                                                )) {
-                                                  return BlocBuilder<
-                                                    WorkshopBloc,
-                                                    WorkshopState
-                                                  >(
-                                                    builder: (context, state) {
-                                                      final isDownloaded =
-                                                          state
-                                                              is WorkshopFileDownloadSuccess &&
-                                                          state.downloadedFiles
-                                                              .containsKey(url);
-                                                      final localPath =
-                                                          isDownloaded
-                                                          ? state
-                                                                .downloadedFiles[url]
-                                                          : null;
-
-                                                      return Stack(
-                                                        children: [
-                                                          Container(
-                                                            width:
-                                                                double.infinity,
-                                                            height: 150,
-                                                            decoration: BoxDecoration(
-                                                              borderRadius:
-                                                                  BorderRadius.circular(
-                                                                    8,
-                                                                  ),
-                                                              image: DecorationImage(
-                                                                fit: BoxFit
-                                                                    .cover,
-                                                                image:
-                                                                    isDownloaded &&
-                                                                        localPath !=
-                                                                            null
-                                                                    ? FileImage(
-                                                                        File(
-                                                                          localPath,
-                                                                        ),
-                                                                      )
-                                                                    : NetworkImage(
-                                                                            url,
-                                                                          )
-                                                                          as ImageProvider,
-                                                              ),
-                                                            ),
-                                                          ),
-                                                          if (!isDownloaded)
-                                                            ClipRRect(
-                                                              borderRadius:
-                                                                  BorderRadius.circular(
-                                                                    8,
-                                                                  ),
-                                                              child: ImageFiltered(
-                                                                imageFilter:
-                                                                    ui.ImageFilter.blur(
-                                                                      sigmaX: 8,
-                                                                      sigmaY: 8,
-                                                                    ),
-                                                                child: Container(
-                                                                  width: double
-                                                                      .infinity,
-                                                                  height: 150,
-                                                                  color: Colors
-                                                                      .black
-                                                                      .withValues(
-                                                                        alpha:
-                                                                            0.3,
-                                                                      ),
-                                                                ),
-                                                              ),
-                                                            ),
-                                                          Positioned(
-                                                            bottom: 8,
-                                                            right: 8,
-                                                            child: isDownloaded
-                                                                ? Container(
-                                                                    decoration: BoxDecoration(
-                                                                      color: Colors
-                                                                          .green,
-                                                                      shape: BoxShape
-                                                                          .circle,
-                                                                    ),
-                                                                    padding:
-                                                                        EdgeInsets.all(
-                                                                          8,
-                                                                        ),
-                                                                    child: Icon(
-                                                                      Icons
-                                                                          .check,
-                                                                      color: Colors
-                                                                          .white,
-                                                                      size: 18,
-                                                                    ),
-                                                                  )
-                                                                : BlocBuilder<
-                                                                    WorkshopBloc,
-                                                                    WorkshopState
-                                                                  >(
-                                                                    builder:
-                                                                        (
-                                                                          context,
-                                                                          downloadState,
-                                                                        ) {
-                                                                          final isDownloading =
-                                                                              downloadState
-                                                                                  is WorkshopFileDownloadInProgress;
-
-                                                                          return Container(
-                                                                            decoration: BoxDecoration(
-                                                                              color: Colors.blue,
-                                                                              shape: BoxShape.circle,
-                                                                            ),
-                                                                            child:
-                                                                                isDownloading
-                                                                                ? SizedBox(
-                                                                                    width: 40,
-                                                                                    height: 40,
-                                                                                    child: CircularProgressIndicator(
-                                                                                      strokeWidth: 2,
-                                                                                      valueColor:
-                                                                                          AlwaysStoppedAnimation<
-                                                                                            Color
-                                                                                          >(
-                                                                                            Colors.white,
-                                                                                          ),
-                                                                                      value: downloadState.progress,
-                                                                                    ),
-                                                                                  )
-                                                                                : IconButton(
-                                                                                    onPressed: () {
-                                                                                      context
-                                                                                          .read<
-                                                                                            WorkshopBloc
-                                                                                          >()
-                                                                                          .add(
-                                                                                            WorkshopDownloadFile(
-                                                                                              fileUrl: url,
-                                                                                              fileName: FileHelper.getFileName(
-                                                                                                url,
-                                                                                              ),
-                                                                                            ),
-                                                                                          );
-                                                                                    },
-                                                                                    icon: Icon(
-                                                                                      Icons.download_rounded,
-                                                                                      color: Colors.white,
-                                                                                    ),
-                                                                                  ),
-                                                                          );
-                                                                        },
-                                                                  ),
-                                                          ),
-                                                        ],
-                                                      );
-                                                    },
-                                                  );
-                                                } else {
-                                                  // Show file icon for non-image files
-                                                  return GestureDetector(
-                                                    onTap: () {
-                                                      context
-                                                          .read<WorkshopBloc>()
-                                                          .add(
-                                                            WorkshopDownloadFile(
-                                                              fileUrl: url,
-                                                              fileName:
-                                                                  FileHelper.getFileName(
-                                                                    url,
-                                                                  ),
-                                                            ),
-                                                          );
-                                                    },
-                                                    child: Container(
-                                                      padding: EdgeInsets.all(
-                                                        12,
-                                                      ),
-                                                      decoration: BoxDecoration(
-                                                        color: colorScheme
-                                                            .surfaceContainer,
-                                                        borderRadius:
-                                                            BorderRadius.circular(
-                                                              8,
-                                                            ),
-                                                      ),
-                                                      child: Row(
-                                                        mainAxisSize:
-                                                            MainAxisSize.min,
-                                                        spacing: 8,
-                                                        children: [
-                                                          Icon(
-                                                            FileHelper.getFileIcon(
-                                                              url,
-                                                            ),
-                                                          ),
-                                                          Flexible(
-                                                            child: Text(
-                                                              url
-                                                                  .split('/')
-                                                                  .last,
-                                                              overflow:
-                                                                  TextOverflow
-                                                                      .ellipsis,
-                                                            ),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    ),
-                                                  );
-                                                }
-                                              }).toList(),
-                                            ),
-                                          Text(
-                                            message.message,
-                                            style: textStyles.paragraph
-                                                .copyWith(
-                                                  height: 1,
-                                                  color: isCurrentUser
-                                                      ? colorScheme.onPrimary
-                                                      : colorScheme.onSurface,
-                                                ),
-                                          ),
-                                          Text(
-                                            _formatTime(message.sentAt),
-                                            style: textStyles.subtext.copyWith(
-                                              fontSize: 10,
-                                              color: isCurrentUser
-                                                  ? colorScheme.onPrimary
-                                                        .withValues(alpha: 0.3)
-                                                  : colorScheme.onSurface
-                                                        .withValues(alpha: 0.4),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  );
-                                },
-                              ),
-                              SizedBox.expand(
-                                child: Center(
-                                  child: Text("File sharing coming soon!"),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
+                    return _buildMessagesContent(
+                      messages,
+                      colorScheme,
+                      textStyles,
                     );
                   }
 
-                  return const SizedBox.shrink();
+                  // Handle download states and other states
+                  // Show last loaded messages if available
+                  if (_lastLoadedMessages.isNotEmpty) {
+                    return _buildMessagesContent(
+                      _lastLoadedMessages,
+                      colorScheme,
+                      textStyles,
+                    );
+                  }
+
+                  // Fallback for unknown states
+                  return Center(
+                    child: CircularProgressIndicator(
+                      color: colorScheme.primary,
+                    ),
+                  );
                 },
               ),
             ),
@@ -685,5 +507,328 @@ class _WorkshopScreenState extends State<WorkshopScreen>
     } else {
       return '${dateTime.day}/${dateTime.month}/${dateTime.year}';
     }
+  }
+
+  Widget _buildMessagesContent(
+    List<WorkshopMessageEntity> messages,
+    ColorScheme colorScheme,
+    AppTextThemeExtension textStyles,
+  ) {
+    return Column(
+      children: [
+        TabBar(
+          controller: _tabController,
+          dividerHeight: 0,
+          indicatorSize: TabBarIndicatorSize.tab,
+          labelPadding: EdgeInsets.symmetric(vertical: 12),
+          unselectedLabelColor: colorScheme.onSurface.withValues(alpha: 0.5),
+          tabs: [
+            Text(
+              "Messages",
+              style: textStyles.heading4.copyWith(
+                fontWeight: FontWeight.normal,
+              ),
+            ),
+            Text(
+              "Files",
+              style: textStyles.heading4.copyWith(
+                fontWeight: FontWeight.normal,
+              ),
+            ),
+          ],
+        ),
+        Expanded(
+          child: TabBarView(
+            controller: _tabController,
+            children: [
+              ListView.builder(
+                controller: _scrollController,
+                reverse: true,
+                padding: EdgeInsets.all(10),
+                itemCount: messages.length,
+                itemBuilder: (context, index) {
+                  final message = messages[index];
+                  final isCurrentUser =
+                      message.senderId ==
+                      FirebaseAuth.instance.currentUser?.uid;
+
+                  return Align(
+                    alignment: isCurrentUser
+                        ? Alignment.centerRight
+                        : Alignment.centerLeft,
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(vertical: 4),
+                      constraints: BoxConstraints(
+                        maxWidth: MediaQuery.of(context).size.width * 0.75,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isCurrentUser
+                            ? colorScheme.primary
+                            : colorScheme.surfaceContainer,
+                        borderRadius: BorderRadius.only(
+                          topLeft: Radius.circular(12),
+                          topRight: Radius.circular(12),
+                          bottomLeft: Radius.circular(isCurrentUser ? 12 : 0),
+                          bottomRight: Radius.circular(isCurrentUser ? 0 : 12),
+                        ),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: isCurrentUser
+                            ? CrossAxisAlignment.end
+                            : CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        spacing: 1,
+                        children: [
+                          if (message.attachmentUrls != null &&
+                              message.attachmentUrls!.isNotEmpty)
+                            Column(
+                              mainAxisSize: MainAxisSize.min,
+                              spacing: 2,
+                              children: message.attachmentUrls!.map((url) {
+                                if (FileHelper.isImage(
+                                  FileHelper.getFileName(url),
+                                )) {
+                                  return _buildImageAttachment(url);
+                                } else {
+                                  // Show file icon for non-image files
+                                  return Stack(
+                                    children: [
+                                      Container(
+                                        padding: EdgeInsets.only(
+                                          left: 8,
+                                          right: 12,
+                                          top: 8,
+                                          bottom: 40,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: colorScheme.surface.withValues(
+                                            alpha: 0.8,
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          spacing: 8,
+                                          children: [
+                                            Icon(FileHelper.getFileIcon(url)),
+                                            Flexible(
+                                              child: Text(
+                                                url.split('/').last,
+                                                overflow: TextOverflow.visible,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      Positioned(
+                                        bottom: 3,
+                                        right: 3,
+                                        child: BlocBuilder<WorkshopBloc, WorkshopState>(
+                                          builder: (context, downloadState) {
+                                            if (downloadState
+                                                is WorkshopFileDownloadSuccess) {
+                                              return Padding(
+                                                padding: const EdgeInsets.all(
+                                                  8.0,
+                                                ),
+                                                child: Icon(
+                                                  Icons.check,
+                                                  size: 24,
+                                                  color: colorScheme.onSurface,
+                                                ),
+                                              );
+                                            }
+                                            return IconButton(
+                                              onPressed: () {
+                                                context.read<WorkshopBloc>().add(
+                                                  WorkshopDownloadFile(
+                                                    fileUrl: url,
+                                                    fileName:
+                                                        FileHelper.getFileName(
+                                                          url,
+                                                        ),
+                                                  ),
+                                                );
+                                              },
+                                              icon: Icon(
+                                                size: 24,
+                                                Icons.download_rounded,
+                                                color: colorScheme.onSurface,
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                      ),
+                                    ],
+                                  );
+                                }
+                              }).toList(),
+                            ),
+                          if (message.message.isNotEmpty)
+                            Text(
+                              message.message,
+                              style: textStyles.paragraph.copyWith(
+                                height: 1,
+                                color: isCurrentUser
+                                    ? colorScheme.onPrimary
+                                    : colorScheme.onSurface,
+                              ),
+                            ),
+                          Text(
+                            _formatTime(message.sentAt),
+                            style: textStyles.subtext.copyWith(
+                              fontSize: 10,
+                              color: isCurrentUser
+                                  ? colorScheme.onPrimary.withValues(alpha: 0.3)
+                                  : colorScheme.onSurface.withValues(
+                                      alpha: 0.4,
+                                    ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+              SizedBox.expand(
+                child: Center(child: Text("File sharing coming soon!")),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildImageAttachment(String url) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDownloaded = _downloadedFiles.containsKey(url);
+    final localPath = isDownloaded ? _downloadedFiles[url] : null;
+
+    logger.i(
+      'DEBUG _buildImageAttachment: url=$url, isDownloaded=$isDownloaded, localPath=$localPath, ALL_CACHED=$_downloadedFiles',
+    );
+
+    return Stack(
+      key: ValueKey('image_${url}_$isDownloaded'),
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: Container(
+            width: double.infinity,
+            height: 150,
+            color: colorScheme.surfaceContainer,
+            child: isDownloaded && localPath != null
+                ? Image.file(
+                    File(localPath),
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      logger.e(
+                        'DEBUG: Image.file error for $localPath: $error',
+                      );
+                      return Container(
+                        color: colorScheme.surfaceContainer,
+                        child: Icon(
+                          Icons.error_outline,
+                          color: colorScheme.onSurface,
+                        ),
+                      );
+                    },
+                  )
+                : Image.network(
+                    url,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      logger.e('DEBUG: Image.network error for $url: $error');
+                      return Container(
+                        color: colorScheme.surfaceContainer,
+                        child: Icon(
+                          Icons.image_not_supported,
+                          color: colorScheme.onSurface,
+                        ),
+                      );
+                    },
+                  ),
+          ),
+        ),
+        // Show semi-transparent overlay only when not downloaded
+        if (!isDownloaded)
+          Container(
+            width: double.infinity,
+            height: 150,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(8),
+              color: colorScheme.surface.withValues(alpha: 0.7),
+            ),
+            child: Center(
+              child: BlocBuilder<WorkshopBloc, WorkshopState>(
+                builder: (context, innerState) {
+                  // Show progress if downloading THIS specific URL
+                  if (innerState is WorkshopFileDownloadInProgress &&
+                      innerState.fileUrl == url) {
+                    return SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 4,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          colorScheme.onSurface,
+                        ),
+                      ),
+                    );
+                  }
+                  return SizedBox.shrink();
+                },
+              ),
+            ),
+          ),
+        Positioned(
+          bottom: 3,
+          right: 3,
+          child: isDownloaded
+              ? Padding(
+                  padding: EdgeInsets.all(8),
+                  child: Icon(
+                    Icons.check,
+                    color: colorScheme.onSurface,
+                    size: 24,
+                  ),
+                )
+              : BlocBuilder<WorkshopBloc, WorkshopState>(
+                  builder: (context, innerState) {
+                    // Hide button only if downloading THIS specific URL
+                    if (innerState is WorkshopFileDownloadInProgress &&
+                        innerState.fileUrl == url) {
+                      return SizedBox.shrink();
+                    }
+                    return IconButton(
+                      onPressed: () {
+                        context.read<WorkshopBloc>().add(
+                          WorkshopDownloadFile(
+                            fileUrl: url,
+                            fileName: FileHelper.getFileName(url),
+                          ),
+                        );
+                      },
+                      icon: Icon(
+                        size: 24,
+                        Icons.download_rounded,
+                        color: colorScheme.onSurface,
+                      ),
+                    );
+                  },
+                ),
+        ),
+      ],
+    );
   }
 }

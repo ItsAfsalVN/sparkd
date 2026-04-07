@@ -81,15 +81,17 @@ class WorkshopAttachmentUploadError extends WorkshopState {
 
 class WorkshopFileDownloadInProgress extends WorkshopState {
   final double? progress;
+  final String? fileUrl;
 
-  WorkshopFileDownloadInProgress({this.progress});
+  WorkshopFileDownloadInProgress({this.progress, this.fileUrl});
 
   @override
-  List<Object?> get props => [progress];
+  List<Object?> get props => [progress, fileUrl];
 }
 
 class WorkshopFileDownloadSuccess extends WorkshopState {
-  final Map<String, String> downloadedFiles; // Map of file names to their local paths
+  final Map<String, String>
+  downloadedFiles; // Map of file names to their local paths
   WorkshopFileDownloadSuccess({required this.downloadedFiles});
 
   @override

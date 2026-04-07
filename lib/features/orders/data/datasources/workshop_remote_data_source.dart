@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -128,18 +129,66 @@ class WorkshopRemoteDataSourceImpl implements WorkshopRemoteDataSource {
   }) async {
     final dio = Dio();
     try {
-      Directory directory = await getApplicationCacheDirectory();
-      final cacheDir = Directory('${directory.path}/workshop_files');
+      // Get the Downloads directory
+      Directory downloadDir;
 
-      if (!await cacheDir.exists()) {
-        await cacheDir.create(recursive: true);
+      if (Platform.isAndroid) {
+        // For Android, save to public Downloads folder
+        // This is accessible via file manager on all Android versions
+        final externalStoragePath = '/storage/emulated/0/Download';
+        downloadDir = Directory(externalStoragePath);
+
+        // If that doesn't work, try alternative paths
+        if (!await downloadDir.exists()) {
+          try {
+            // Try using environment variable
+            final homeDir = Platform.environment['HOME'];
+            if (homeDir != null) {
+              downloadDir = Directory('$homeDir/Download');
+            }
+          } catch (e) {
+            // Fallback to app cache if all else fails
+            downloadDir = await getApplicationCacheDirectory();
+            logger.w('Using cache directory as fallback: ${downloadDir.path}');
+          }
+        }
+      } else if (Platform.isIOS) {
+        // For iOS, use the app's Documents folder which is accessible
+        downloadDir = await getApplicationDocumentsDirectory();
+      } else {
+        // For other platforms
+        downloadDir = await getApplicationDocumentsDirectory();
       }
 
-      String savePath = '${cacheDir.path}/$fileName';
+      if (!await downloadDir.exists()) {
+        await downloadDir.create(recursive: true);
+      }
+
+      // Create Sparkd subfolder
+      final sparkdDir = Directory('${downloadDir.path}/Sparkd');
+      if (!await sparkdDir.exists()) {
+        await sparkdDir.create(recursive: true);
+      }
+
+      String savePath = '${sparkdDir.path}/$fileName';
+
+      // FIX: URL-decode the filename and extract just the actual filename (not folder paths)
+      // The fileName often comes with URL-encoded paths like "orders%2FuserId%2Ffilename.jpg"
+      // We need to decode it and get just the actual filename
+      final decodedFileName = Uri.decodeComponent(fileName);
+      final actualFileName = decodedFileName
+          .split('/')
+          .last; // Get just the filename after any slashes
+
+      savePath = '${sparkdDir.path}/$actualFileName';
+
+      logger.i(
+        '🔍 downloadWorkshopFile: original fileName=$fileName, decoded=$decodedFileName, actual=$actualFileName, savePath=$savePath',
+      );
 
       // Check if file already exists
       if (File(savePath).existsSync()) {
-        logger.i('File already cached: $fileName');
+        logger.i('File already exists: $fileName at $savePath');
         return savePath;
       }
 
@@ -155,7 +204,7 @@ class WorkshopRemoteDataSourceImpl implements WorkshopRemoteDataSource {
         },
       );
 
-      logger.i('File downloaded successfully: $fileName');
+      logger.i('File downloaded successfully: $fileName at $savePath');
       return savePath;
     } catch (e) {
       logger.e('Error downloading file: $e');
