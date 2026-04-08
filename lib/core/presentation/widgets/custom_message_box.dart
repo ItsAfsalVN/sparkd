@@ -2,10 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:sparkd/core/utils/app_text_theme_extension.dart';
 
 class CustomMessageBox extends StatelessWidget {
+  final bool? disabled;
   final VoidCallback onAttachPressed;
   final TextEditingController? controller;
 
-  const CustomMessageBox({super.key, this.controller, required this.onAttachPressed});
+  const CustomMessageBox({
+    super.key,
+    this.controller,
+    required this.onAttachPressed,
+    this.disabled,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -13,6 +19,7 @@ class CustomMessageBox extends StatelessWidget {
     final textStyles = Theme.of(context).textStyles;
 
     return TextFormField(
+      enabled: disabled != true,
       controller: controller,
       decoration: InputDecoration(
         suffixIcon: IconButton(
@@ -32,6 +39,12 @@ class CustomMessageBox extends StatelessWidget {
           borderRadius: BorderRadius.circular(100),
           borderSide: BorderSide(
             color: colorScheme.onSurface.withValues(alpha: 0.4),
+          ),
+        ),
+        disabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(100),
+          borderSide: BorderSide(
+            color: colorScheme.onSurface.withValues(alpha: 0.2),
           ),
         ),
         focusedBorder: OutlineInputBorder(

@@ -3,6 +3,8 @@ import 'package:sparkd/core/utils/logger.dart';
 import 'package:sparkd/features/orders/domain/usecases/download_workshop_file.dart';
 import 'package:sparkd/features/orders/domain/usecases/workshop_usecases.dart';
 import 'package:sparkd/features/orders/domain/usecases/send_workshop_message_with_attachment.dart';
+import 'package:sparkd/features/orders/domain/repository/order_repository.dart';
+import 'package:sparkd/features/orders/domain/entities/order_status.dart';
 import 'package:sparkd/features/orders/presentation/bloc/workshop_event.dart';
 import 'package:sparkd/features/orders/presentation/bloc/workshop_state.dart';
 
@@ -12,6 +14,7 @@ class WorkshopBloc extends Bloc<WorkshopEvent, WorkshopState> {
   final DeleteWorkshopMessageUseCase _deleteMessageUseCase;
   final SendWorkshopMessageWithAttachment _uploadMessageWithAttachmentUseCase;
   final DownloadWorkshopFileUseCase _downloadWorkshopFileUseCase;
+  final OrderRepository _orderRepository;
   Map<String, String> _downloadedFilesCache =
       {}; // Map of file names to their local paths
 
@@ -22,17 +25,20 @@ class WorkshopBloc extends Bloc<WorkshopEvent, WorkshopState> {
     required SendWorkshopMessageWithAttachment
     uploadMessageWithAttachmentUseCase,
     required DownloadWorkshopFileUseCase downloadWorkshopFileUseCase,
+    required OrderRepository orderRepository,
   }) : _getMessagesUseCase = getMessagesUseCase,
        _sendMessageUseCase = sendMessageUseCase,
        _deleteMessageUseCase = deleteMessageUseCase,
        _uploadMessageWithAttachmentUseCase = uploadMessageWithAttachmentUseCase,
        _downloadWorkshopFileUseCase = downloadWorkshopFileUseCase,
+       _orderRepository = orderRepository,
        super(WorkshopInitial()) {
     on<WorkshopLoadMessages>(_onLoadMessages);
     on<WorkshopSendMessage>(_onSendMessage);
     on<WorkshopDeleteMessage>(_onDeleteMessage);
     on<WorkshopUploadMessageWithAttachment>(_onUploadMessageWithAttachment);
     on<WorkshopDownloadFile>(_onDownloadFile);
+    on<WorkshopMarkOrderAsCompleted>(_onMarkOrderAsCompleted);
   }
 
   Future<void> _onLoadMessages(
@@ -146,6 +152,21 @@ class WorkshopBloc extends Bloc<WorkshopEvent, WorkshopState> {
     } catch (e) {
       logger.e('Error downloading file: $e');
       emit(WorkshopFileDownloadError(message: e.toString()));
+    }
+  }
+
+  Future<void> _onMarkOrderAsCompleted(
+    WorkshopMarkOrderAsCompleted event,
+    Emitter<WorkshopState> emit,
+  ) async {
+    try {
+      await _orderRepository.updateOrderStatus(event.orderId, {
+        'status': OrderStatus.completed.toString().split('.').last,
+      });
+      logger.i('Order marked as completed: ${event.orderId}');
+    } catch (e) {
+      logger.e('Error marking order as completed: $e');
+      emit(WorkshopError(message: e.toString()));
     }
   }
 

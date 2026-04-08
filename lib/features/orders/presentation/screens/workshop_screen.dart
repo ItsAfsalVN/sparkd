@@ -5,17 +5,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:sparkd/core/presentation/widgets/custom_message_box.dart';
 import 'package:sparkd/core/utils/app_text_theme_extension.dart';
 import 'package:sparkd/core/utils/snackbar_helper.dart';
 import 'package:sparkd/core/utils/user_helper.dart';
 import 'package:sparkd/features/orders/domain/entities/order_entity.dart';
 import 'package:sparkd/features/orders/domain/entities/workshop_message_entity.dart';
+import 'package:sparkd/features/orders/domain/entities/order_status.dart';
 import 'package:sparkd/features/orders/presentation/bloc/workshop_bloc.dart';
 import 'package:sparkd/features/orders/presentation/bloc/workshop_event.dart';
 import 'package:sparkd/features/orders/presentation/bloc/workshop_state.dart';
-import 'package:sparkd/core/utils/file_helper.dart';
 import 'package:sparkd/core/utils/logger.dart';
+import 'package:sparkd/features/orders/presentation/widgets/requirement_widgets.dart';
+import 'package:sparkd/features/orders/presentation/widgets/message_bubble_widget.dart';
+import 'package:sparkd/features/orders/presentation/widgets/image_attachment_widget.dart';
+import 'package:sparkd/features/orders/presentation/widgets/dialog_widgets.dart';
+import 'package:sparkd/features/orders/presentation/widgets/message_input_widget.dart';
 
 class WorkshopScreen extends StatefulWidget {
   final OrderEntity order;
@@ -37,13 +41,14 @@ class _WorkshopScreenState extends State<WorkshopScreen>
   Map<String, String> _downloadedFiles = {}; // Track downloaded files locally
   List<WorkshopMessageEntity> _lastLoadedMessages =
       []; // Track last loaded messages
+  bool _isOrderCompleted = false; // Track if order has been marked as completed
 
   @override
   void initState() {
     super.initState();
     _messageController = TextEditingController();
     _scrollController = ScrollController();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
 
     // Restore downloaded files from both Bloc cache and SharedPreferences
     _restoreDownloadedFiles();
@@ -356,97 +361,6 @@ class _WorkshopScreenState extends State<WorkshopScreen>
                 },
               ),
             ),
-            // Message input box
-            Container(
-              decoration: BoxDecoration(color: colorScheme.surface),
-              padding: EdgeInsets.all(10),
-              child: Column(
-                spacing: 4,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      // Client and spark details
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            widget.isSme ? "Brought by" : "Client",
-                            style: textStyles.subtext.copyWith(
-                              color: colorScheme.onSurface.withValues(
-                                alpha: 0.5,
-                              ),
-                            ),
-                          ),
-                          if (_isLoadingName)
-                            SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                  colorScheme.primary,
-                                ),
-                              ),
-                            )
-                          else
-                            Text(
-                              _otherPartyName ?? 'Unknown',
-                              style: textStyles.heading5.copyWith(height: 1),
-                            ),
-                        ],
-                      ),
-
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Text(
-                            "Due in",
-                            style: textStyles.subtext.copyWith(
-                              color: colorScheme.onSurface.withValues(
-                                alpha: 0.5,
-                              ),
-                            ),
-                          ),
-                          Text(
-                            widget.order.deadline != null
-                                ? '${widget.order.deadline!.difference(DateTime.now()).inDays} days'
-                                : 'N/A',
-                            style: textStyles.heading5.copyWith(height: 1),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 8),
-                  Row(
-                    spacing: 8,
-                    children: [
-                      Expanded(
-                        child: CustomMessageBox(
-                          controller: _messageController,
-                          onAttachPressed: _onAttachPressed,
-                        ),
-                      ),
-                      SizedBox(
-                        height: 50,
-                        width: 50,
-                        child: IconButton(
-                          style: IconButton.styleFrom(
-                            backgroundColor: colorScheme.primary,
-                          ),
-                          icon: Icon(
-                            Icons.send_rounded,
-                            color: colorScheme.onPrimary,
-                          ),
-                          onPressed: _sendMessage,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
           ],
         ),
       ),
@@ -472,320 +386,201 @@ class _WorkshopScreenState extends State<WorkshopScreen>
     }
   }
 
+  /// Check if the deadline has passed
+  bool _isPastDue() {
+    if (widget.order.deadline == null) return false;
+    return DateTime.now().isAfter(widget.order.deadline!);
+  }
+
+  /// Get the number of days remaining (negative if past due)
+  int _getDaysRemaining() {
+    if (widget.order.deadline == null) return 0;
+    return widget.order.deadline!.difference(DateTime.now()).inDays;
+  }
+
+  /// Get past due status text
+  String _getPastDueStatusText() {
+    if (!_isPastDue()) return '';
+    final daysOverdue = _getDaysRemaining().abs();
+    return '$daysOverdue ${daysOverdue == 1 ? 'day' : 'days'} overdue';
+  }
+
+  /// Check if chat should be disabled
+  bool _isChatDisabled() {
+    return widget.order.status == OrderStatus.completed || _isOrderCompleted;
+  }
+
+  /// Build Requirements Tab - Display SME responses to requirements
+  Widget _buildRequirementsTab(
+    ColorScheme colorScheme,
+    AppTextThemeExtension textStyles,
+  ) {
+    return RequirementsTabWidget(
+      requirements: widget.order.requirements,
+      requirementResponses: widget.order.requirementResponses,
+      colorScheme: colorScheme,
+      textStyles: textStyles,
+    );
+  }
+
+  /// Show confirmation dialog to mark order as delivered
+  void _showMarkAsCompletedDialog() {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textStyles = Theme.of(context).textStyles;
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return MarkAsCompletedDialog(
+          colorScheme: colorScheme,
+          textStyles: textStyles,
+          onConfirm: _markOrderAsCompleted,
+        );
+      },
+    );
+  }
+
+  void _markOrderAsCompleted() {
+    context.read<WorkshopBloc>().add(
+      WorkshopMarkOrderAsCompleted(orderId: widget.order.id!),
+    );
+    setState(() {
+      _isOrderCompleted = true;
+    });
+    showSnackbar(context, 'Order marked as completed', SnackBarType.success);
+  }
+
   Widget _buildMessagesContent(
     List<WorkshopMessageEntity> messages,
     ColorScheme colorScheme,
     AppTextThemeExtension textStyles,
   ) {
-    return Column(
-      children: [
-        TabBar(
-          controller: _tabController,
-          dividerHeight: 0,
-          indicatorSize: TabBarIndicatorSize.tab,
-          labelPadding: EdgeInsets.symmetric(vertical: 12),
-          unselectedLabelColor: colorScheme.onSurface.withValues(alpha: 0.5),
-          tabs: [
-            Text(
-              "Messages",
-              style: textStyles.heading4.copyWith(
-                fontWeight: FontWeight.normal,
+    return ListenableBuilder(
+      listenable: _tabController,
+      builder: (context, child) {
+        return Column(
+          children: [
+            TabBar(
+              controller: _tabController,
+              dividerHeight: 0,
+              indicatorSize: TabBarIndicatorSize.tab,
+              labelPadding: const EdgeInsets.symmetric(vertical: 12),
+              unselectedLabelColor: colorScheme.onSurface.withValues(
+                alpha: 0.5,
               ),
+              tabs: [
+                Text(
+                  "Requirements",
+                  style: textStyles.heading4.copyWith(
+                    fontWeight: FontWeight.normal,
+                  ),
+                ),
+                Text(
+                  "Messages",
+                  style: textStyles.heading4.copyWith(
+                    fontWeight: FontWeight.normal,
+                  ),
+                ),
+                Text(
+                  "Files",
+                  style: textStyles.heading4.copyWith(
+                    fontWeight: FontWeight.normal,
+                  ),
+                ),
+              ],
             ),
-            Text(
-              "Files",
-              style: textStyles.heading4.copyWith(
-                fontWeight: FontWeight.normal,
-              ),
-            ),
-          ],
-        ),
-        Expanded(
-          child: TabBarView(
-            controller: _tabController,
-            children: [
-              ListView.builder(
-                controller: _scrollController,
-                reverse: true,
-                padding: EdgeInsets.all(10),
-                itemCount: messages.length,
-                itemBuilder: (context, index) {
-                  final message = messages[index];
-                  final isCurrentUser =
-                      message.senderId ==
-                      FirebaseAuth.instance.currentUser?.uid;
+            Expanded(
+              child: TabBarView(
+                controller: _tabController,
+                children: [
+                  _buildRequirementsTab(colorScheme, textStyles),
+                  ListView.builder(
+                    controller: _scrollController,
+                    reverse: true,
+                    padding: const EdgeInsets.all(10),
+                    itemCount: messages.length,
+                    itemBuilder: (context, index) {
+                      final message = messages[index];
+                      final isCurrentUser =
+                          message.senderId ==
+                          FirebaseAuth.instance.currentUser?.uid;
 
-                  return Align(
-                    alignment: isCurrentUser
-                        ? Alignment.centerRight
-                        : Alignment.centerLeft,
-                    child: Container(
-                      margin: const EdgeInsets.symmetric(vertical: 4),
-                      constraints: BoxConstraints(
-                        maxWidth: MediaQuery.of(context).size.width * 0.75,
-                      ),
-                      decoration: BoxDecoration(
-                        color: isCurrentUser
-                            ? colorScheme.primary
-                            : colorScheme.surfaceContainer,
-                        borderRadius: BorderRadius.only(
-                          topLeft: Radius.circular(12),
-                          topRight: Radius.circular(12),
-                          bottomLeft: Radius.circular(isCurrentUser ? 12 : 0),
-                          bottomRight: Radius.circular(isCurrentUser ? 0 : 12),
-                        ),
-                      ),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                      child: Column(
-                        crossAxisAlignment: isCurrentUser
-                            ? CrossAxisAlignment.end
-                            : CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        spacing: 1,
-                        children: [
-                          if (message.attachmentUrls != null &&
-                              message.attachmentUrls!.isNotEmpty)
-                            Column(
-                              mainAxisSize: MainAxisSize.min,
-                              spacing: 2,
-                              children: message.attachmentUrls!.map((url) {
-                                if (FileHelper.isImage(
-                                  FileHelper.getFileName(url),
-                                )) {
-                                  return _buildImageAttachment(url);
-                                } else {
-                                  // Show file icon for non-image files
-                                  return Stack(
-                                    children: [
-                                      Container(
-                                        padding: EdgeInsets.only(
-                                          left: 8,
-                                          right: 12,
-                                          top: 8,
-                                          bottom: 40,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: colorScheme.surface.withValues(
-                                            alpha: 0.8,
-                                          ),
-                                          borderRadius: BorderRadius.circular(
-                                            8,
-                                          ),
-                                        ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          spacing: 8,
-                                          children: [
-                                            Icon(FileHelper.getFileIcon(url)),
-                                            Flexible(
-                                              child: Text(
-                                                url.split('/').last,
-                                                overflow: TextOverflow.visible,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      Positioned(
-                                        bottom: 3,
-                                        right: 3,
-                                        child: BlocBuilder<WorkshopBloc, WorkshopState>(
-                                          builder: (context, downloadState) {
-                                            if (downloadState
-                                                is WorkshopFileDownloadSuccess) {
-                                              return Padding(
-                                                padding: const EdgeInsets.all(
-                                                  8.0,
-                                                ),
-                                                child: Icon(
-                                                  Icons.check,
-                                                  size: 24,
-                                                  color: colorScheme.onSurface,
-                                                ),
-                                              );
-                                            }
-                                            return IconButton(
-                                              onPressed: () {
-                                                context.read<WorkshopBloc>().add(
-                                                  WorkshopDownloadFile(
-                                                    fileUrl: url,
-                                                    fileName:
-                                                        FileHelper.getFileName(
-                                                          url,
-                                                        ),
-                                                  ),
-                                                );
-                                              },
-                                              icon: Icon(
-                                                size: 24,
-                                                Icons.download_rounded,
-                                                color: colorScheme.onSurface,
-                                              ),
-                                            );
-                                          },
-                                        ),
-                                      ),
-                                    ],
-                                  );
-                                }
-                              }).toList(),
-                            ),
-                          if (message.message.isNotEmpty)
-                            Text(
-                              message.message,
-                              style: textStyles.paragraph.copyWith(
-                                height: 1,
-                                color: isCurrentUser
-                                    ? colorScheme.onPrimary
-                                    : colorScheme.onSurface,
-                              ),
-                            ),
-                          Text(
-                            _formatTime(message.sentAt),
-                            style: textStyles.subtext.copyWith(
-                              fontSize: 10,
-                              color: isCurrentUser
-                                  ? colorScheme.onPrimary.withValues(alpha: 0.3)
-                                  : colorScheme.onSurface.withValues(
-                                      alpha: 0.4,
-                                    ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
+                      return MessageBubbleWidget(
+                        message: message,
+                        isCurrentUser: isCurrentUser,
+                        colorScheme: colorScheme,
+                        textStyles: textStyles,
+                        downloadedFiles: _downloadedFiles,
+                        buildImageAttachment: _buildImageAttachment,
+                        formatTime: _formatTime,
+                      );
+                    },
+                  ),
+                  FileListTabWidget(
+                    messages: messages,
+                    scrollController: _scrollController,
+                    colorScheme: colorScheme,
+                    textStyles: textStyles,
+                    buildImageAttachment: _buildImageAttachment,
+                    formatTime: _formatTime,
+                  ),
+                ],
               ),
-              SizedBox.expand(
-                child: Center(child: Text("File sharing coming soon!")),
-              ),
-            ],
-          ),
-        ),
-      ],
+            ),
+            if (_tabController.index == 1)
+              _buildMessageInputArea(colorScheme, textStyles),
+          ],
+        );
+      },
     );
   }
 
-  Widget _buildImageAttachment(String url) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final isDownloaded = _downloadedFiles.containsKey(url);
-    final localPath = isDownloaded ? _downloadedFiles[url] : null;
+  Widget _buildMessageInputArea(
+    ColorScheme colorScheme,
+    AppTextThemeExtension textStyles,
+  ) {
+    return MessageInputAreaWidget(
+      messageController: _messageController,
+      onSendMessage: _sendMessage,
+      onAttachPressed: _onAttachPressed,
+      isLoadingName: _isLoadingName,
+      otherPartyName: _otherPartyName,
+      dueInText: _buildDueInText(),
+      clientLabel: widget.isSme ? "Brought by" : "Client",
+      isSme: widget.isSme,
+      showPastDueWarning:
+          widget.order.status == OrderStatus.inProgress &&
+          _isPastDue() &&
+          !widget.isSme,
+      pastDueWarningText: '${_getPastDueStatusText()} - Please deliver ASAP',
+      showMarkAsCompletedButton:
+          widget.isSme && widget.order.status == OrderStatus.inProgress,
+      onMarkAsCompletedPressed: _showMarkAsCompletedDialog,
+      isChatDisabled: _isChatDisabled(),
+      orderStatus: widget.order.status,
+      colorScheme: colorScheme,
+      textStyles: textStyles,
+    );
+  }
 
-    return Stack(
-      key: ValueKey('image_${url}_$isDownloaded'),
-      children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(8),
-          child: Container(
-            width: double.infinity,
-            height: 150,
-            color: colorScheme.surfaceContainer,
-            child: isDownloaded && localPath != null
-                ? Image.file(
-                    File(localPath),
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      logger.e('Image.file error for $localPath: $error');
-                      return Container(
-                        color: colorScheme.surfaceContainer,
-                        child: Icon(
-                          Icons.error_outline,
-                          color: colorScheme.onSurface,
-                        ),
-                      );
-                    },
-                  )
-                : Image.network(
-                    url,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      logger.e('Image.network error for $url: $error');
-                      return Container(
-                        color: colorScheme.surfaceContainer,
-                        child: Icon(
-                          Icons.image_not_supported,
-                          color: colorScheme.onSurface,
-                        ),
-                      );
-                    },
-                  ),
-          ),
-        ),
-        // Show semi-transparent overlay only when not downloaded
-        if (!isDownloaded)
-          Container(
-            width: double.infinity,
-            height: 150,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8),
-              color: colorScheme.surface.withValues(alpha: 0.7),
-            ),
-            child: Center(
-              child: BlocBuilder<WorkshopBloc, WorkshopState>(
-                builder: (context, innerState) {
-                  // Show progress if downloading THIS specific URL
-                  if (innerState is WorkshopFileDownloadInProgress &&
-                      innerState.fileUrl == url) {
-                    return SizedBox(
-                      width: 24,
-                      height: 24,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 4,
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          colorScheme.onSurface,
-                        ),
-                      ),
-                    );
-                  }
-                  return SizedBox.shrink();
-                },
-              ),
-            ),
-          ),
-        Positioned(
-          bottom: 3,
-          right: 3,
-          child: isDownloaded
-              ? Padding(
-                  padding: EdgeInsets.all(8),
-                  child: Icon(
-                    Icons.check,
-                    color: colorScheme.onSurface,
-                    size: 24,
-                  ),
-                )
-              : BlocBuilder<WorkshopBloc, WorkshopState>(
-                  builder: (context, innerState) {
-                    // Hide button only if downloading THIS specific URL
-                    if (innerState is WorkshopFileDownloadInProgress &&
-                        innerState.fileUrl == url) {
-                      return SizedBox.shrink();
-                    }
-                    return IconButton(
-                      onPressed: () {
-                        context.read<WorkshopBloc>().add(
-                          WorkshopDownloadFile(
-                            fileUrl: url,
-                            fileName: FileHelper.getFileName(url),
-                          ),
-                        );
-                      },
-                      icon: Icon(
-                        size: 24,
-                        Icons.download_rounded,
-                        color: colorScheme.onSurface,
-                      ),
-                    );
-                  },
-                ),
-        ),
-      ],
+  String _buildDueInText() {
+    if (widget.order.deadline == null) return 'N/A';
+    if (widget.order.status == OrderStatus.inProgress) {
+      return _isPastDue()
+          ? _getPastDueStatusText()
+          : '${_getDaysRemaining()} days';
+    }
+    return widget.order.status.toString().split('.').last.toUpperCase();
+  }
+
+  Widget _buildImageAttachment(String url, bool isCurrentUser) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return ImageAttachmentWidget(
+      url: url,
+      isCurrentUser: isCurrentUser,
+      downloadedFiles: _downloadedFiles,
+      colorScheme: colorScheme,
     );
   }
 }

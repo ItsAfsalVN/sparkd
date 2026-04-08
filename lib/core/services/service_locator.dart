@@ -193,6 +193,7 @@ Future<void> init() async {
       deleteMessageUseCase: sl(),
       uploadMessageWithAttachmentUseCase: sl(),
       downloadWorkshopFileUseCase: sl(),
+      orderRepository: sl(),
     ),
   );
 

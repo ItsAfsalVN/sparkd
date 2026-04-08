@@ -20,8 +20,6 @@ class OrderCard extends StatelessWidget {
         return 'Pending Payment';
       case OrderStatus.inProgress:
         return 'In Progress';
-      case OrderStatus.delivered:
-        return 'Delivered';
       case OrderStatus.completed:
         return 'Completed';
       case OrderStatus.cancelled:
@@ -35,8 +33,6 @@ class OrderCard extends StatelessWidget {
       case OrderStatus.pendingPayment:
         return colorScheme.tertiary;
       case OrderStatus.inProgress:
-        return colorScheme.primary;
-      case OrderStatus.delivered:
         return colorScheme.primary;
       case OrderStatus.completed:
         return colorScheme.primary;

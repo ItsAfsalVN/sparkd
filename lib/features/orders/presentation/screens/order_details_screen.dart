@@ -55,8 +55,6 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
         return 'Pending Payment';
       case OrderStatus.inProgress:
         return 'In Progress';
-      case OrderStatus.delivered:
-        return 'Delivered';
       case OrderStatus.completed:
         return 'Completed';
       case OrderStatus.cancelled:
@@ -70,8 +68,6 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
       case OrderStatus.pendingPayment:
         return colorScheme.tertiary;
       case OrderStatus.inProgress:
-        return colorScheme.primary;
-      case OrderStatus.delivered:
         return colorScheme.primary;
       case OrderStatus.completed:
         return colorScheme.primary;
@@ -87,10 +83,8 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
       case OrderStatus.pendingPayment:
         return widget.isSme ? 'Mark as Paid' : null;
       case OrderStatus.inProgress:
-        return 'Go to Workshop';
-      case OrderStatus.delivered:
-        return 'Complete Order';
       case OrderStatus.completed:
+        return 'Go to Workshop';
       case OrderStatus.cancelled:
         return null;
     }
@@ -101,6 +95,25 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
         widget.order.status == OrderStatus.pendingSparkAcceptance;
   }
 
+  /// Check if the deadline has passed
+  bool _isPastDue() {
+    if (widget.order.deadline == null) return false;
+    return DateTime.now().isAfter(widget.order.deadline!);
+  }
+
+  /// Get the number of days remaining (negative if past due)
+  int _getDaysRemaining() {
+    if (widget.order.deadline == null) return 0;
+    return widget.order.deadline!.difference(DateTime.now()).inDays;
+  }
+
+  /// Get past due status text
+  String _getPastDueStatusText() {
+    if (!_isPastDue()) return '';
+    final daysOverdue = _getDaysRemaining().abs();
+    return '$daysOverdue ${daysOverdue == 1 ? 'day' : 'days'} overdue';
+  }
+
   void _handleOrderAction() {
     final currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser == null) return;
@@ -108,8 +121,16 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
     final actionLabel = _getNextActionLabel();
     if (actionLabel == null) return;
 
+    // Show acceptance commitment dialog for Spark accepting order
+    if (!widget.isSme &&
+        widget.order.status == OrderStatus.pendingSparkAcceptance &&
+        actionLabel == 'Accept Order') {
+      _showAcceptanceCommitmentDialog();
+      return;
+    }
+
     if (actionLabel != 'Go to Workshop') {
-      // Show confirmation dialog
+      // Show confirmation dialog for other actions
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
@@ -142,7 +163,9 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
     if (widget.order.id == null) return;
 
     // Navigate to workshop
-    if (widget.order.status == OrderStatus.inProgress) {
+    if ((widget.order.status == OrderStatus.inProgress ||
+            widget.order.status == OrderStatus.completed) &&
+        !widget.isSme) {
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -166,12 +189,276 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
       return;
     }
 
+    // SME mark as delivered (goes to workshop to complete)
+    if (widget.isSme &&
+        (widget.order.status == OrderStatus.inProgress ||
+            widget.order.status == OrderStatus.completed)) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => BlocProvider(
+            create: (_) => sl<WorkshopBloc>(),
+            child: WorkshopScreen(order: widget.order, isSme: widget.isSme),
+          ),
+        ),
+      );
+      return;
+    }
+
     // Spark accept order
     if (!widget.isSme &&
         widget.order.status == OrderStatus.pendingSparkAcceptance) {
       if (widget.sparksOrdersBloc == null) return;
       widget.sparksOrdersBloc!.add(AcceptOrderEvent(orderId: widget.order.id!));
     }
+  }
+
+  void _showAcceptanceCommitmentDialog() {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textStyles = Theme.of(context).textStyles;
+    final deliveryDate = widget.order.deadline != null
+        ? '${widget.order.deadline!.day}/${widget.order.deadline!.month}/${widget.order.deadline!.year}'
+        : 'Not set';
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                spacing: 16,
+                children: [
+                  // Header
+                  Row(
+                    spacing: 12,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: colorScheme.primary.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Icon(
+                          Icons.handshake_rounded,
+                          color: colorScheme.primary,
+                          size: 24,
+                        ),
+                      ),
+                      Expanded(
+                        child: Text(
+                          'Confirm Order Acceptance',
+                          style: textStyles.heading4,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Divider(color: colorScheme.onSurface.withValues(alpha: 0.1)),
+                  // Order details
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: colorScheme.surfaceContainer,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      spacing: 8,
+                      children: [
+                        Text(
+                          'Order Details',
+                          style: textStyles.subtext.copyWith(
+                            fontWeight: FontWeight.w900,
+                            color: colorScheme.onSurface.withValues(alpha: 0.6),
+                          ),
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Delivery Date:',
+                              style: textStyles.paragraph.copyWith(
+                                fontSize: 13,
+                              ),
+                            ),
+                            Text(
+                              deliveryDate,
+                              style: textStyles.heading5.copyWith(
+                                color: colorScheme.primary,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ],
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Amount:',
+                              style: textStyles.paragraph.copyWith(
+                                fontSize: 13,
+                              ),
+                            ),
+                            Text(
+                              '₹${widget.order.gigPrice.toStringAsFixed(0)}',
+                              style: textStyles.heading5.copyWith(
+                                color: colorScheme.primary,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  // Commitment message
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: colorScheme.primary.withValues(alpha: 0.05),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: colorScheme.primary.withValues(alpha: 0.2),
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      spacing: 8,
+                      children: [
+                        Row(
+                          spacing: 8,
+                          children: [
+                            Icon(
+                              Icons.info_outlined,
+                              size: 18,
+                              color: colorScheme.primary,
+                            ),
+                            Text(
+                              'Important',
+                              style: textStyles.subtext.copyWith(
+                                fontWeight: FontWeight.w900,
+                                color: colorScheme.primary,
+                              ),
+                            ),
+                          ],
+                        ),
+                        Text(
+                          'By accepting this order, you commit to delivering the work by the deadline above. Once accepted, this order cannot be cancelled.',
+                          style: textStyles.paragraph.copyWith(
+                            fontSize: 13,
+                            color: colorScheme.onSurface.withValues(alpha: 0.8),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  // Checklist
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    spacing: 8,
+                    children: [
+                      Text(
+                        'Before accepting, make sure:',
+                        style: textStyles.subtext.copyWith(
+                          fontWeight: FontWeight.w900,
+                          color: colorScheme.onSurface.withValues(alpha: 0.6),
+                        ),
+                      ),
+                      _buildChecklistItem(
+                        colorScheme,
+                        textStyles,
+                        '✓ You understand all requirements',
+                      ),
+                      _buildChecklistItem(
+                        colorScheme,
+                        textStyles,
+                        '✓ You can meet the deadline',
+                      ),
+                      _buildChecklistItem(
+                        colorScheme,
+                        textStyles,
+                        '✓ You are committed to quality',
+                      ),
+                    ],
+                  ),
+                  Divider(color: colorScheme.onSurface.withValues(alpha: 0.1)),
+                  // Buttons
+                  Row(
+                    spacing: 12,
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => Navigator.pop(dialogContext),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          child: Text(
+                            'Review Again',
+                            style: textStyles.heading5,
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            Navigator.pop(dialogContext);
+                            _performOrderAction();
+                          },
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            backgroundColor: colorScheme.primary,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          child: Text(
+                            'Accept Order',
+                            style: textStyles.heading5.copyWith(
+                              color: colorScheme.onPrimary,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildChecklistItem(
+    ColorScheme colorScheme,
+    AppTextThemeExtension textStyles,
+    String text,
+  ) {
+    return Row(
+      spacing: 8,
+      children: [
+        Icon(Icons.check_circle_outline, size: 18, color: colorScheme.primary),
+        Expanded(
+          child: Text(
+            text,
+            style: textStyles.paragraph.copyWith(
+              fontSize: 13,
+              color: colorScheme.onSurface.withValues(alpha: 0.7),
+            ),
+          ),
+        ),
+      ],
+    );
   }
 
   void _showRejectDialog() {
@@ -356,7 +643,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                                   ),
                                 ],
                               ),
-                              if (widget.order.deadline != null)
+                              if (widget.order.deadline != null && widget.order.status == OrderStatus.inProgress)
                                 Column(
                                   crossAxisAlignment: CrossAxisAlignment.end,
                                   children: [
@@ -369,13 +656,48 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                                         fontWeight: FontWeight.w900,
                                       ),
                                     ),
-                                    Text(
-                                      timeago.format(widget.order.deadline!),
-                                      style: textStyles.heading4.copyWith(
-                                        color: colorScheme.onSurface.withValues(
-                                          alpha: .6,
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.end,
+                                      spacing: 2,
+                                      children: [
+                                        Text(
+                                          timeago.format(
+                                            widget.order.deadline!,
+                                          ),
+                                          style: textStyles.heading4.copyWith(
+                                            color: _isPastDue()
+                                                ? colorScheme.error
+                                                : colorScheme.onSurface
+                                                      .withValues(alpha: .6),
+                                            fontWeight: _isPastDue()
+                                                ? FontWeight.w700
+                                                : FontWeight.normal,
+                                          ),
                                         ),
-                                      ),
+                                        if (_isPastDue())
+                                          Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            spacing: 4,
+                                            children: [
+                                              Icon(
+                                                Icons.warning_rounded,
+                                                size: 14,
+                                                color: colorScheme.error,
+                                              ),
+                                              Text(
+                                                _getPastDueStatusText(),
+                                                style: textStyles.subtext
+                                                    .copyWith(
+                                                      color: colorScheme.error,
+                                                      fontSize: 11,
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                    ),
+                                              ),
+                                            ],
+                                          ),
+                                      ],
                                     ),
                                   ],
                                 )
@@ -458,6 +780,55 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                                 ],
                               );
                             }),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                  // Past due warning (if applicable and in progress)
+                  if (_isPastDue() &&
+                      widget.order.status == OrderStatus.inProgress)
+                    Container(
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: colorScheme.error.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: colorScheme.error.withValues(alpha: .3),
+                        ),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(10),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          spacing: 6,
+                          children: [
+                            Row(
+                              spacing: 8,
+                              children: [
+                                Icon(
+                                  Icons.warning_rounded,
+                                  color: colorScheme.error,
+                                  size: 20,
+                                ),
+                                Expanded(
+                                  child: Text(
+                                    'Past Due',
+                                    style: textStyles.subtext.copyWith(
+                                      color: colorScheme.error,
+                                      fontWeight: FontWeight.w900,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Text(
+                              'This order is ${_getPastDueStatusText()}. Please prioritize delivery to avoid penalties.',
+                              style: textStyles.paragraph.copyWith(
+                                fontSize: 13,
+                                color: colorScheme.error.withValues(alpha: 0.8),
+                              ),
+                            ),
                           ],
                         ),
                       ),

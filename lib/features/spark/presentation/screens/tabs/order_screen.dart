@@ -24,7 +24,6 @@ class _SparkOrdersScreenState extends State<SparkOrdersScreen> {
     ('pendingSparkAcceptance', 'Pending'),
     ('pendingPayment', 'Payment Pending'),
     ('inProgress', 'In Progress'),
-    ('delivered', 'Delivered'),
     ('completed', 'Completed'),
     ('cancelled', 'Cancelled'),
   ];
@@ -217,11 +216,12 @@ class _SparkOrdersScreenContent extends StatelessWidget {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (routeContext) => OrderDetailsScreen(
-                                      order: order,
-                                      isSme: false,
-                                      sparksOrdersBloc: bloc,
-                                    ),
+                                    builder: (routeContext) =>
+                                        OrderDetailsScreen(
+                                          order: order,
+                                          isSme: false,
+                                          sparksOrdersBloc: bloc,
+                                        ),
                                   ),
                                 );
                               },

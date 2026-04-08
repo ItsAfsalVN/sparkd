@@ -70,8 +70,6 @@ class OrderModel {
         return OrderStatus.pendingPayment;
       case 'inProgress':
         return OrderStatus.inProgress;
-      case 'delivered':
-        return OrderStatus.delivered;
       case 'completed':
         return OrderStatus.completed;
       case 'cancelled':

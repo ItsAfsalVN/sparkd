@@ -74,3 +74,21 @@ class WorkshopDownloadFile extends WorkshopEvent {
   @override
   List<Object?> get props => [fileUrl, fileName];
 }
+
+class WorkshopMarkOrderAsDelivered extends WorkshopEvent {
+  final String orderId;
+
+  WorkshopMarkOrderAsDelivered({required this.orderId});
+
+  @override
+  List<Object?> get props => [orderId];
+}
+
+class WorkshopMarkOrderAsCompleted extends WorkshopEvent {
+  final String orderId;
+
+  WorkshopMarkOrderAsCompleted({required this.orderId});
+
+  @override
+  List<Object?> get props => [orderId];
+}
