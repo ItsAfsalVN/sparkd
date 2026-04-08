@@ -643,7 +643,8 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                                   ),
                                 ],
                               ),
-                              if (widget.order.deadline != null && widget.order.status == OrderStatus.inProgress)
+                              if (widget.order.deadline != null &&
+                                  widget.order.status == OrderStatus.inProgress)
                                 Column(
                                   crossAxisAlignment: CrossAxisAlignment.end,
                                   children: [
