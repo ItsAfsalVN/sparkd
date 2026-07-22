@@ -1,11 +1,11 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:sparkd/core/utils/delivery_types.dart';
 import 'package:sparkd/core/utils/form_statuses.dart';
 import 'package:sparkd/core/utils/logger.dart';
 import 'package:sparkd/features/gigs/domain/entities/gig_entity.dart';
 import 'package:sparkd/features/gigs/domain/entities/requirement_entity.dart';
-import 'package:sparkd/features/spark/domain/entities/skill_entity.dart';
+import 'package:sparkd/features/gigs/domain/usecases/update_gig_views.dart';
+import 'package:sparkd/features/spark/presentation/domain/entities/skill_entity.dart';
 import 'package:sparkd/features/gigs/domain/usecases/update_gig.dart';
 
 part 'edit_gig_event.dart';
@@ -13,24 +13,25 @@ part 'edit_gig_state.dart';
 
 class EditGigBloc extends Bloc<EditGigEvent, EditGigState> {
   final UpdateGigUseCase updateGigUseCase;
+  final UpdateGigViews updateGigViews;
 
-  EditGigBloc({required this.updateGigUseCase}) : super(const EditGigState()) {
+  EditGigBloc({required this.updateGigUseCase, required this.updateGigViews})
+    : super(const EditGigState()) {
     on<EditGigInitialized>(_onInitialized);
     on<EditGigTitleChanged>(_onTitleChanged);
     on<EditGigDescriptionChanged>(_onDescriptionChanged);
     on<EditGigCategoryChanged>(_onCategoryChanged);
-    on<EditGigDeliveryTypeChanged>(_onDeliveryTypeChanged);
     on<EditGigPriceChanged>(_onPriceChanged);
     on<EditGigDeliveryTimeChanged>(_onDeliveryTimeChanged);
     on<EditGigRevisionsChanged>(_onRevisionsChanged);
     on<EditGigTagsChanged>(_onTagsChanged);
-    on<EditGigDeliverablesChanged>(_onDeliverablesChanged);
     on<EditGigRequirementsChanged>(_onRequirementsChanged);
     on<EditGigThumbnailChanged>(_onThumbnailChanged);
     on<EditGigGalleryImagesChanged>(_onGalleryImagesChanged);
     on<EditGigDemoVideoChanged>(_onDemoVideoChanged);
     on<EditGigSubmitted>(_onSubmitted);
     on<EditGigStatusReset>(_onStatusReset);
+    on<EditGigViewsIncremented>(_onViewsIncremented);
   }
 
   void _onInitialized(EditGigInitialized event, Emitter<EditGigState> emit) {
@@ -46,9 +47,7 @@ class EditGigBloc extends Bloc<EditGigEvent, EditGigState> {
         deliveryTimeInDays: event.gig.deliveryTimeInDays,
         revisions: event.gig.maxRevisions,
         tags: event.gig.tags,
-        deliverables: event.gig.deliverables,
         requirements: event.gig.requirements,
-        deliveryType: event.gig.deliveryType,
         thumbnailImage: event.gig.thumbnailImage,
         galleryImages: event.gig.portfolioImages,
         demoVideo: event.gig.demoVideo,
@@ -82,13 +81,6 @@ class EditGigBloc extends Bloc<EditGigEvent, EditGigState> {
     emit(state.copyWith(category: event.category));
   }
 
-  void _onDeliveryTypeChanged(
-    EditGigDeliveryTypeChanged event,
-    Emitter<EditGigState> emit,
-  ) {
-    emit(state.copyWith(deliveryType: event.deliveryType));
-  }
-
   void _onPriceChanged(EditGigPriceChanged event, Emitter<EditGigState> emit) {
     emit(state.copyWith(price: event.price));
   }
@@ -109,13 +101,6 @@ class EditGigBloc extends Bloc<EditGigEvent, EditGigState> {
 
   void _onTagsChanged(EditGigTagsChanged event, Emitter<EditGigState> emit) {
     emit(state.copyWith(tags: event.tags));
-  }
-
-  void _onDeliverablesChanged(
-    EditGigDeliverablesChanged event,
-    Emitter<EditGigState> emit,
-  ) {
-    emit(state.copyWith(deliverables: event.deliverables));
   }
 
   void _onRequirementsChanged(
@@ -164,9 +149,7 @@ class EditGigBloc extends Bloc<EditGigEvent, EditGigState> {
         price: state.price,
         deliveryTimeInDays: state.deliveryTimeInDays,
         maxRevisions: state.revisions,
-        deliverables: state.deliverables,
         requirements: state.requirements,
-        deliveryType: state.deliveryType ?? DeliveryTypes.file,
         thumbnailImage: state.thumbnailImage,
         portfolioImages: state.galleryImages,
         demoVideo: state.demoVideo,
@@ -189,5 +172,16 @@ class EditGigBloc extends Bloc<EditGigEvent, EditGigState> {
 
   void _onStatusReset(EditGigStatusReset event, Emitter<EditGigState> emit) {
     emit(state.copyWith(status: FormStatus.initial));
+  }
+
+  void _onViewsIncremented(
+    EditGigViewsIncremented event,
+    Emitter<EditGigState> emit,
+  ) async {
+    try {
+      await updateGigViews.call(state.gigId!);
+    } catch (e) {
+      logger.e('EditGigBloc: Error incrementing gig views - $e');
+    }
   }
 }

@@ -7,8 +7,6 @@ import 'package:sparkd/core/services/storage_service.dart';
 import 'package:sparkd/core/presentation/widgets/custom_button.dart';
 import 'package:sparkd/core/presentation/widgets/custom_dropdown.dart';
 import 'package:sparkd/core/presentation/widgets/custom_text_field.dart';
-import 'package:sparkd/features/gigs/presentation/widgets/deliverables_checklist.dart';
-import 'package:sparkd/features/gigs/presentation/widgets/delivery_type_selector.dart';
 import 'package:sparkd/features/gigs/presentation/widgets/image_upload.dart';
 import 'package:sparkd/features/gigs/presentation/widgets/mandatory_requirements.dart';
 import 'package:sparkd/features/gigs/presentation/widgets/multi_image_upload.dart';
@@ -16,13 +14,12 @@ import 'package:sparkd/features/spark/presentation/widgets/selectable_list.dart'
 import 'package:sparkd/features/gigs/presentation/widgets/tag_input.dart';
 import 'package:sparkd/features/gigs/presentation/widgets/video_upload.dart';
 import 'package:sparkd/core/utils/app_text_theme_extension.dart';
-import 'package:sparkd/core/utils/delivery_types.dart';
 import 'package:sparkd/core/utils/form_statuses.dart';
 import 'package:sparkd/core/utils/logger.dart';
 import 'package:sparkd/core/utils/snackbar_helper.dart';
 import 'package:sparkd/features/gigs/presentation/bloc/create_gig/create_gig_bloc.dart';
 import 'package:sparkd/features/spark/data/datasources/static_skill_data_source.dart';
-import 'package:sparkd/features/spark/domain/entities/skill_entity.dart';
+import 'package:sparkd/features/spark/presentation/domain/entities/skill_entity.dart';
 import 'package:sparkd/features/gigs/domain/entities/requirement_entity.dart';
 
 class CreateNewGigScreen extends StatefulWidget {
@@ -39,7 +36,6 @@ class _CreateNewGigScreenState extends State<CreateNewGigScreen> {
   List<String> _gigTags = [];
   int? _deliveryTime;
   int? _revisions;
-  List<String> _selectedDeliverables = [];
 
   // Upload state variables - store files until submit
   File? _thumbnailImageFile;
@@ -49,7 +45,6 @@ class _CreateNewGigScreenState extends State<CreateNewGigScreen> {
 
   // New component state variables
   List<RequirementEntity> _mandatoryRequirements = [];
-  DeliveryTypes? _selectedDeliveryType;
 
   // Text form field variables
   String _gigTitle = '';
@@ -223,19 +218,6 @@ class _CreateNewGigScreenState extends State<CreateNewGigScreen> {
                     },
                   ),
 
-                  // Deliverables Checklist
-                  DeliverablesChecklist(
-                    label: "What You'll Deliver",
-                    selectedDeliverables: _selectedDeliverables,
-                    maxSelections: 6,
-                    onChanged: (deliverables) {
-                      setState(() {
-                        _selectedDeliverables = deliverables;
-                      });
-                      logger.d('Selected deliverables: $_selectedDeliverables');
-                    },
-                  ),
-
                   // Primary Thumbnail Upload
                   ImageUpload(
                     label: "Primary Thumbnail",
@@ -293,20 +275,6 @@ class _CreateNewGigScreenState extends State<CreateNewGigScreen> {
                       });
                       logger.d(
                         'Mandatory requirements: $_mandatoryRequirements',
-                      );
-                    },
-                  ),
-
-                  // Delivery Type Selector
-                  DeliveryTypeSelector(
-                    label: "Delivery Type",
-                    selectedType: _selectedDeliveryType,
-                    onChanged: (type) {
-                      setState(() {
-                        _selectedDeliveryType = type;
-                      });
-                      logger.d(
-                        'Selected delivery type: $_selectedDeliveryType',
                       );
                     },
                   ),
@@ -407,9 +375,6 @@ class _CreateNewGigScreenState extends State<CreateNewGigScreen> {
       if (_revisions != null) {
         context.read<CreateGigBloc>().add(GigRevisionsChanged(_revisions!));
       }
-      context.read<CreateGigBloc>().add(
-        GigDeliverablesChanged(_selectedDeliverables),
-      );
       if (thumbnailUrl != null) {
         context.read<CreateGigBloc>().add(GigThumbnailChanged(thumbnailUrl));
       }
@@ -422,11 +387,6 @@ class _CreateNewGigScreenState extends State<CreateNewGigScreen> {
       context.read<CreateGigBloc>().add(
         GigRequirementsChanged(_mandatoryRequirements),
       );
-      if (_selectedDeliveryType != null) {
-        context.read<CreateGigBloc>().add(
-          GigDeliveryTypeChanged(_selectedDeliveryType!),
-        );
-      }
 
       // Submit the gig
       context.read<CreateGigBloc>().add(const CreateGigSubmitted());

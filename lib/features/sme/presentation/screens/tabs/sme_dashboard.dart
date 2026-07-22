@@ -3,7 +3,6 @@ import 'package:sparkd/core/presentation/widgets/app_bottom_navigation_bar.dart'
 import 'package:sparkd/core/presentation/widgets/app_bottom_navigation_bar_item.dart';
 import 'package:sparkd/features/sme/presentation/screens/tabs/discover_screen.dart';
 import 'package:sparkd/features/sme/presentation/screens/tabs/home_screen.dart';
-import 'package:sparkd/features/sme/presentation/screens/tabs/inbox_screen.dart';
 import 'package:sparkd/features/sme/presentation/screens/tabs/order_screen.dart';
 import 'package:sparkd/features/sme/presentation/screens/tabs/profile_screen.dart';
 
@@ -33,11 +32,6 @@ class _SmeDashboardState extends State<SmeDashboard> {
       label: 'Discover',
       iconPath: 'assets/icons/sme/compass.svg',
       screen: const SmeDiscoverScreen(),
-    ),
-    AppBottomNavigationBarItem(
-      label: 'Inbox',
-      iconPath: 'assets/icons/sme/inbox.svg',
-      screen: const SmeInboxScreen(),
     ),
     AppBottomNavigationBarItem(
       label: 'Profile',

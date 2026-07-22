@@ -1,11 +1,10 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:sparkd/core/utils/delivery_types.dart';
 import 'package:sparkd/core/utils/form_statuses.dart';
 import 'package:sparkd/core/utils/logger.dart';
 import 'package:sparkd/features/gigs/domain/entities/gig_entity.dart';
 import 'package:sparkd/features/gigs/domain/entities/requirement_entity.dart';
-import 'package:sparkd/features/spark/domain/entities/skill_entity.dart';
+import 'package:sparkd/features/spark/presentation/domain/entities/skill_entity.dart';
 import 'package:sparkd/features/gigs/domain/usecases/create_new_gig.dart';
 import 'package:sparkd/features/gigs/domain/usecases/get_user_gigs.dart';
 
@@ -23,12 +22,10 @@ class CreateGigBloc extends Bloc<CreateGigEvent, CreateGigState> {
     on<GigTitleChanged>(_onTitleChanged);
     on<GigDescriptionChanged>(_onDescriptionChanged);
     on<GigCategoryChanged>(_onCategoryChanged);
-    on<GigDeliveryTypeChanged>(_onDeliveryTypeChanged);
     on<GigPriceChanged>(_onPriceChanged);
     on<GigDeliveryTimeChanged>(_onDeliveryTimeChanged);
     on<GigRevisionsChanged>(_onRevisionsChanged);
     on<GigTagsChanged>(_onTagsChanged);
-    on<GigDeliverablesChanged>(_onDeliverablesChanged);
     on<GigRequirementsChanged>(_onRequirementsChanged);
     on<GigPostInstructionsChanged>(_onPostInstructionsChanged);
     on<GigThumbnailChanged>(_onThumbnailChanged);
@@ -59,13 +56,6 @@ class CreateGigBloc extends Bloc<CreateGigEvent, CreateGigState> {
     emit(state.copyWith(category: event.category));
   }
 
-  void _onDeliveryTypeChanged(
-    GigDeliveryTypeChanged event,
-    Emitter<CreateGigState> emit,
-  ) {
-    emit(state.copyWith(deliveryType: event.deliveryType));
-  }
-
   void _onPriceChanged(GigPriceChanged event, Emitter<CreateGigState> emit) {
     emit(state.copyWith(price: event.price));
   }
@@ -86,13 +76,6 @@ class CreateGigBloc extends Bloc<CreateGigEvent, CreateGigState> {
 
   void _onTagsChanged(GigTagsChanged event, Emitter<CreateGigState> emit) {
     emit(state.copyWith(tags: event.tags));
-  }
-
-  void _onDeliverablesChanged(
-    GigDeliverablesChanged event,
-    Emitter<CreateGigState> emit,
-  ) {
-    emit(state.copyWith(deliverables: event.deliverables));
   }
 
   void _onRequirementsChanged(
@@ -147,9 +130,7 @@ class CreateGigBloc extends Bloc<CreateGigEvent, CreateGigState> {
         price: state.price,
         deliveryTimeInDays: state.deliveryTimeInDays,
         maxRevisions: state.revisions,
-        deliverables: state.deliverables,
         requirements: state.requirements,
-        deliveryType: state.deliveryType ?? DeliveryTypes.file,
         thumbnailImage: state.thumbnailImage,
         portfolioImages: state.galleryImages,
         demoVideo: state.demoVideo,
@@ -178,12 +159,10 @@ class CreateGigBloc extends Bloc<CreateGigEvent, CreateGigState> {
         deliveryTimeInDays: 0,
         revisions: 0,
         tags: [],
-        deliverables: [],
         requirements: [],
         postGigInstructions: [],
         status: FormStatus.initial,
         category: null,
-        deliveryType: null,
         thumbnailImage: null,
         galleryImages: [],
         demoVideo: null,

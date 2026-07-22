@@ -2,24 +2,15 @@ import 'package:sparkd/features/orders/domain/entities/workshop_message_entity.d
 
 class WorkshopMessageModel extends WorkshopMessageEntity {
   const WorkshopMessageModel({
-    required String id,
-    required String orderId,
-    required String senderId,
-    required String senderName,
-    required String senderRole,
-    required String message,
-    required DateTime sentAt,
-    List<String>? attachmentUrls,
-  }) : super(
-         id: id,
-         orderId: orderId,
-         senderId: senderId,
-         senderName: senderName,
-         senderRole: senderRole,
-         message: message,
-         sentAt: sentAt,
-         attachmentUrls: attachmentUrls,
-       );
+    required super.id,
+    required super.orderId,
+    required super.senderId,
+    required super.senderName,
+    required super.senderRole,
+    required super.message,
+    required super.sentAt,
+    super.attachmentUrls,
+  });
 
   factory WorkshopMessageModel.fromMap(Map<String, dynamic> map) {
     return WorkshopMessageModel(

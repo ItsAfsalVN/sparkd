@@ -57,7 +57,7 @@ class CustomDropdown<T> extends StatelessWidget {
           ),
           child: DropdownButtonFormField<T>(
             focusNode: focusNode,
-            value: value,
+            initialValue: value,
             hint: Text(
               hintText,
               style: textStyles.subtext.copyWith(

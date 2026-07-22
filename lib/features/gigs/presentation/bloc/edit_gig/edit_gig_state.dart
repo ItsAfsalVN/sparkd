@@ -11,13 +11,12 @@ class EditGigState extends Equatable {
   final double price;
   final int deliveryTimeInDays;
   final int revisions;
-  final List<String> deliverables;
   final String? thumbnailImage;
   final List<String> galleryImages;
   final String? demoVideo;
   final List<RequirementEntity> requirements;
-  final DeliveryTypes? deliveryType;
   final FormStatus? status;
+  final double? totalViews;
 
   const EditGigState({
     this.gigId,
@@ -30,13 +29,12 @@ class EditGigState extends Equatable {
     this.price = 0.0,
     this.deliveryTimeInDays = 0,
     this.revisions = 0,
-    this.deliverables = const [],
     this.thumbnailImage,
     this.galleryImages = const [],
     this.demoVideo,
     this.requirements = const [],
-    this.deliveryType,
     this.status = FormStatus.initial,
+    this.totalViews,
   });
 
   EditGigState copyWith({
@@ -50,13 +48,12 @@ class EditGigState extends Equatable {
     double? price,
     int? deliveryTimeInDays,
     int? revisions,
-    List<String>? deliverables,
     String? thumbnailImage,
     List<String>? galleryImages,
     String? demoVideo,
     List<RequirementEntity>? requirements,
-    DeliveryTypes? deliveryType,
     FormStatus? status,
+    double? totalViews,
   }) {
     return EditGigState(
       gigId: gigId ?? this.gigId,
@@ -69,13 +66,12 @@ class EditGigState extends Equatable {
       price: price ?? this.price,
       deliveryTimeInDays: deliveryTimeInDays ?? this.deliveryTimeInDays,
       revisions: revisions ?? this.revisions,
-      deliverables: deliverables ?? this.deliverables,
       thumbnailImage: thumbnailImage ?? this.thumbnailImage,
       galleryImages: galleryImages ?? this.galleryImages,
       demoVideo: demoVideo ?? this.demoVideo,
       requirements: requirements ?? this.requirements,
-      deliveryType: deliveryType ?? this.deliveryType,
       status: status ?? this.status,
+      totalViews: totalViews ?? this.totalViews,
     );
   }
 
@@ -91,12 +87,11 @@ class EditGigState extends Equatable {
     price,
     deliveryTimeInDays,
     revisions,
-    deliverables,
     thumbnailImage,
     galleryImages,
     demoVideo,
     requirements,
-    deliveryType,
     status,
+    totalViews,
   ];
 }

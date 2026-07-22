@@ -35,13 +35,6 @@ class EditGigCategoryChanged extends EditGigEvent {
   List<Object> get props => [category];
 }
 
-class EditGigDeliveryTypeChanged extends EditGigEvent {
-  final DeliveryTypes deliveryType;
-  const EditGigDeliveryTypeChanged(this.deliveryType);
-  @override
-  List<Object> get props => [deliveryType];
-}
-
 class EditGigPriceChanged extends EditGigEvent {
   final double price;
   const EditGigPriceChanged(this.price);
@@ -68,13 +61,6 @@ class EditGigTagsChanged extends EditGigEvent {
   const EditGigTagsChanged(this.tags);
   @override
   List<Object> get props => [tags];
-}
-
-class EditGigDeliverablesChanged extends EditGigEvent {
-  final List<String> deliverables;
-  const EditGigDeliverablesChanged(this.deliverables);
-  @override
-  List<Object> get props => [deliverables];
 }
 
 class EditGigRequirementsChanged extends EditGigEvent {
@@ -111,4 +97,8 @@ class EditGigSubmitted extends EditGigEvent {
 
 class EditGigStatusReset extends EditGigEvent {
   const EditGigStatusReset();
+}
+
+class EditGigViewsIncremented extends EditGigEvent {
+  const EditGigViewsIncremented();
 }

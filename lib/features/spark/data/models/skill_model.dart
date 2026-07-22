@@ -1,4 +1,4 @@
-import 'package:sparkd/features/spark/domain/entities/skill_entity.dart';
+import 'package:sparkd/features/spark/presentation/domain/entities/skill_entity.dart';
 
 class ToolModel extends ToolEntity {
   const ToolModel({required super.toolID, required super.toolName});

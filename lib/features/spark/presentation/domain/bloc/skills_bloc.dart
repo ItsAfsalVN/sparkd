@@ -6,7 +6,7 @@ import 'package:sparkd/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:sparkd/core/services/service_locator.dart' as di;
 import 'package:sparkd/features/spark/data/datasources/static_skill_data_source.dart';
 import 'package:sparkd/features/spark/data/models/skill_model.dart';
-import 'package:sparkd/features/spark/domain/entities/skill_entity.dart';
+import 'package:sparkd/features/spark/presentation/domain/entities/skill_entity.dart';
 import 'package:sparkd/core/utils/form_statuses.dart';
 
 part 'skills_event.dart';

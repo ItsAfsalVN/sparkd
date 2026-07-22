@@ -117,4 +117,16 @@ class GigRepositoryImpl implements GigRepository {
       rethrow;
     }
   }
+
+  @override
+  Future<void> incrementGigViews(String gigId) {
+    try {
+      logger.i('Repository: Incrementing views for gig $gigId');
+
+      return remoteDataSource.incrementGigViews(gigId);
+    } catch (e) {
+      logger.e('Repository: Error incrementing gig views - $e');
+      rethrow;
+    }
+  }
 }

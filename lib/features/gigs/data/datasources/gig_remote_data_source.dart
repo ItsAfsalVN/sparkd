@@ -13,6 +13,7 @@ abstract class GigRemoteDataSource {
   Future<void> deleteGig(String id);
   Future<List<GigModel>> getGigsByCategory(String categoryId);
   Future<List<GigModel>> getGigsByCreator(String creatorId);
+  Future<void> incrementGigViews(String gigId);
 }
 
 class GigRemoteDataSourceImpl implements GigRemoteDataSource {
@@ -267,6 +268,42 @@ class GigRemoteDataSourceImpl implements GigRemoteDataSource {
     } catch (e) {
       logger.e('Error fetching gigs by creator: $e');
       throw Exception('Failed to fetch gigs by creator: $e');
+    }
+  }
+
+  @override
+  Future<void> incrementGigViews(String gigId) async {
+    try {
+      final currentUser = _auth.currentUser;
+      if (currentUser == null) {
+        throw Exception('User not authenticated');
+      }
+      final viewerDoc = await _firestore
+          .collection('gigs')
+          .doc(gigId)
+          .collection('views')
+          .doc(currentUser.uid)
+          .get();
+
+      if (!viewerDoc.exists) {
+        await _firestore
+            .collection('gigs')
+            .doc(gigId)
+            .collection('views')
+            .doc(currentUser.uid)
+            .set({'userId':currentUser.uid,'viewedAt': DateTime.now().toIso8601String()});
+
+        await _firestore.collection('gigs').doc(gigId).update({
+          'totalViews': FieldValue.increment(1),
+        });
+
+        logger.i('Gig view incremented for gigId: $gigId by user: ${currentUser.uid}');
+      }else{
+        logger.i("User ${currentUser.uid} has already viewed gig $gigId");
+      }
+    } catch (e) {
+      logger.e('Error incrementing gig view: $e');
+      throw Exception('Failed to increment gig view: $e');
     }
   }
 }

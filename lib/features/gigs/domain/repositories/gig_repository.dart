@@ -8,4 +8,5 @@ abstract class GigRepository {
   Future<void> deleteGig(String id);
   Future<List<GigEntity>> getGigsByCategory(String categoryId);
   Future<List<GigEntity>> getGigsByCreator(String creatorId);
+  Future<void> incrementGigViews(String gigId);
 }

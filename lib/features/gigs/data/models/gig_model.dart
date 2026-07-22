@@ -1,4 +1,3 @@
-import 'package:sparkd/core/utils/delivery_types.dart';
 import 'package:sparkd/features/gigs/domain/entities/gig_entity.dart';
 import 'package:sparkd/features/gigs/domain/entities/requirement_entity.dart';
 
@@ -12,9 +11,7 @@ class GigModel extends GigEntity {
     required super.price,
     required super.deliveryTimeInDays,
     required super.maxRevisions,
-    required super.deliverables,
     required super.requirements,
-    required super.deliveryType,
     super.thumbnailImage,
     super.portfolioImages = const [],
     super.demoVideo,
@@ -24,6 +21,9 @@ class GigModel extends GigEntity {
     super.isActive = true,
     super.rating = 0.0,
     super.totalReviews = 0,
+    super.totalEarnings = 0,
+    super.totalViews = 0,
+    super.ordersInProgress = 0,
   });
 
   factory GigModel.fromJson(Map<String, dynamic> json) {
@@ -36,13 +36,11 @@ class GigModel extends GigEntity {
       price: (json['price'] as num).toDouble(),
       deliveryTimeInDays: json['deliveryTimeInDays'] as int,
       maxRevisions: json['maxRevisions'] as int,
-      deliverables: List<String>.from(json['deliverables'] ?? []),
       requirements:
           (json['requirements'] as List<dynamic>?)
               ?.map((e) => RequirementEntity.fromMap(e as Map<String, dynamic>))
               .toList() ??
           [],
-      deliveryType: _parseDeliveryType(json['deliveryType']),
       thumbnailImage: json['thumbnailImage'] as String?,
       portfolioImages: List<String>.from(json['portfolioImages'] ?? []),
       demoVideo: json['demoVideo'] as String?,
@@ -56,6 +54,9 @@ class GigModel extends GigEntity {
       isActive: json['isActive'] as bool? ?? true,
       rating: (json['rating'] as num?)?.toDouble() ?? 0.0,
       totalReviews: json['totalReviews'] as int? ?? 0,
+      totalEarnings: (json['totalEarnings'] as num?)?.toDouble() ?? 0.0,
+      totalViews: json['totalViews'] as int? ?? 0,
+      ordersInProgress: json['ordersInProgress'] as int? ?? 0,
     );
   }
 
@@ -69,9 +70,7 @@ class GigModel extends GigEntity {
       'price': price,
       'deliveryTimeInDays': deliveryTimeInDays,
       'maxRevisions': maxRevisions,
-      'deliverables': deliverables,
       'requirements': requirements.map((e) => e.toMap()).toList(),
-      'deliveryType': _deliveryTypeToString(deliveryType),
       'thumbnailImage': thumbnailImage,
       'portfolioImages': portfolioImages,
       'demoVideo': demoVideo,
@@ -81,6 +80,9 @@ class GigModel extends GigEntity {
       'isActive': isActive,
       'rating': rating,
       'totalReviews': totalReviews,
+      'totalEarnings': totalEarnings,
+      'totalViews': totalViews,
+      'ordersInProgress': ordersInProgress,
     };
   }
 
@@ -94,9 +96,7 @@ class GigModel extends GigEntity {
       price: entity.price,
       deliveryTimeInDays: entity.deliveryTimeInDays,
       maxRevisions: entity.maxRevisions,
-      deliverables: entity.deliverables,
       requirements: entity.requirements,
-      deliveryType: entity.deliveryType,
       thumbnailImage: entity.thumbnailImage,
       portfolioImages: entity.portfolioImages,
       demoVideo: entity.demoVideo,
@@ -106,6 +106,9 @@ class GigModel extends GigEntity {
       isActive: entity.isActive,
       rating: entity.rating,
       totalReviews: entity.totalReviews,
+      totalEarnings: entity.totalEarnings,
+      totalViews: entity.totalViews,
+      ordersInProgress: entity.ordersInProgress,
     );
   }
 
@@ -119,9 +122,7 @@ class GigModel extends GigEntity {
       price: price,
       deliveryTimeInDays: deliveryTimeInDays,
       maxRevisions: maxRevisions,
-      deliverables: deliverables,
       requirements: requirements,
-      deliveryType: deliveryType,
       thumbnailImage: thumbnailImage,
       portfolioImages: portfolioImages,
       demoVideo: demoVideo,
@@ -131,30 +132,10 @@ class GigModel extends GigEntity {
       isActive: isActive,
       rating: rating,
       totalReviews: totalReviews,
+      totalEarnings: totalEarnings,
+      totalViews: totalViews,
+      ordersInProgress: ordersInProgress,
     );
-  }
-
-  static DeliveryTypes _parseDeliveryType(dynamic value) {
-    if (value == null) return DeliveryTypes.file;
-
-    switch (value.toString().toLowerCase()) {
-      case 'file':
-        return DeliveryTypes.file;
-      case 'servicecompletion':
-      case 'service_completion':
-        return DeliveryTypes.serviceCompletion;
-      default:
-        return DeliveryTypes.file;
-    }
-  }
-
-  static String _deliveryTypeToString(DeliveryTypes type) {
-    switch (type) {
-      case DeliveryTypes.file:
-        return 'file';
-      case DeliveryTypes.serviceCompletion:
-        return 'serviceCompletion';
-    }
   }
 
   @override
@@ -169,7 +150,6 @@ class GigModel extends GigEntity {
     int? maxRevisions,
     List<String>? deliverables,
     List<RequirementEntity>? requirements,
-    DeliveryTypes? deliveryType,
     String? thumbnailImage,
     List<String>? portfolioImages,
     String? demoVideo,
@@ -179,6 +159,9 @@ class GigModel extends GigEntity {
     bool? isActive,
     double? rating,
     int? totalReviews,
+    double? totalEarnings,
+    int? totalViews,
+    int? ordersInProgress,
   }) {
     return GigModel(
       id: id ?? this.id,
@@ -189,9 +172,7 @@ class GigModel extends GigEntity {
       price: price ?? this.price,
       deliveryTimeInDays: deliveryTimeInDays ?? this.deliveryTimeInDays,
       maxRevisions: maxRevisions ?? this.maxRevisions,
-      deliverables: deliverables ?? this.deliverables,
       requirements: requirements ?? this.requirements,
-      deliveryType: deliveryType ?? this.deliveryType,
       thumbnailImage: thumbnailImage ?? this.thumbnailImage,
       portfolioImages: portfolioImages ?? this.portfolioImages,
       demoVideo: demoVideo ?? this.demoVideo,
@@ -201,6 +182,9 @@ class GigModel extends GigEntity {
       isActive: isActive ?? this.isActive,
       rating: rating ?? this.rating,
       totalReviews: totalReviews ?? this.totalReviews,
+      totalEarnings: totalEarnings ?? this.totalEarnings,
+      totalViews: totalViews ?? this.totalViews,
+      ordersInProgress: ordersInProgress ?? this.ordersInProgress,
     );
   }
 }

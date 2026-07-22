@@ -15,7 +15,7 @@ class WorkshopBloc extends Bloc<WorkshopEvent, WorkshopState> {
   final SendWorkshopMessageWithAttachment _uploadMessageWithAttachmentUseCase;
   final DownloadWorkshopFileUseCase _downloadWorkshopFileUseCase;
   final OrderRepository _orderRepository;
-  Map<String, String> _downloadedFilesCache =
+  final Map<String, String> _downloadedFilesCache =
       {}; // Map of file names to their local paths
 
   WorkshopBloc({

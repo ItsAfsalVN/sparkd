@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:sparkd/core/presentation/widgets/custom_button.dart';
+import 'package:sparkd/core/services/service_locator.dart';
 import 'package:sparkd/core/utils/user_helper.dart';
 import 'package:sparkd/features/gigs/domain/entities/gig_entity.dart';
+import 'package:sparkd/features/gigs/domain/usecases/update_gig_views.dart';
 import 'package:sparkd/features/gigs/presentation/widgets/rating_view.dart';
 import 'package:sparkd/core/presentation/widgets/ui_card.dart';
 import 'package:sparkd/core/utils/app_text_theme_extension.dart';
@@ -165,12 +167,17 @@ class SmeGigCard extends StatelessWidget {
           ),
           // Button
           CustomButton(
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => SmeGigDetailsScreen(gig: gig),
-                ),
-              );
+            onPressed: () async {
+              final updateGigViews = sl<UpdateGigViews>();
+              await updateGigViews.call(gig.id!);
+              if (context.mounted) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => SmeGigDetailsScreen(gig: gig),
+                  ),
+                );
+              }
             },
             title: "Buy",
             borderRadius: BorderRadius.circular(12),

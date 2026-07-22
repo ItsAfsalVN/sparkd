@@ -18,6 +18,7 @@ import 'package:sparkd/features/gigs/domain/usecases/create_new_gig.dart';
 import 'package:sparkd/features/gigs/domain/usecases/get_gigs.dart';
 import 'package:sparkd/features/gigs/domain/usecases/get_user_gigs.dart';
 import 'package:sparkd/features/gigs/domain/usecases/update_gig.dart';
+import 'package:sparkd/features/gigs/domain/usecases/update_gig_views.dart';
 import 'package:sparkd/features/gigs/presentation/bloc/create_gig/create_gig_bloc.dart';
 import 'package:sparkd/features/gigs/presentation/bloc/discover_gig/discover_gig_bloc.dart';
 import 'package:sparkd/features/gigs/presentation/bloc/edit_gig/edit_gig_bloc.dart';
@@ -44,7 +45,7 @@ import 'package:sparkd/features/orders/domain/repository/upload_file_repository.
 import 'package:sparkd/features/spark/data/datasources/static_skill_data_source.dart';
 import 'package:sparkd/features/gigs/data/datasources/gig_remote_data_source.dart';
 import 'package:sparkd/features/gigs/data/repositories/gig_repository_impl.dart';
-import 'package:sparkd/features/spark/domain/bloc/skills_bloc.dart';
+import 'package:sparkd/features/spark/presentation/domain/bloc/skills_bloc.dart';
 import 'package:sparkd/features/auth/data/datasources/auth_local_data_source.dart';
 import 'package:sparkd/features/auth/data/datasources/auth_remote_data_source.dart';
 import 'package:sparkd/features/auth/data/repositories/auth_repository_implementation.dart';
@@ -150,12 +151,15 @@ Future<void> init() async {
     () => CreateGigBloc(createNewGigUseCase: sl(), getUserGigsUseCase: sl()),
   );
 
-  sl.registerFactory(() => EditGigBloc(updateGigUseCase: sl()));
+  sl.registerFactory(
+    () => EditGigBloc(updateGigUseCase: sl(), updateGigViews: sl()),
+  );
 
   sl.registerFactory(() => DiscoverGigBloc(getGigsUseCase: sl()));
 
   sl.registerLazySingleton(() => CreateNewGigUseCase(repository: sl()));
   sl.registerLazySingleton(() => UpdateGigUseCase(repository: sl()));
+  sl.registerLazySingleton(() => UpdateGigViews(repository: sl()));
 
   sl.registerLazySingleton(() => GetUserGigsUseCase(repository: sl()));
   sl.registerLazySingleton(() => GetGigsUseCase(gigRepository: sl()));

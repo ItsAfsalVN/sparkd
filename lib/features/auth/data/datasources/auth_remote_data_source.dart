@@ -345,7 +345,7 @@ class AuthRemoteDataSourceImplementation extends AuthRemoteDataSource {
           }
 
           logger.w(
-            "Firestore: Attempt ${retryCount} failed, retrying in ${retryDelay.inMilliseconds}ms...",
+            "Firestore: Attempt $retryCount failed, retrying in ${retryDelay.inMilliseconds}ms...",
             error: e,
           );
 

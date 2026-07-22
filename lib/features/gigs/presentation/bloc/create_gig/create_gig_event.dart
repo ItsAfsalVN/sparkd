@@ -28,13 +28,6 @@ class GigCategoryChanged extends CreateGigEvent {
   List<Object> get props => [category];
 }
 
-class GigDeliveryTypeChanged extends CreateGigEvent {
-  final DeliveryTypes deliveryType;
-  const GigDeliveryTypeChanged(this.deliveryType);
-  @override
-  List<Object> get props => [deliveryType];
-}
-
 class GigPriceChanged extends CreateGigEvent {
   final double price;
   const GigPriceChanged(this.price);
@@ -61,13 +54,6 @@ class GigTagsChanged extends CreateGigEvent {
   const GigTagsChanged(this.tags);
   @override
   List<Object> get props => [tags];
-}
-
-class GigDeliverablesChanged extends CreateGigEvent {
-  final List<String> deliverables;
-  const GigDeliverablesChanged(this.deliverables);
-  @override
-  List<Object> get props => [deliverables];
 }
 
 class GigRequirementsChanged extends CreateGigEvent {

@@ -75,7 +75,7 @@ class SparkGigCard extends StatelessWidget {
                     size: 20,
                   ),
                   Text(
-                    "1.2k",
+                    gig.totalViews.toString(),
                     style: textStyles.subtext.copyWith(
                       color: colorScheme.onSurface.withValues(alpha: .3),
                     ),
@@ -114,7 +114,7 @@ class SparkGigCard extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        gig.price.toStringAsFixed(0),
+                        gig.totalEarnings.toStringAsFixed(0),
                         style: textStyles.heading2.copyWith(
                           color: colorScheme.onSurface.withValues(alpha: .8),
                           height: 1,
@@ -135,7 +135,7 @@ class SparkGigCard extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    "4",
+                    gig.ordersInProgress.toString(),
                     style: textStyles.heading2.copyWith(
                       color: colorScheme.onSurface.withValues(alpha: .8),
                       height: 1,

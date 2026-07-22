@@ -117,4 +117,9 @@ class GigRepositoryImpl implements GigRepository {
       rethrow;
     }
   }
+  
+  @override
+  Future<void> incrementGigViews(String gigId) async{
+    await remoteDataSource.incrementGigViews(gigId);
+  }
 }

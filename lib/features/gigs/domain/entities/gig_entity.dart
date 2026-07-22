@@ -1,5 +1,4 @@
 import 'package:equatable/equatable.dart';
-import 'package:sparkd/core/utils/delivery_types.dart';
 import 'package:sparkd/features/gigs/domain/entities/requirement_entity.dart';
 
 class GigEntity extends Equatable {
@@ -11,9 +10,7 @@ class GigEntity extends Equatable {
   final double price;
   final int deliveryTimeInDays;
   final int maxRevisions;
-  final List<String> deliverables;
   final List<RequirementEntity> requirements;
-  final DeliveryTypes deliveryType;
   final String? thumbnailImage;
   final List<String> portfolioImages;
   final String? demoVideo;
@@ -23,6 +20,9 @@ class GigEntity extends Equatable {
   final bool isActive;
   final double rating;
   final int totalReviews;
+  final double totalEarnings;
+  final int totalViews;
+  final int ordersInProgress;
 
   const GigEntity({
     this.id,
@@ -33,9 +33,7 @@ class GigEntity extends Equatable {
     required this.price,
     required this.deliveryTimeInDays,
     required this.maxRevisions,
-    required this.deliverables,
     required this.requirements,
-    required this.deliveryType,
     this.thumbnailImage,
     this.portfolioImages = const [],
     this.demoVideo,
@@ -45,6 +43,9 @@ class GigEntity extends Equatable {
     this.isActive = true,
     this.rating = 0.0,
     this.totalReviews = 0,
+    this.totalEarnings = 0,
+    this.totalViews = 0,
+    this.ordersInProgress = 0,
   });
 
   @override
@@ -57,9 +58,7 @@ class GigEntity extends Equatable {
     price,
     deliveryTimeInDays,
     maxRevisions,
-    deliverables,
     requirements,
-    deliveryType,
     thumbnailImage,
     portfolioImages,
     demoVideo,
@@ -69,6 +68,9 @@ class GigEntity extends Equatable {
     isActive,
     rating,
     totalReviews,
+    totalEarnings,
+    totalViews,
+    ordersInProgress,
   ];
 
   GigEntity copyWith({
@@ -80,9 +82,7 @@ class GigEntity extends Equatable {
     double? price,
     int? deliveryTimeInDays,
     int? maxRevisions,
-    List<String>? deliverables,
     List<RequirementEntity>? requirements,
-    DeliveryTypes? deliveryType,
     String? thumbnailImage,
     List<String>? portfolioImages,
     String? demoVideo,
@@ -92,6 +92,9 @@ class GigEntity extends Equatable {
     bool? isActive,
     double? rating,
     int? totalReviews,
+    double? totalEarnings,
+    int? totalViews,
+    int? ordersInProgress,
   }) {
     return GigEntity(
       id: id ?? this.id,
@@ -102,9 +105,7 @@ class GigEntity extends Equatable {
       price: price ?? this.price,
       deliveryTimeInDays: deliveryTimeInDays ?? this.deliveryTimeInDays,
       maxRevisions: maxRevisions ?? this.maxRevisions,
-      deliverables: deliverables ?? this.deliverables,
       requirements: requirements ?? this.requirements,
-      deliveryType: deliveryType ?? this.deliveryType,
       thumbnailImage: thumbnailImage ?? this.thumbnailImage,
       portfolioImages: portfolioImages ?? this.portfolioImages,
       demoVideo: demoVideo ?? this.demoVideo,
@@ -114,6 +115,9 @@ class GigEntity extends Equatable {
       isActive: isActive ?? this.isActive,
       rating: rating ?? this.rating,
       totalReviews: totalReviews ?? this.totalReviews,
+      totalEarnings: totalEarnings ?? this.totalEarnings,
+      totalViews: totalViews ?? this.totalViews,
+      ordersInProgress: ordersInProgress ?? this.ordersInProgress,
     );
   }
 }

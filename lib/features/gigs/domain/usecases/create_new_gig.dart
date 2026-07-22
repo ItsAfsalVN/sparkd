@@ -58,10 +58,6 @@ class CreateNewGigUseCase {
       throw Exception('Invalid revisions value');
     }
 
-    if (gig.deliverables.isEmpty) {
-      throw Exception('At least one deliverable must be selected');
-    }
-
     if (gig.requirements.isEmpty) {
       throw Exception('At least one requirement must be specified');
     }

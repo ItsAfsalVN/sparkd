@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:sparkd/core/utils/app_colors.dart';
 import 'package:sparkd/core/utils/app_text_theme_extension.dart';
 import 'package:sparkd/core/utils/snackbar_helper.dart';
 import 'package:sparkd/features/gigs/domain/entities/requirement_entity.dart';
