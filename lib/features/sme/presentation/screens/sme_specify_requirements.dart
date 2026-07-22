@@ -37,10 +37,12 @@ class _SmeSpecifyRequirementsState extends State<SmeSpecifyRequirements> {
 
   Future<void> _pickFile(RequirementEntity requirement) async {
     try {
-      final result = await FilePicker.platform.pickFiles(
+      final result = await FilePicker.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png', 'zip'],
       );
+
+      if (!mounted) return;
 
       if (result != null && result.files.single.path != null) {
         final file = File(result.files.single.path!);
@@ -50,21 +52,9 @@ class _SmeSpecifyRequirementsState extends State<SmeSpecifyRequirements> {
         });
 
         logger.i('File selected: ${result.files.single.name}');
-
-        if (mounted) {
-          showSnackbar(
-            context,
-            'File selected: ${result.files.single.name}',
-            SnackBarType.success,
-          );
-        }
       }
     } catch (e) {
       logger.e('Error selecting file: $e');
-
-      if (mounted) {
-        showSnackbar(context, 'Failed to select file: $e', SnackBarType.error);
-      }
     }
   }
 

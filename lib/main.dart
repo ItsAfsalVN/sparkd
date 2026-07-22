@@ -250,8 +250,9 @@ class _AppState extends State<App> {
                       const SizedBox(height: 24),
                       ElevatedButton.icon(
                         onPressed: () {
-                          // Restart the app by recreating the widget
-                          (context as Element).reassemble();
+                          setState(() {
+                            _initFuture = _initializeApp();
+                          });
                         },
                         icon: const Icon(Icons.refresh),
                         label: const Text('Retry'),

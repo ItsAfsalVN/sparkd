@@ -7,7 +7,6 @@ import 'package:sparkd/features/gigs/domain/entities/gig_entity.dart';
 import 'package:sparkd/features/gigs/domain/entities/requirement_entity.dart';
 import 'package:sparkd/features/gigs/presentation/widgets/rating_view.dart';
 import 'package:sparkd/features/sme/presentation/screens/sme_specify_requirements.dart';
-import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 import 'package:video_player/video_player.dart';
 import 'package:chewie/chewie.dart';
 import 'package:sparkd/core/utils/logger.dart';
@@ -26,7 +25,6 @@ class _SmeGigDetailsScreenState extends State<SmeGigDetailsScreen>
   late PageController _pageController;
   int _currentPage = 0;
   late List<Widget> _mediaItems;
-  YoutubePlayerController? _youtubeController;
   VideoPlayerController? _videoPlayerController;
   ChewieController? _chewieController;
   bool _isVideoLoading = false;
@@ -37,7 +35,11 @@ class _SmeGigDetailsScreenState extends State<SmeGigDetailsScreen>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _pageController = PageController();
-    _initializeYoutubeController();
+
+    if (widget.gig.demoVideo != null && widget.gig.demoVideo!.isNotEmpty) {
+      _initializeVideoPlayer(widget.gig.demoVideo!);
+    }
+
     _buildMediaItems();
   }
 
@@ -45,7 +47,6 @@ class _SmeGigDetailsScreenState extends State<SmeGigDetailsScreen>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _pageController.dispose();
-    _youtubeController?.dispose();
     _videoPlayerController?.dispose();
     _chewieController?.dispose();
     super.dispose();
@@ -61,35 +62,7 @@ class _SmeGigDetailsScreenState extends State<SmeGigDetailsScreen>
   }
 
   void _pauseAllVideos() {
-    _youtubeController?.pause();
     _videoPlayerController?.pause();
-  }
-
-  void _initializeYoutubeController() {
-    logger.i('_initializeYoutubeController called');
-    logger.i('Demo video URL: ${widget.gig.demoVideo}');
-
-    if (widget.gig.demoVideo != null && widget.gig.demoVideo!.isNotEmpty) {
-      final youtubeVideoId = YoutubePlayer.convertUrlToId(
-        widget.gig.demoVideo!,
-      );
-
-      logger.i('YouTube video ID: $youtubeVideoId');
-
-      if (youtubeVideoId != null) {
-        logger.i('Initializing YouTube controller');
-        _youtubeController = YoutubePlayerController(
-          initialVideoId: youtubeVideoId,
-          flags: const YoutubePlayerFlags(autoPlay: false, mute: false),
-        );
-      } else {
-        // It's an uploaded video file
-        logger.i('Not a YouTube URL, initializing video player');
-        _initializeVideoPlayer(widget.gig.demoVideo!);
-      }
-    } else {
-      logger.w('Demo video is null or empty');
-    }
   }
 
   Future<void> _initializeVideoPlayer(String videoUrl) async {
@@ -242,19 +215,6 @@ class _SmeGigDetailsScreenState extends State<SmeGigDetailsScreen>
   }
 
   Widget _buildVideoWidget(String videoUrl) {
-    // Check if it's a YouTube URL and we have a controller
-    if (_youtubeController != null) {
-      return YoutubePlayer(
-        controller: _youtubeController!,
-        showVideoProgressIndicator: true,
-        progressIndicatorColor: Colors.red,
-        progressColors: const ProgressBarColors(
-          playedColor: Colors.red,
-          handleColor: Colors.redAccent,
-        ),
-      );
-    }
-
     // Show error if video failed to load
     if (_videoError != null) {
       return Container(

@@ -169,7 +169,7 @@ class _WorkshopScreenState extends State<WorkshopScreen>
 
   void _onAttachPressed() async {
     try {
-      final file = await FilePicker.platform.pickFiles(
+      final file = await FilePicker.pickFiles(
         type: FileType.any,
         allowMultiple: false,
       );

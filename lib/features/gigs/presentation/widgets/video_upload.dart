@@ -61,9 +61,8 @@ class _VideoUploadState extends State<VideoUpload>
       });
 
       // Pick video file
-      FilePickerResult? result = await FilePicker.platform.pickFiles(
+      FilePickerResult? result = await FilePicker.pickFiles(
         type: FileType.video,
-        allowMultiple: false,
       );
 
       if (result != null && result.files.single.path != null) {
@@ -203,7 +202,7 @@ class _VideoUploadState extends State<VideoUpload>
         // Helper text
         if (!_hasVideo)
           Text(
-            "Supported formats: MP4, MOV, AVI (Max 50MB) or paste a YouTube/Vimeo URL",
+            "Supported formats: MP4, MOV, AVI (Max 50MB)",
             style: textStyles.paragraph.copyWith(
               fontSize: 12,
               color: colorScheme.onSurface.withValues(alpha: 0.6),
@@ -231,7 +230,7 @@ class _VideoUploadState extends State<VideoUpload>
           height: double.infinity,
           child: _isUploading
               ? Column(
-                spacing: 12,
+                  spacing: 12,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     CircularProgressIndicator(color: colorScheme.primary),
@@ -289,7 +288,7 @@ class _VideoUploadState extends State<VideoUpload>
           TextField(
             controller: _urlController,
             decoration: InputDecoration(
-              hintText: "Paste YouTube, Vimeo, or direct video URL",
+              hintText: "Paste a direct video URL",
               hintStyle: textStyles.paragraph.copyWith(
                 fontSize: 12,
                 color: colorScheme.onSurface.withValues(alpha: 0.6),
